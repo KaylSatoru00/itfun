@@ -1,0 +1,647 @@
+/* student_modules.css — RESPONSIVE VERSION */
+.lm-panel {
+  width: 100vw;
+  height: 100vh;
+  background-color: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+}
+
+/* ── TOP NAVBAR ── */
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  background: #fff;
+  z-index: 10;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f0d0d5;
+}
+
+/* Search bar — fixed size, never grows */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: 2px solid #c8102e;
+  border-radius: 20px;
+  padding: 0 14px 0 10px;
+  gap: 6px;
+  flex: 0 0 auto;
+  height: 30px;
+  box-sizing: border-box;
+}
+
+.search-icon {
+  font-size: 16px;
+  color: #c8102e;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #333;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  width: 200px;
+  height: 100%;
+  padding: 0;
+  line-height: 1;
+}
+
+.search-input::placeholder {
+  color: #c8102e;
+}
+
+/* Spacer — fills the gap between search and buttons */
+.navbar-spacer {
+  flex: 1;
+}
+
+/* Buttons — fixed size, never shrinks */
+.top-center-btns {
+  display: flex;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.top-btn {
+  padding: 0 20px;
+  height: 38px;
+  border-radius: 20px;
+  border: 2px solid #c8102e;
+  background: #fff;
+  color: #c8102e;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.top-btn:hover {
+  background: #c8102e;
+  color: #fff;
+}
+
+/* Avatar trigger — fixed below navbar, right side */
+.avatar-trigger {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  z-index: 25;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: box-shadow 0.2s;
+}
+
+.avatar-trigger:hover {
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2);
+  border-radius: 50%;
+}
+
+/* Avatar initials circle */
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #c8102e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  user-select: none;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 6px rgba(200, 16, 46, 0.35);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.account-icon {
+  font-size: 40px;
+  color: #c8102e;
+}
+
+/* ── MODULES GRID WRAPPER ── */
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding: 90px 24px 80px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* All sub-panels — no absolute positioning */
+.sub-panel-1,
+.sub-panel-2,
+.sub-panel-3,
+.sub-panel-4,
+.sub-panel-5,
+.sub-panel-6,
+.sub-panel-7,
+.sub-panel-8,
+.sub-panel-9 {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #A50034 0%, #a00d24 100%);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effect */
+.sub-panel-1:hover,
+.sub-panel-2:hover,
+.sub-panel-3:hover,
+.sub-panel-4:hover,
+.sub-panel-5:hover,
+.sub-panel-6:hover,
+.sub-panel-7:hover,
+.sub-panel-8:hover,
+.sub-panel-9:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Panel content */
+.panel-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+  padding: 10px 16px;
+  line-height: 1.4;
+  font-family: Arial, sans-serif;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+/* Image area */
+.panel-image-wrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+.panel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  z-index: 20;
+}
+
+.bottom-nav-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #A50034;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.2s ease;
+  border-top: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.bottom-nav-btn:hover {
+  background: #c8102e;
+}
+
+.bottom-nav-btn.active {
+  background: #7a0025;
+}
+
+.bottom-nav-icon {
+  font-size: 22px;
+}
+
+.bottom-nav-label {
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+}
+
+/* Sidebar backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 24;
+}
+
+/* Sidebar — content-height popover below avatar */
+.sidebar {
+  position: fixed;
+  top: 65px;
+  right: 1px;
+  width: 160px;
+  height: auto;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px 14px;
+  gap: 10px;
+  z-index: 30;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid #f0d0d5;
+  width: 180px;        /* ← change this for wider/narrower */
+  min-height: 819px;   /* ← change this for taller/shorter */
+  height: auto;        /* keeps it stretching with content */
+}
+
+.sidebar-close-btn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-close-btn:hover {
+  background: #f0d0d5;
+  color: #c8102e;
+}
+
+.sidebar-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+  width: 100%;
+  text-align: center;
+}
+
+.sidebar-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #c8102e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  user-select: none;
+  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.3);
+  border: 3px solid #f0d0d5;
+  letter-spacing: 1px;
+}
+
+.sidebar-name {
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  color: #222;
+  margin: 0;
+}
+
+.sidebar-role {
+  font-size: 11px;
+  font-family: Arial, sans-serif;
+  color: #A50034;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.sidebar-divider {
+  width: 100%;
+  height: 1px;
+  background: #f0d0d5;
+  margin: 4px 0;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px 0;
+  background: #fff;
+  color: #c8102e;
+  border: 1.5px solid #c8102e;
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin-top: auto;
+}
+
+.logout-btn:hover {
+  background: #c8102e;
+  color: #fff;
+}
+
+/* Mobile sidebar narrower */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 180px;
+  }
+  .sidebar-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+  }
+}
+
+/* Join Course Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 8px;
+  width: min(380px, 100%);
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  background: #A50034;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  color: #fff;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-body {
+  padding: 24px 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-label {
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  color: #333;
+  white-space: nowrap;
+}
+
+.modal-required {
+  color: #c8102e;
+}
+
+.modal-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 2px solid #4a90d9;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  outline: none;
+}
+
+.modal-footer {
+  background: #f0f0f0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  border-top: 1px solid #ddd;
+}
+
+.modal-join-btn {
+  padding: 7px 24px;
+  background: #c8102e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-join-btn:hover {
+  background: #a00d24;
+}
+
+.modal-cancel-btn {
+  padding: 7px 24px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-cancel-btn:hover {
+  background: #e0e0e0;
+}
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+
+/* Large laptop (1280px and below) → 2 columns, shrink navbar */
+@media (max-width: 1280px) {
+  .modules-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .search-input {
+    width: 100px;
+  }
+
+  .top-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Tablet (768px and below) → 1 column */
+@media (max-width: 768px) {
+  .modules-grid {
+    grid-template-columns: 1fr;
+    padding: 80px 16px 80px 16px;
+    gap: 16px;
+  }
+
+  .search-input {
+    width: 90px;
+  }
+
+  .top-center-btns {
+    gap: 6px;
+  }
+
+  .top-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .bottom-nav-label {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .bottom-nav-icon {
+    font-size: 18px;
+  }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+  .top-navbar {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .search-input {
+    width: 60px;
+  }
+
+  .top-center-btns {
+    gap: 4px;
+  }
+
+  .top-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .bottom-nav-btn {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .bottom-nav-label {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+
+  .sub-panel-1,
+  .sub-panel-2,
+  .sub-panel-3,
+  .sub-panel-4,
+  .sub-panel-5,
+  .sub-panel-6,
+  .sub-panel-7,
+  .sub-panel-8,
+  .sub-panel-9 {
+    height: 160px;
+  }
+
+  .modules-grid {
+    padding-top: 76px;
+  }
+
+  .account-icon-wrapper {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+
+  .avatar-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .account-icon {
+    font-size: 34px;
+  }
+
+  .avatar-trigger {
+    top: 70px;
+    right: 10px;
+  }
+
+  .sidebar {
+    width: 150px;
+    top: 110px;
+    right: 8px;
+  }
+
+  .sidebar-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+  }
+}
