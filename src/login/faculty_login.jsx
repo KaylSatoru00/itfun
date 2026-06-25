@@ -274,7 +274,7 @@ function FacultyLogin() {
             <div className="input-group">
               <RequiredLabel label="Email" touched={loginTouched.email} value={loginEmail} />
               <input
-                type="email" className="input" placeholder="faculty@school.edu"
+                type="email" className="input" placeholder="example@gmail.com"
                 value={loginEmail}
                 onChange={e => setLoginEmail(e.target.value)}
                 onBlur={() => setLoginTouched(t => ({ ...t, email: true }))}
@@ -343,7 +343,7 @@ function FacultyLogin() {
             <div className="input-group">
               <RequiredLabel label="Email" touched={signupTouched.email} value={signupEmail} />
               <input
-                type="email" className="input" placeholder="faculty@school.edu"
+                type="email" className="input" placeholder="example@gmail.com"
                 value={signupEmail}
                 onChange={e => setSignupEmail(e.target.value)}
                 onBlur={() => setSignupTouched(t => ({ ...t, email: true }))}

@@ -16,7 +16,7 @@ function generateClassCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-const SECTIONS = Array.from({ length: 26 }, (_, i) =>
+const SECTIONS = Array.from({ length: 10 }, (_, i) =>
   `BSIT-1${String.fromCharCode(65 + i)}`
 );
 
@@ -522,21 +522,25 @@ function FacultyClass() {
             >
               <label className="modal-label">Select Class Section</label>
 
-              <div className="modal-section-grid">
+              <select
+                className="modal-section-select"
+                value={selectedSection}
+                onChange={e => setSelectedSection(e.target.value)}
+              >
+                <option value="">Select Section</option>
                 {SECTIONS.map(sec => {
                   const taken = classes.some(c => c.name === sec);
                   return (
-                    <button
+                    <option
                       key={sec}
-                      className={`section-btn ${taken ? 'taken' : ''} ${selectedSection === sec ? 'selected' : ''}`}
+                      value={sec}
                       disabled={taken}
-                      onClick={() => !taken && setSelectedSection(sec)}
                     >
-                      {sec}
-                    </button>
+                      {taken ? `${sec} (Already Created)` : sec}
+                    </option>
                   );
                 })}
-              </div>
+              </select>
 
               {selectedSection && (
                 <div className="modal-selected-label">
@@ -556,7 +560,7 @@ function FacultyClass() {
                 <div className="modal-code-display">{generatedCode}</div>
               )}
 
-              <div className="modal-footer">
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
                 <button
                   className="modal-create-btn"
                   onClick={handleCreateClass}

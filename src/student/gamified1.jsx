@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import bgImage    from '../assets/back.jpg';
-import bgMusic    from '../assets/mixkit-hip-hop-02-738.mp3';
+
 
 import abacus     from '../assets/abacus.jpg';
 import napiers    from '../assets/napiers.jpg';

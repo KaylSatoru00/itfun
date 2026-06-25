@@ -75,6 +75,18 @@ function LearningModules() {
     setJoinError('');
     setJoinLoading(true);
     try {
+      // Check if student already has ANY enrollment globally
+      const existingEnrollQ = query(
+        collection(db, 'enrollments'),
+        where('studentId', '==', user.uid)
+      );
+      const existingEnrollSnap = await getDocs(existingEnrollQ);
+      if (!existingEnrollSnap.empty) {
+        setJoinError('You are already enrolled in a course. You can only join one course at a time.');
+        setJoinLoading(false);
+        return;
+      }
+
       const q = query(collection(db, 'classes'), where('accessCode', '==', code));
       const snap = await getDocs(q);
       if (snap.empty) {
@@ -84,17 +96,6 @@ function LearningModules() {
       }
       const classDoc = snap.docs[0];
       const classData = { firestoreId: classDoc.id, ...classDoc.data() };
-      const enrollQ = query(
-        collection(db, 'enrollments'),
-        where('classId', '==', classDoc.id),
-        where('studentId', '==', user.uid)
-      );
-      const enrollSnap = await getDocs(enrollQ);
-      if (!enrollSnap.empty) {
-        setJoinError('You are already enrolled in this class.');
-        setJoinLoading(false);
-        return;
-      }
       setFoundClass(classData);
       setJoinStep('confirm');
     } catch (err) {
@@ -159,7 +160,7 @@ function LearningModules() {
         {/* My Course + Join Course + Avatar buttons */}
         <div className="top-center-btns">
           <button className="top-btn" onClick={() => setShowMyCourse(true)}>
-            My Course {myCourses.length > 0 && (
+            Class Instructor {myCourses.length > 0 && (
               <span style={{
                 background: '#c8102e', color: '#fff', borderRadius: '50%',
                 fontSize: '10px', padding: '1px 5px', marginLeft: '4px', fontWeight: 'bold',
@@ -167,7 +168,7 @@ function LearningModules() {
             )}
           </button>
           <button className="top-btn" onClick={() => { setShowJoinModal(true); setJoinStep('input'); }}>
-            Join Course
+            Join Instructor
           </button>
           {/* Avatar — beside Join Course, opens logout modal */}
           <div
@@ -309,7 +310,7 @@ function LearningModules() {
               onClick={e => e.stopPropagation()}
             >
               <div className="modal-header">
-                <h3 className="modal-title">Confirm Logout</h3>
+                <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>Confirm Logout</h3>
                 <button className="modal-close" onClick={() => setShowLogoutModal(false)}>✕</button>
               </div>
               <div className="modal-body" style={{ flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '28px 20px 20px' }}>
@@ -365,7 +366,7 @@ function LearningModules() {
                       style={{ marginTop: '8px' }}
                       onClick={() => { setShowMyCourse(false); setShowJoinModal(true); setJoinStep('input'); }}
                     >
-                      Join a Course
+                      Join Instructor
                     </button>
                   </div>
                 ) : (
@@ -452,7 +453,7 @@ function LearningModules() {
               {joinStep === 'input' && (
                 <>
                   <div className="modal-header">
-                    <h3 className="modal-title">Join a Course</h3>
+                    <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>Join Instructor</h3>
                     <button className="modal-close" onClick={handleCloseModal}>✕</button>
                   </div>
                   <div className="modal-body" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
