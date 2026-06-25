@@ -1,0 +1,264 @@
+.st-panel {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f9e4e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 120px;
+  box-sizing: border-box;
+}
+
+/* Title */
+.st-title {
+  font-size: clamp(20px, 3.5vw, 28px);
+  font-weight: bold;
+  color: #1a1a1a;
+  margin: 0 0 28px 0;
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* 1-column grid */
+.st-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* Mixed Type — same as all other cards */
+.st-card-wide {
+  grid-column: unset;
+  max-width: unset;
+  justify-self: unset;
+}
+
+/* Each card */
+.st-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #A50034;
+  border-radius: 16px;
+  padding: 20px 22px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+  min-height: 90px;
+}
+
+.st-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Icon image */
+.st-card-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Label */
+.st-card-label {
+  font-size: clamp(14px, 2.5vw, 16px);
+  font-weight: bold;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+  line-height: 1.4;
+}
+
+/* Selected highlight */
+.st-card-selected {
+  outline: 4px solid #ffffff;
+  box-shadow: 0 0 0 4px #ffffff, 0 0 24px rgba(165, 0, 52, 0.6);
+}
+
+/* Checkmark badge */
+.st-card-check {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #A50034;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Bottom nav */
+.st-bottom {
+  position: fixed;
+  bottom: 24px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.st-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #A50034;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 28px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  pointer-events: all;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.st-btn:hover {
+  background: #c8102e;
+  transform: scale(1.04);
+}
+
+.st-btn span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Disabled Generate button */
+.st-btn-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.st-btn-disabled:hover {
+  background: #A50034;
+  transform: none;
+}
+
+/* ─── Responsive: Laptop (≥ 1024px) ─── */
+@media (min-width: 1024px) {
+  .st-grid {
+    grid-template-columns: 1fr 1fr;
+    max-width: 900px;
+    gap: 20px;
+  }
+
+  .st-card {
+    min-height: 100px;
+  }
+}
+
+/* ─── Responsive: Large Desktop (≥ 1440px) ─── */
+@media (min-width: 1440px) {
+  .st-grid {
+    max-width: 1100px;
+    gap: 24px;
+  }
+
+  .st-card {
+    padding: 24px 28px;
+    min-height: 110px;
+  }
+
+  .st-card-img {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* ─── Responsive: Tablet (≤ 768px) ─── */
+@media (max-width: 768px) {
+  .st-panel {
+    padding: 36px 16px 110px;
+  }
+
+  .st-grid {
+    max-width: 100%;
+    gap: 14px;
+  }
+
+  .st-card {
+    padding: 16px 18px;
+    gap: 14px;
+    min-height: 80px;
+  }
+
+  .st-card-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .st-bottom {
+    padding: 0 20px;
+    bottom: 18px;
+  }
+
+  .st-btn {
+    font-size: 13px;
+    padding: 10px 20px;
+  }
+}
+
+/* ─── Responsive: Mobile (≤ 480px) ─── */
+@media (max-width: 480px) {
+  .st-panel {
+    padding: 28px 14px 110px;
+  }
+
+  .st-grid {
+    gap: 12px;
+  }
+
+  .st-card {
+    padding: 14px 14px;
+    gap: 12px;
+    min-height: 70px;
+    border-radius: 12px;
+  }
+
+  .st-card-img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .st-card-label {
+    font-size: 13px;
+  }
+
+  .st-card-check {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    top: -7px;
+    right: -7px;
+  }
+
+  .st-bottom {
+    padding: 0 14px;
+    bottom: 14px;
+  }
+
+  .st-btn {
+    font-size: 12px;
+    padding: 10px 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .st-btn span {
+    font-size: 15px;
+  }
+}

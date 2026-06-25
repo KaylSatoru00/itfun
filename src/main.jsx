@@ -4,31 +4,41 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import './index.css'
 import { UserProvider } from './user_context'
-import Login from './login.jsx'
-import StudentLogin from './student_login.jsx'
-import FacultyLogin from './faculty_login.jsx'
-import FacultyModules from './faculty_modules.jsx'
-import FacultyClass from './faculty_class.jsx'
-import LearningModules from './student_modules.jsx'
-import PvpQuiz from './pvp_quiz.jsx'
-import Chapter1 from './s1.jsx'
-import Chapter2 from './s2';
-import Chapter3 from './s3';
-import Chapter4 from './s4';
-import Chapter5 from './s5';
-import Chapter6 from './s6';
-import Chapter7 from './s7';
-import Chapter8 from './s8';
-import Chapter9 from './s9';
-import FacultyChapter1 from './f1.jsx'
-import FacultyChapter2 from './f2.jsx'
-import FacultyChapter3 from './f3.jsx'
-import FacultyChapter4 from './f4.jsx'
-import FacultyChapter5 from './f5.jsx'
-import FacultyChapter6 from './f6.jsx'
-import FacultyChapter7 from './f7.jsx'
-import FacultyChapter8 from './f8.jsx'
-import FacultyChapter9 from './f9.jsx'
+import Gamified1 from './student/gamified1.jsx'
+import Gamified9 from './student/gamified9.jsx'
+
+// Login
+import Login from './login/login.jsx'
+import StudentLogin from './login/student_login.jsx'
+import FacultyLogin from './login/faculty_login.jsx'
+
+// Student
+import LearningModules from './student/student_modules.jsx'
+import PvpQuiz from './student/pvp_quiz.jsx'
+import SelectModule from './student/select_module.jsx'
+import SelectType from './student/select_type.jsx'
+import Chapter1 from './student/s1.jsx'
+import Chapter2 from './student/s2.jsx'
+import Chapter3 from './student/s3.jsx'
+import Chapter4 from './student/s4.jsx'
+import Chapter5 from './student/s5.jsx'
+import Chapter6 from './student/s6.jsx'
+import Chapter7 from './student/s7.jsx'
+import Chapter8 from './student/s8.jsx'
+import Chapter9 from './student/s9.jsx'
+
+// Faculty
+import FacultyModules from './faculty/faculty_modules.jsx'
+import FacultyClass from './faculty/faculty_class.jsx'
+import FacultyChapter1 from './faculty/f1.jsx'
+import FacultyChapter2 from './faculty/f2.jsx'
+import FacultyChapter3 from './faculty/f3.jsx'
+import FacultyChapter4 from './faculty/f4.jsx'
+import FacultyChapter5 from './faculty/f5.jsx'
+import FacultyChapter6 from './faculty/f6.jsx'
+import FacultyChapter7 from './faculty/f7.jsx'
+import FacultyChapter8 from './faculty/f8.jsx'
+import FacultyChapter9 from './faculty/f9.jsx'
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -42,6 +52,8 @@ function AnimatedRoutes() {
         <Route path="/faculty-class" element={<FacultyClass />} />
         <Route path="/learning-modules" element={<LearningModules />} />
         <Route path="/pvp-quiz" element={<PvpQuiz />} />
+        <Route path="/select-module" element={<SelectModule />} />
+        <Route path="/select-type" element={<SelectType />} />
         <Route path="/student-chapter-1" element={<Chapter1 />} />
         <Route path="/student-chapter-2" element={<Chapter2 />} />
         <Route path="/student-chapter-3" element={<Chapter3 />} />
@@ -57,9 +69,11 @@ function AnimatedRoutes() {
         <Route path="/faculty-chapter-4" element={<FacultyChapter4 />} />
         <Route path="/faculty-chapter-5" element={<FacultyChapter5 />} />
         <Route path="/faculty-chapter-6" element={<FacultyChapter6 />} />
-        <Route path="/faculty-chapter-7" element={<FacultyChapter7 />} />\
+        <Route path="/faculty-chapter-7" element={<FacultyChapter7 />} />
         <Route path="/faculty-chapter-8" element={<FacultyChapter8 />} />
         <Route path="/faculty-chapter-9" element={<FacultyChapter9 />} />
+        <Route path="/gamified-1" element={<Gamified1 />} />
+        <Route path="/gamified-9" element={<Gamified9 />} />
       </Routes>
     </AnimatePresence>
   )
