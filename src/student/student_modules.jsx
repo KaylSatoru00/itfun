@@ -8,7 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { db } from '../firebase';
 import {
-  collection, query, where, getDocs, addDoc, serverTimestamp, onSnapshot,
+  collection, query, where, getDocs, addDoc, doc, getDoc,
+  serverTimestamp, onSnapshot,
 } from 'firebase/firestore';
 import img1 from '../assets/panel1.webp';
 import img2 from '../assets/panel2.jpg';
@@ -20,37 +21,68 @@ import img7 from '../assets/panel7.webp';
 import img8 from '../assets/panel8.png';
 import img9 from '../assets/panel9.jpg';
 
+/* ─────────────────────────────────────────────
+   Module metadata
+──────────────────────────────────────────────*/
+const MODULES = [
+  { id: 'module1', num: 1, route: '/student-chapter-1', label: 'Introduction to Computers and History of Computers', img: img1 },
+  { id: 'module2', num: 2, route: '/student-chapter-2', label: 'Language & Types of Computers with Their Uses',       img: img2 },
+  { id: 'module3', num: 3, route: '/student-chapter-3', label: 'Number System & Conversions',                         img: img3 },
+  { id: 'module4', num: 4, route: '/student-chapter-4', label: 'Hardware Components, Input and Output Devices & Basic PC-Building', img: img4 },
+  { id: 'module5', num: 5, route: '/student-chapter-5', label: 'Types of Software',                                   img: img5 },
+  { id: 'module6', num: 6, route: '/student-chapter-6', label: 'Networking Fundamentals',                             img: img6 },
+  { id: 'module7', num: 7, route: '/student-chapter-7', label: 'Microsoft Office Applications',                       img: img7 },
+  { id: 'module8', num: 8, route: '/student-chapter-8', label: 'Application of Computers in Different Fields',        img: img8 },
+  { id: 'module9', num: 9, route: '/student-chapter-9', label: 'Keyboarding',                                         img: img9 },
+];
+
 function toPascalCase(str = '') {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
+
+
+/* ════════════════════════════════════════════
+   Main Component
+═════════════════════════════════════════════*/
 function LearningModules() {
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showMyCourse, setShowMyCourse] = useState(false);
-  const [myCourses, setMyCourses] = useState([]);
+  const [showLogoutModal, setShowLogoutModal]   = useState(false);
+  const [showMyCourse, setShowMyCourse]         = useState(false);
+  const [myCourses, setMyCourses]               = useState([]);
 
   // ── Join Course modal states ──
-  const [joinStep, setJoinStep] = useState('input');
+  const [joinStep, setJoinStep]       = useState('input');
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [accessCode, setAccessCode] = useState('');
-  const [joinError, setJoinError] = useState('');
+  const [accessCode, setAccessCode]   = useState('');
+  const [joinError, setJoinError]     = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
-  const [foundClass, setFoundClass] = useState(null);
+  const [foundClass, setFoundClass]   = useState(null);
 
-  const navigate = useNavigate();
-  const { user } = useUser();
-  const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
+  // ── Module unlock/progress state ──
+  // moduleStates[moduleId] = { unlocked: bool, completed: bool, overallPercent: number }
+  const [moduleStates, setModuleStates] = useState(() =>
+    Object.fromEntries(MODULES.map((m, i) => [
+      m.id,
+      { unlocked: i === 0, completed: false, overallPercent: 0 },
+    ]))
+  );
+  const [progressLoading, setProgressLoading] = useState(true);
 
+  const navigate  = useNavigate();
+  const { user }  = useUser();
+  const initials  = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
+
+  /* ── Body background ── */
   useEffect(() => {
-    document.body.style.backgroundImage = 'none';
+    document.body.style.backgroundImage  = 'none';
     document.body.style.backgroundColor = '#ffffff';
     return () => {
-      document.body.style.backgroundImage = '';
+      document.body.style.backgroundImage  = '';
       document.body.style.backgroundColor = '';
     };
   }, []);
 
-  // ── Real-time listener for student's enrollments ──
+  /* ── Real-time listener for enrollments ── */
   useEffect(() => {
     if (!user) return;
     const q = query(collection(db, 'enrollments'), where('studentId', '==', user.uid));
@@ -60,6 +92,64 @@ function LearningModules() {
     return () => unsub();
   }, [user]);
 
+  /* ── Real-time listener for module progress ──
+     Listens to the student's progress doc and rebuilds moduleStates.
+     Doc path: studentProgress/{uid}
+     Structure mirrors the spec:
+       modules.module1.unlocked / completed / lessons.lessonKey.progress
+  ── */
+  useEffect(() => {
+    if (!user) return;
+    setProgressLoading(true);
+
+    const progressRef = doc(db, 'studentProgress', user.uid);
+    const unsub = onSnapshot(progressRef, (snap) => {
+      if (!snap.exists()) {
+        // First-time student: only module1 unlocked, rest locked
+        setModuleStates(
+          Object.fromEntries(MODULES.map((m, i) => [
+            m.id,
+            { unlocked: i === 0, completed: false, overallPercent: 0 },
+          ]))
+        );
+        setProgressLoading(false);
+        return;
+      }
+
+      const data = snap.data();
+      const modules = data.modules || {};
+
+      const newStates = {};
+      MODULES.forEach((m, i) => {
+        const mData = modules[m.id] || {};
+        const unlocked = i === 0 ? true : (mData.unlocked ?? false);
+        const completed = mData.completed ?? false;
+
+        // Calculate average lesson progress for display
+        const lessons = mData.lessons || {};
+        const lessonValues = Object.values(lessons).map(l => l.progress ?? 0);
+        const overallPercent = lessonValues.length > 0
+          ? Math.round(lessonValues.reduce((a, b) => a + b, 0) / lessonValues.length)
+          : 0;
+
+        newStates[m.id] = { unlocked, completed, overallPercent };
+      });
+
+      setModuleStates(newStates);
+      setProgressLoading(false);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  /* ── Navigation guard: only allow access if unlocked ── */
+  const handleModuleClick = (module) => {
+    const state = moduleStates[module.id];
+    if (!state?.unlocked) return; // silently block locked modules
+    navigate(module.route);
+  };
+
+  /* ── Join Course handlers ── */
   const handleCloseModal = () => {
     setShowJoinModal(false);
     setAccessCode('');
@@ -68,14 +158,12 @@ function LearningModules() {
     setFoundClass(null);
   };
 
-  // ── Step 1: Look up the access code ──
   const handleLookupCode = async () => {
     const code = accessCode.trim().toUpperCase();
     if (!code) { setJoinError('Please enter an access code.'); return; }
     setJoinError('');
     setJoinLoading(true);
     try {
-      // Check if student already has ANY enrollment globally
       const existingEnrollQ = query(
         collection(db, 'enrollments'),
         where('studentId', '==', user.uid)
@@ -86,7 +174,6 @@ function LearningModules() {
         setJoinLoading(false);
         return;
       }
-
       const q = query(collection(db, 'classes'), where('accessCode', '==', code));
       const snap = await getDocs(q);
       if (snap.empty) {
@@ -95,8 +182,7 @@ function LearningModules() {
         return;
       }
       const classDoc = snap.docs[0];
-      const classData = { firestoreId: classDoc.id, ...classDoc.data() };
-      setFoundClass(classData);
+      setFoundClass({ firestoreId: classDoc.id, ...classDoc.data() });
       setJoinStep('confirm');
     } catch (err) {
       console.error('Error looking up class:', err);
@@ -105,23 +191,22 @@ function LearningModules() {
     setJoinLoading(false);
   };
 
-  // ── Step 2: Confirm and save enrollment ──
   const handleConfirmJoin = async () => {
     if (!foundClass || !user) return;
     setJoinLoading(true);
     try {
       await addDoc(collection(db, 'enrollments'), {
-        classId: foundClass.firestoreId,
-        className: foundClass.name,
-        subject: foundClass.subject,
-        facultyId: foundClass.facultyId,
-        facultyName: foundClass.facultyName,
-        studentId: user.uid,
-        studentName: `${user.firstName} ${user.lastName}`,
+        classId:          foundClass.firestoreId,
+        className:        foundClass.name,
+        subject:          foundClass.subject,
+        facultyId:        foundClass.facultyId,
+        facultyName:      foundClass.facultyName,
+        studentId:        user.uid,
+        studentName:      `${user.firstName} ${user.lastName}`,
         studentFirstName: user.firstName,
-        studentLastName: user.lastName,
-        studentEmail: user.email,
-        joinedAt: serverTimestamp(),
+        studentLastName:  user.lastName,
+        studentEmail:     user.email,
+        joinedAt:         serverTimestamp(),
       });
       setJoinStep('success');
     } catch (err) {
@@ -132,12 +217,15 @@ function LearningModules() {
     setJoinLoading(false);
   };
 
-  // ── Avatar color from string ──
+  /* ── Avatar color ── */
   function avatarColor(str = '') {
     let hash = 0;
     for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
     return `hsl(${Math.abs(hash) % 360}, 60%, 45%)`;
   }
+
+  /* ── Panel CSS class names (unchanged from original) ── */
+  const panelClass = (num) => `sub-panel-${num}`;
 
   return (
     <motion.div
@@ -148,16 +236,11 @@ function LearningModules() {
     >
       {/* ── Top Navbar ── */}
       <div className="top-navbar">
-        {/* Search bar */}
         <div className="search-bar">
           <IoSearchCircle className="search-icon" />
           <input type="text" className="search-input" placeholder="Search" />
         </div>
-
-        {/* Spacer */}
         <div className="navbar-spacer" />
-
-        {/* My Course + Join Course + Avatar buttons */}
         <div className="top-center-btns">
           <button className="top-btn" onClick={() => setShowMyCourse(true)}>
             Class Instructor {myCourses.length > 0 && (
@@ -170,7 +253,6 @@ function LearningModules() {
           <button className="top-btn" onClick={() => { setShowJoinModal(true); setJoinStep('input'); }}>
             Join Instructor
           </button>
-          {/* Avatar — beside Join Course, opens logout modal */}
           <div
             className="avatar-circle"
             onClick={() => setShowLogoutModal(true)}
@@ -184,99 +266,34 @@ function LearningModules() {
 
       {/* ── Module panels ── */}
       <div className="lm-scroll-body">
-      <div className="modules-grid">
+        <div className="modules-grid">
+          {MODULES.map((module) => {
+            const state    = moduleStates[module.id] ?? { unlocked: false, completed: false, overallPercent: 0 };
+            const locked   = !state.unlocked;
+            const cssClass = panelClass(module.num);
 
-        {/* Panel 1 — Introduction to Computers and History of Computers */}
-        <div className="sub-panel-1" onClick={() => navigate('/student-chapter-1')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Introduction to Computers and History of Computers</h3>
-            <div className="panel-image-wrapper">
-              <img src={img1} alt="Module 1" className="panel-image" />
-            </div>
-          </div>
+            return (
+              <div
+                key={module.id}
+                className={cssClass}
+                onClick={() => handleModuleClick(module)}
+                style={{
+                  cursor: locked ? 'not-allowed' : 'pointer',
+                  filter: locked ? 'grayscale(100%) brightness(0.5)' : 'none',
+                  transition: 'filter 0.3s ease',
+                  userSelect: 'none',
+                }}
+              >
+                <div className="panel-content">
+                  <h3 className="panel-title">{module.label}</h3>
+                  <div className="panel-image-wrapper">
+                    <img src={module.img} alt={`Module ${module.num}`} className="panel-image" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-
-        {/* Panel 2 — Types of Computer and Their Uses */}
-        <div className="sub-panel-2" onClick={() => navigate('/student-chapter-2')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Language & Types of Computers with Their Uses</h3>
-            <div className="panel-image-wrapper">
-              <img src={img2} alt="Module 2" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 3 */}
-        <div className="sub-panel-3" onClick={() => navigate('/student-chapter-3')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Number System & Conversions</h3>
-            <div className="panel-image-wrapper">
-              <img src={img3} alt="Module 3" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 4 */}
-        <div className="sub-panel-4" onClick={() => navigate('/student-chapter-4')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Hardware Components, Input and Output Devices & Basic PC-Building</h3>
-            <div className="panel-image-wrapper">
-              <img src={img4} alt="Module 4" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 5 */}
-        <div className="sub-panel-5" onClick={() => navigate('/student-chapter-5')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Types of Software</h3>
-            <div className="panel-image-wrapper">
-              <img src={img5} alt="Module 5" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 6 */}
-        <div className="sub-panel-6" onClick={() => navigate('/student-chapter-6')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Networking Fundamentals</h3>
-            <div className="panel-image-wrapper">
-              <img src={img6} alt="Module 6" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 7 */}
-        <div className="sub-panel-7" onClick={() => navigate('/student-chapter-7')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Microsoft Office Applications</h3>
-            <div className="panel-image-wrapper">
-              <img src={img7} alt="Module 7" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 8 */}
-        <div className="sub-panel-8" onClick={() => navigate('/student-chapter-8')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Application of Computers in Different Fields</h3>
-            <div className="panel-image-wrapper">
-              <img src={img8} alt="Module 8" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 9 */}
-        <div className="sub-panel-9" onClick={() => navigate('/student-chapter-9')}>
-          <div className="panel-content">
-            <h3 className="panel-title">Keyboarding</h3>
-            <div className="panel-image-wrapper">
-              <img src={img9} alt="Module 9" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-      </div>
       </div>
 
       {/* Bottom Navigation */}
@@ -296,9 +313,7 @@ function LearningModules() {
         {showLogoutModal && (
           <motion.div
             className="modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShowLogoutModal(false)}
           >
             <motion.div
@@ -351,7 +366,11 @@ function LearningModules() {
             >
               <div className="modal-header" style={{ justifyContent: 'center', position: 'relative' }}>
                 <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>My Instructor</h3>
-                <button className="modal-close" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }} onClick={() => setShowMyCourse(false)}>✕</button>
+                <button
+                  className="modal-close"
+                  style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}
+                  onClick={() => setShowMyCourse(false)}
+                >✕</button>
               </div>
 
               <div style={{ padding: '16px 20px', maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -372,16 +391,10 @@ function LearningModules() {
                 ) : (
                   myCourses.map(course => (
                     <div key={course.enrollmentDocId} style={{
-                      border: '1px solid #f0d0d5',
-                      borderRadius: '10px',
-                      padding: '14px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '14px',
-                      background: '#fff',
-                      boxShadow: '0 2px 8px rgba(200,16,46,0.06)',
+                      border: '1px solid #f0d0d5', borderRadius: '10px', padding: '14px 16px',
+                      display: 'flex', alignItems: 'center', gap: '14px',
+                      background: '#fff', boxShadow: '0 2px 8px rgba(200,16,46,0.06)',
                     }}>
-                      {/* Faculty Avatar */}
                       <div style={{
                         width: '46px', height: '46px', borderRadius: '12px', flexShrink: 0,
                         background: avatarColor(course.facultyId),
@@ -390,8 +403,6 @@ function LearningModules() {
                       }}>
                         {(course.facultyName || 'F').charAt(0).toUpperCase()}
                       </div>
-
-                      {/* Course Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'Arial, sans-serif', fontWeight: 'bold', fontSize: '14px', color: '#222', marginBottom: '2px' }}>
                           {toPascalCase(course.className || '')}
@@ -406,11 +417,9 @@ function LearningModules() {
                           </span>
                         </div>
                       </div>
-
-                      {/* Joined date */}
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ textAlign: 'left', flexShrink: 0 }}>
                         <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#aaa', marginBottom: '2px' }}>Joined</div>
-                        <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#555' }}>
+                        <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#555', textAlign: 'right' }}>
                           {course.joinedAt?.toDate
                             ? course.joinedAt.toDate().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
                             : '—'}
@@ -436,9 +445,7 @@ function LearningModules() {
         {showJoinModal && (
           <motion.div
             className="modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={handleCloseModal}
           >
             <motion.div

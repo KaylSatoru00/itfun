@@ -32,6 +32,60 @@ const MODULE_NAMES = [
   'Keyboarding',
 ];
 
+// ── Module definitions for progress tracking ──
+// Each module defines which lessons it contains
+const MODULE_DEFINITIONS = {
+  module1: {
+    displayName: 'Introduction to Computers and History of Computers',
+    lessons: ['lesson1', 'lesson2', 'lesson3'],
+    totalLessons: 3,
+  },
+  module2: {
+    displayName: 'Language & Types of Computers with Their Uses',
+    lessons: ['lesson1', 'lesson2', 'lesson3', 'lesson4'],
+    totalLessons: 4,
+  },
+  // Modules 3-9 will be added later
+  module3: {
+    displayName: 'Number System & Conversions',
+    lessons: [],
+    totalLessons: 0,
+  },
+  module4: {
+    displayName: 'Hardware Components, Input and Output Devices & Basic PC-Building',
+    lessons: [],
+    totalLessons: 0,
+  },
+  module5: {
+    displayName: 'Types of Software',
+    lessons: [],
+    totalLessons: 0,
+  },
+  module6: {
+    displayName: 'Networking Fundamentals',
+    lessons: [],
+    totalLessons: 0,
+  },
+  module7: {
+    displayName: 'Microsoft Office Applications',
+    lessons: [],
+    totalLessons: 0,
+  },
+  module8: {
+    displayName: 'Application of Computers in Different Fields',
+    lessons: [],
+    totalLessons: 0,
+  },
+  module9: {
+    displayName: 'Keyboarding',
+    lessons: [],
+    totalLessons: 0,
+  },
+};
+
+// ── For display, only modules 1 and 2 have lessons defined ──
+const VISIBLE_MODULES = ['module1', 'module2'];
+
 function getInitials(name) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
@@ -97,6 +151,10 @@ function FacultyClass() {
   const { user } = useUser();
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
 
+  // ── State for selected student's progress ──
+  const [selectedStudentProgress, setSelectedStudentProgress] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(false);
+
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = '#ffffff';
@@ -126,6 +184,7 @@ function FacultyClass() {
     if (!activeClass) {
       setEnrolledStudents([]);
       setSelectedStudent(null);
+      setSelectedStudentProgress(null);
       return;
     }
     setLoadingStudents(true);
@@ -137,6 +196,63 @@ function FacultyClass() {
     });
     return () => unsub();
   }, [activeClass]);
+
+  // ── Listen to selected student's progress in real-time ──
+  useEffect(() => {
+    if (!selectedStudent) {
+      setSelectedStudentProgress(null);
+      return;
+    }
+
+    setLoadingProgress(true);
+    const progressRef = doc(db, 'studentProgress', selectedStudent.studentId);
+
+    const unsub = onSnapshot(progressRef, (snap) => {
+      if (snap.exists()) {
+        setSelectedStudentProgress(snap.data());
+      } else {
+        // No progress doc yet - student hasn't started any modules
+        setSelectedStudentProgress(null);
+      }
+      setLoadingProgress(false);
+    }, (error) => {
+      console.error('Error loading student progress:', error);
+      setLoadingProgress(false);
+    });
+
+    return () => unsub();
+  }, [selectedStudent]);
+
+  // ── Calculate module progress for a given module ──
+  const calculateModuleProgress = (moduleKey, progressData) => {
+    const moduleDef = MODULE_DEFINITIONS[moduleKey];
+    if (!moduleDef || moduleDef.totalLessons === 0) return 0;
+
+    const modules = progressData?.modules || {};
+    const moduleData = modules[moduleKey] || {};
+    const lessons = moduleData.lessons || {};
+
+    // Calculate average of all lesson progress
+    let totalProgress = 0;
+    let lessonCount = 0;
+
+    moduleDef.lessons.forEach(lessonKey => {
+      const lessonData = lessons[lessonKey];
+      if (lessonData && typeof lessonData.progress === 'number') {
+        totalProgress += lessonData.progress;
+        lessonCount++;
+      }
+    });
+
+    // If no lessons have progress data, return 0
+    if (lessonCount === 0) return 0;
+
+    // Average = sum of lesson progress / total lessons in module
+    return Math.round((totalProgress / moduleDef.totalLessons) * 100) / 100;
+  };
+
+  // ── Helper to check if student has progress doc ──
+  const hasProgress = selectedStudentProgress !== null;
 
   const handleGenerateCode = () => setGeneratedCode(generateClassCode());
 
@@ -326,6 +442,7 @@ function FacultyClass() {
                   <span>EMAIL</span>
                   <span>JOINED</span>
                   <span>PROGRESS</span>
+                  <span></span>
                 </div>
 
                 <div className="ic-table-body">
@@ -341,51 +458,65 @@ function FacultyClass() {
                     </p>
                   ) : (
                     filteredStudents.map(s => (
-                      <div
-                        key={s.enrollmentDocId}
-                        className={`ic-table-row ${selectedStudent?.enrollmentDocId === s.enrollmentDocId ? 'selected' : ''}`}
-                        onClick={() => setSelectedStudent(s)}
-                      >
-                        <div className="ic-student-cell">
-                          <div className="ic-avatar" style={{ background: avatarColor(s.studentId) }}>
-                            {getInitials(s.studentName)}
-                          </div>
-                          <div>
-                            <div className="ic-student-name">{formatName(s)}</div>
-                            <div className="ic-student-id">{s.studentEmail}</div>
-                          </div>
-                        </div>
-                        <div className="ic-section-cell" style={{ fontSize: '11px', color: '#aaa' }}>
-                          {s.studentEmail}
-                        </div>
-                        <div className="ic-section-cell">
-                          {s.joinedAt?.toDate
-                            ? s.joinedAt.toDate().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : '—'}
-                        </div>
-                        <div className="ic-progress-cell">
-                          <div className="ic-progress-bar-track">
-                            <div
-                              className="ic-progress-bar-fill"
-                              style={{
-                                width: `${s.overallProgress ?? 0}%`,
-                                background: (s.overallProgress ?? 0) >= 80 ? '#2e7d32' : (s.overallProgress ?? 0) >= 60 ? '#e65100' : '#c8102e',
-                              }}
-                            />
-                          </div>
-                          <span className="ic-progress-label">{s.overallProgress ?? 0}%</span>
-                        </div>
-                        <button
-                          className="ic-delete-btn"
-                          onClick={e => { e.stopPropagation(); handleRemoveStudent(s.enrollmentDocId); }}
-                          title="Remove student"
-                        >🗑️</button>
-                        <button
-                          className="ic-view-btn"
-                          onClick={e => { e.stopPropagation(); setSelectedStudent(s); }}
-                        >View ›</button>
-                      </div>
-                    ))
+  <div
+    key={s.enrollmentDocId}
+    className={`ic-table-row ${selectedStudent?.enrollmentDocId === s.enrollmentDocId ? 'selected' : ''}`}
+    onClick={() => setSelectedStudent(s)}
+  >
+    <div className="ic-student-cell">
+      <div className="ic-avatar" style={{ background: avatarColor(s.studentId) }}>
+        {getInitials(s.studentName)}
+      </div>
+      <div className="ic-student-text">
+        <div className="ic-student-name">{formatName(s)}</div>
+        <div className="ic-student-id">{s.studentEmail}</div>
+      </div>
+    </div>
+
+    <div className="ic-section-cell ic-email-cell">
+      {s.studentEmail}
+    </div>
+
+    <div className="ic-section-cell ic-joined-cell">
+      {s.joinedAt?.toDate
+        ? s.joinedAt.toDate().toLocaleDateString('en-PH', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : '-'}
+    </div>
+
+    <div className="ic-progress-cell">
+      <div className="ic-progress-bar-track">
+        <div
+          className="ic-progress-bar-fill"
+          style={{
+            width: `${s.overallProgress ?? 0}%`,
+            background:
+              (s.overallProgress ?? 0) >= 80
+                ? '#2e7d32'
+                : (s.overallProgress ?? 0) >= 60
+                  ? '#e65100'
+                  : '#c8102e',
+          }}
+        />
+      </div>
+      <span className="ic-progress-label">{s.overallProgress ?? 0}%</span>
+    </div>
+
+    <button
+      className="ic-unenroll-btn"
+      onClick={e => {
+        e.stopPropagation();
+        handleRemoveStudent(s.enrollmentDocId);
+      }}
+      title="Unenroll student"
+    >
+      Unenroll
+    </button>
+  </div>
+))
                   )}
                 </div>
               </div>
@@ -440,26 +571,74 @@ function FacultyClass() {
                       </div>
                     </div>
 
-                    {/* Module-by-module progress bars */}
+                    {/* ── MODULE PROGRESS SECTION ── */}
                     <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', fontWeight: 'bold', color: '#888', margin: '0 0 4px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                         Module Progress
                       </p>
-                      {MODULE_NAMES.map((name, i) => {
-                        const pct = selectedStudent.moduleProgress?.[i] ?? 0;
-                        const barColor = pct >= 80 ? '#2e7d32' : pct >= 60 ? '#e65100' : '#c8102e';
-                        return (
-                          <div key={i}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                              <span style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#444', flex: 1, paddingRight: '8px', lineHeight: '1.3' }}>{name}</span>
-                              <span style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#888', whiteSpace: 'nowrap', fontWeight: 'bold' }}>{pct}%</span>
+                      
+                      {loadingProgress ? (
+                        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                          <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#aaa' }}>Loading progress...</p>
+                        </div>
+                      ) : !hasProgress ? (
+                        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                          <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#aaa' }}>
+                            No progress data yet
+                          </p>
+                        </div>
+                      ) : (
+                        VISIBLE_MODULES.map((moduleKey) => {
+                          const moduleDef = MODULE_DEFINITIONS[moduleKey];
+                          const moduleProgress = calculateModuleProgress(moduleKey, selectedStudentProgress);
+                          const barColor = moduleProgress >= 80 ? '#2e7d32' : moduleProgress >= 60 ? '#e65100' : '#c8102e';
+                          
+                          return (
+                            <div key={moduleKey}>
+                              <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'baseline', 
+                                marginBottom: '4px' 
+                              }}>
+                                <span style={{ 
+                                  fontFamily: 'Arial, sans-serif', 
+                                  fontSize: '13px', 
+                                  color: '#444', 
+                                  flex: 1, 
+                                  paddingRight: '8px', 
+                                  lineHeight: '1.3' 
+                                }}>
+                                  {moduleDef.displayName}
+                                </span>
+                                <span style={{ 
+                                  fontFamily: 'Arial, sans-serif', 
+                                  fontSize: '13px', 
+                                  color: '#888', 
+                                  whiteSpace: 'nowrap', 
+                                  fontWeight: 'bold' 
+                                }}>
+                                  {moduleProgress}%
+                                </span>
+                              </div>
+                              <div style={{ 
+                                height: '7px', 
+                                background: '#f0d0d5', 
+                                borderRadius: '99px', 
+                                overflow: 'hidden' 
+                              }}>
+                                <div style={{ 
+                                  height: '100%', 
+                                  width: `${moduleProgress}%`, 
+                                  background: barColor, 
+                                  borderRadius: '99px', 
+                                  transition: 'width 0.5s ease' 
+                                }} />
+                              </div>
                             </div>
-                            <div style={{ height: '7px', background: '#f0d0d5', borderRadius: '99px', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${pct}%`, background: barColor, borderRadius: '99px', transition: 'width 0.5s ease' }} />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </motion.div>
                 ) : (
@@ -492,10 +671,10 @@ function FacultyClass() {
                     onClick={e => e.stopPropagation()}
                   >
                     <div className="confirm-icon">🗑️</div>
-                    <p className="confirm-message">Remove this student from the class?</p>
+                    <p className="confirm-message">Unenroll this student from the class?</p>
                     <div className="confirm-footer">
                       <button className="confirm-cancel-btn" onClick={() => setConfirmRemoveStudentId(null)}>Cancel</button>
-                      <button className="confirm-remove-btn" onClick={handleConfirmRemoveStudent}>Remove</button>
+                      <button className="confirm-remove-btn" onClick={handleConfirmRemoveStudent}>Unenroll</button>
                     </div>
                   </motion.div>
                 </motion.div>

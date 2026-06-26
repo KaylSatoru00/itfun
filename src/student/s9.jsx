@@ -7,15 +7,36 @@ import handImg from '../assets/hand.png';
 
 import './s9.css';
 
+import { useProgressTracker } from '../hooks/useProgressTracker';
+
+/* ─────────────────────────────────────────────
+   Module / Lesson config for Chapter 9
+   lesson "keyboarding" has 5 AccordionItems
+──────────────────────────────────────────────*/
+const MODULE_ID = 'module9';
+const LESSON_CONFIGS = {
+  keyboarding: { totalItems: 5 },
+};
+
 /* ────────────────────────────────────────────
-   Accordion
+   Accordion — calls onFirstOpen(id) once
 ─────────────────────────────────────────────*/
-function AccordionItem({ title, children, isOpen, onToggle }) {
+function AccordionItem({ id, title, children, isOpen, onToggle, onFirstOpen }) {
+  const [counted, setCounted] = useState(false);
+
+  const handleToggle = () => {
+    onToggle();
+    if (!isOpen && !counted) {
+      setCounted(true);
+      onFirstOpen?.(id);
+    }
+  };
+
   return (
     <div className="chap-accordion-item">
       <button
         className={`chap-accordion-header ${isOpen ? 'open' : ''}`}
-        onClick={onToggle}
+        onClick={handleToggle}
       >
         <span>{title}</span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>
@@ -75,6 +96,28 @@ function CircleProgress({ percent = 0, active = false }) {
         style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
       <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fontSize="7" fontWeight="bold" fill={active ? '#fff' : '#A50034'}>{percent}%</text>
     </svg>
+  );
+}
+
+/* ────────────────────────────────────────────
+   Lesson Progress Bar
+─────────────────────────────────────────────*/
+function LessonProgressBar({ percent }) {
+  return (
+    <div style={{ marginTop: 6, width: '100%' }}>
+      <div style={{
+        height: 6, borderRadius: 4, background: 'rgba(255,255,255,0.3)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%', borderRadius: 4, background: '#fff',
+          width: `${percent}%`, transition: 'width 0.4s ease',
+        }} />
+      </div>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', textAlign: 'right', marginTop: 2 }}>
+        {percent}%
+      </div>
+    </div>
   );
 }
 
@@ -253,6 +296,14 @@ function Chapter9() {
   const [activeSection, setActiveSection] = useState('keyboarding');
   const [openAccordion, setOpenAccordion] = useState(null);
 
+  /* ── Progress tracking hook ── */
+  const { lessonProgress, recordInteraction } = useProgressTracker(
+    MODULE_ID,
+    LESSON_CONFIGS
+  );
+
+  const kbPct = Math.round(lessonProgress?.keyboarding?.progress ?? 0);
+
   const toggle = (key) => setOpenAccordion(prev => prev === key ? null : key);
 
   return (
@@ -279,16 +330,22 @@ function Chapter9() {
         <div className="chap-left-col">
           <div className="chap-card-small">
             <div className="chap-nav-buttons">
-              {navItems.map(item => (
-                <button
-                  key={item.key}
-                  className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
-                  onClick={() => setActiveSection(item.key)}
-                >
-                  <CircleProgress percent={0} active={activeSection === item.key} />
-                  {item.label}
-                </button>
-              ))}
+              {navItems.map(item => {
+                const pct = item.key === 'keyboarding' ? kbPct : 0;
+                return (
+                  <button
+                    key={item.key}
+                    className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
+                    onClick={() => setActiveSection(item.key)}
+                  >
+                    <CircleProgress percent={pct} active={activeSection === item.key} />
+                    <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+                    {activeSection === item.key && (
+                      <LessonProgressBar percent={pct} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -322,41 +379,51 @@ function Chapter9() {
               <div className="chap-accordion" style={{ marginTop: 14 }}>
 
                 <AccordionItem
+                  id="s9-accordion-basic"
                   title="Basic Shortcut Keys"
                   isOpen={openAccordion === 'basic'}
                   onToggle={() => toggle('basic')}
+                  onFirstOpen={(id) => recordInteraction('keyboarding', id)}
                 >
                   <ShortcutTable rows={basicShortcuts} />
                 </AccordionItem>
 
                 <AccordionItem
+                  id="s9-accordion-word"
                   title="Word Shortcut Keys"
                   isOpen={openAccordion === 'word'}
                   onToggle={() => toggle('word')}
+                  onFirstOpen={(id) => recordInteraction('keyboarding', id)}
                 >
                   <ShortcutTable rows={wordShortcuts} />
                 </AccordionItem>
 
                 <AccordionItem
+                  id="s9-accordion-windows"
                   title="Microsoft Windows Shortcut Keys"
                   isOpen={openAccordion === 'windows'}
                   onToggle={() => toggle('windows')}
+                  onFirstOpen={(id) => recordInteraction('keyboarding', id)}
                 >
                   <ShortcutTable rows={windowsShortcuts} />
                 </AccordionItem>
 
                 <AccordionItem
+                  id="s9-accordion-winkey"
                   title="WinKey Shortcuts"
                   isOpen={openAccordion === 'winkey'}
                   onToggle={() => toggle('winkey')}
+                  onFirstOpen={(id) => recordInteraction('keyboarding', id)}
                 >
                   <ShortcutTable rows={winkeyShortcuts} />
                 </AccordionItem>
 
                 <AccordionItem
+                  id="s9-accordion-excel"
                   title="Excel Shortcut Keys"
                   isOpen={openAccordion === 'excel'}
                   onToggle={() => toggle('excel')}
+                  onFirstOpen={(id) => recordInteraction('keyboarding', id)}
                 >
                   <ShortcutTable rows={excelShortcuts} />
                 </AccordionItem>

@@ -563,22 +563,24 @@
 .ic-table-panel {
   flex: 1;
   background: #fff;
-  border: 1px solid #f0d0d5;
-  border-radius: 14px;
-  padding: 20px;
+  border: 1px solid #f5d6dc;
+  border-radius: 18px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(200,16,46,0.07);
+  box-shadow: 0 10px 30px rgba(200,16,46,0.08);
 }
 
-.ic-table-title { font-size: 18px; font-weight: bold; font-family: Arial, sans-serif; color: #222; }
-.ic-table-subtitle { font-size: 13px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 14px; }
+.ic-table-title { font-size: 20px; font-weight: 800; font-family: Arial, sans-serif; color: #222; letter-spacing: 0.3px; }
+.ic-table-subtitle { font-size: 13px; color: #8a8a8a; font-family: Arial, sans-serif; margin-bottom: 16px; }
 
+/* ── FIXED: equal column spacing ── */
 .ic-table-header {
   display: grid;
-  grid-template-columns: 2fr 1.4fr 1fr 1.6fr;
-  padding: 6px 8px;
+  grid-template-columns: 1.8fr 1.8fr 120px 160px 110px;
+  column-gap: 18px;
+  padding: 10px 8px 8px;
   font-size: 12px;
   font-weight: bold;
   color: #aaa;
@@ -592,19 +594,35 @@
 
 .ic-table-row {
   display: grid;
-  grid-template-columns: 2fr 1.4fr 1fr 1.6fr auto auto;
+  grid-template-columns: 1.8fr 1.8fr 120px 160px 110px;
+  column-gap: 18px;
   align-items: center;
-  padding: 12px 8px;
+  min-height: 64px;
+  padding: 10px 8px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
   border-bottom: 1px solid #fafafa;
-  gap: 8px;
 }
-.ic-table-row:hover { background: #fff5f7; }
-.ic-table-row.selected { background: #fdecea; }
 
-.ic-student-cell { display: flex; align-items: center; gap: 10px; }
+.ic-table-row:hover {
+  background: #fff5f7;
+}
+
+.ic-table-row.selected {
+  background: #fdecea;
+}
+
+.ic-student-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ic-student-text {
+  min-width: 0;
+}
 
 .ic-avatar {
   width: 38px; height: 38px; border-radius: 50%;
@@ -617,16 +635,25 @@
 .ic-student-id { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; }
 .ic-section-cell { font-size: 13px; font-family: Arial, sans-serif; color: #555; }
 
+.ic-email-cell { font-size: 13px; color: #666; }
+
 .ic-delete-btn { background: none; border: none; cursor: pointer; font-size: 17px; padding: 4px; opacity: 0.5; transition: opacity 0.2s; }
 .ic-delete-btn:hover { opacity: 1; }
 
-.ic-view-btn {
-  background: #fff; border: 1px solid #e0e0e0; border-radius: 16px;
-  padding: 5px 14px; font-size: 13px; font-family: Arial, sans-serif;
-  color: #555; cursor: pointer; white-space: nowrap;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+.ic-unenroll-btn {
+  background: #fde6ea;
+  border: 1px solid #f7c2cb;
+  color: #c8102e;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s, transform 0.2s;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 999px;
 }
-.ic-view-btn:hover { background: #c8102e; border-color: #c8102e; color: #fff; }
+.ic-unenroll-btn:hover { opacity: 0.85; transform: translateY(-1px); }
 
 .ic-profile-panel {
   width: 300px; flex-shrink: 0; background: #fff;

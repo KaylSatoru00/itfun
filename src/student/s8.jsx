@@ -12,15 +12,38 @@ import healthcareImg from '../assets/healthcare.jpg';
 
 import './s8.css';
 
+import { useProgressTracker } from '../hooks/useProgressTracker';
+
+/* ─────────────────────────────────────────────
+   Module / Lesson config for Chapter 8
+   lesson "applications" has 6 FlipCards
+──────────────────────────────────────────────*/
+const MODULE_ID = 'module8';
+const LESSON_CONFIGS = {
+  applications: { totalItems: 6 },
+};
+
 /* ────────────────────────────────────────────
    Flip Card — image front, text back
+   Calls onFirstFlip(id) once on first flip
 ─────────────────────────────────────────────*/
-function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', frontIcon = '🖥️' }) {
+function FlipCard({ id, frontImage, frontLabel, backText, backIcon = '💡', frontIcon = '🖥️', onFirstFlip }) {
   const [flipped, setFlipped] = useState(false);
+  const [counted, setCounted] = useState(false);
+
+  const handleClick = () => {
+    const next = !flipped;
+    setFlipped(next);
+    if (next && !counted) {
+      setCounted(true);
+      onFirstFlip?.(id);
+    }
+  };
+
   return (
     <div
       className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
-      onClick={() => setFlipped(f => !f)}
+      onClick={handleClick}
     >
       <div className="chap-flip-card-inner">
         <div className="chap-flip-card-front">
@@ -69,6 +92,28 @@ function CircleProgress({ percent = 0, active = false }) {
   );
 }
 
+/* ────────────────────────────────────────────
+   Lesson Progress Bar
+─────────────────────────────────────────────*/
+function LessonProgressBar({ percent }) {
+  return (
+    <div style={{ marginTop: 6, width: '100%' }}>
+      <div style={{
+        height: 6, borderRadius: 4, background: 'rgba(255,255,255,0.3)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          height: '100%', borderRadius: 4, background: '#fff',
+          width: `${percent}%`, transition: 'width 0.4s ease',
+        }} />
+      </div>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', textAlign: 'right', marginTop: 2 }}>
+        {percent}%
+      </div>
+    </div>
+  );
+}
+
 const navItems = [
   { key: 'applications', label: 'Application of Computers in Different Fields' },
 ];
@@ -79,6 +124,14 @@ const navItems = [
 function Chapter8() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('applications');
+
+  /* ── Progress tracking hook ── */
+  const { lessonProgress, recordInteraction } = useProgressTracker(
+    MODULE_ID,
+    LESSON_CONFIGS
+  );
+
+  const appPct = Math.round(lessonProgress?.applications?.progress ?? 0);
 
   return (
     <motion.div
@@ -103,16 +156,22 @@ function Chapter8() {
         {/* ── Left Nav ── */}
         <div className="chap-card-small">
           <div className="chap-nav-buttons">
-            {navItems.map(item => (
-              <button
-                key={item.key}
-                className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
-                onClick={() => setActiveSection(item.key)}
-              >
-                <CircleProgress percent={0} active={activeSection === item.key} />
-                {item.label}
-              </button>
-            ))}
+            {navItems.map(item => {
+              const pct = item.key === 'applications' ? appPct : 0;
+              return (
+                <button
+                  key={item.key}
+                  className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
+                  onClick={() => setActiveSection(item.key)}
+                >
+                  <CircleProgress percent={pct} active={activeSection === item.key} />
+                  <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+                  {activeSection === item.key && (
+                    <LessonProgressBar percent={pct} />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -133,10 +192,12 @@ function Chapter8() {
 
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
+                  id="s8-flip-business"
                   frontImage={businessImg}
                   frontLabel="In Business"
                   backIcon="💼"
                   backText="Computers are widely used in businesses to help manage daily operations and important records. Because computers are fast, accurate, and reliable, they have become an essential tool in business organizations."
+                  onFirstFlip={(id) => recordInteraction('applications', id)}
                 />
               </div>
 
@@ -168,10 +229,12 @@ function Chapter8() {
 
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
+                  id="s8-flip-banking"
                   frontImage={bankingImg}
                   frontLabel="In Banking"
                   backIcon="🏦"
-                  backText="Banks depend heavily on computers to manage customer accounts and process financial transactions quickly and accurately."
+                  backText="Banks depend heavily on computers to manage customer accounts and process financial transactions quickly and accurately. From ATM operations to online banking, computers are at the core of modern banking."
+                  onFirstFlip={(id) => recordInteraction('applications', id)}
                 />
               </div>
 
@@ -201,10 +264,12 @@ function Chapter8() {
 
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
+                  id="s8-flip-education"
                   frontImage={educationImg}
                   frontLabel="In Education"
                   backIcon="🎓"
                   backText="Computers have improved education by making learning more interactive and accessible. They are used for teaching, learning, testing, and managing student records — also known as Computer-Based Education (CBE)."
+                  onFirstFlip={(id) => recordInteraction('applications', id)}
                 />
               </div>
 
@@ -236,10 +301,12 @@ function Chapter8() {
 
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
+                  id="s8-flip-marketing"
                   frontImage={marketingImg}
                   frontLabel="In Marketing"
                   backIcon="📢"
                   backText="In marketing, computers are used to create advertisements, manage campaigns, and enable home shopping through computerized catalogues that let customers browse products and place orders directly."
+                  onFirstFlip={(id) => recordInteraction('applications', id)}
                 />
               </div>
 
@@ -266,10 +333,12 @@ function Chapter8() {
 
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
+                  id="s8-flip-military"
                   frontImage={militaryImg}
                   frontLabel="In Military"
                   backIcon="🪖"
                   backText="Computers are largely used in defence. Modern tanks, missiles, and weapons employ computerised control systems for precision and coordination."
+                  onFirstFlip={(id) => recordInteraction('applications', id)}
                 />
               </div>
 
@@ -295,10 +364,12 @@ function Chapter8() {
 
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
+                  id="s8-flip-healthcare"
                   frontImage={healthcareImg}
                   frontLabel="In Healthcare"
                   backIcon="🏥"
                   backText="Computers have become an important part in hospitals, labs, and dispensaries — used to keep records of patients and medicines, and in scanning and diagnosing different diseases."
+                  onFirstFlip={(id) => recordInteraction('applications', id)}
                 />
               </div>
 
@@ -338,6 +409,3 @@ function Chapter8() {
 }
 
 export default Chapter8;
-
-
-

@@ -1,7 +1,8 @@
 // s5.jsx — Types of Software (System, Application and Operating System)
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useProgressTracker } from '../hooks/useProgressTracker';
 
 // ── Assets ──
 import softwareImg      from '../assets/software.jpg';
@@ -18,15 +19,32 @@ import osImg            from '../assets/os.jpg';
 
 import './s5.css';
 
+/* ─────────────────────────────────────────────
+   Module / Lesson config for Chapter 5
+   Tracked items: 2 FlipCards + 2 sys accordions + 1 OS flipcard + 1 table dropdown = 6
+──────────────────────────────────────────────*/
+const MODULE_ID = 'module5';
+const TOTAL_ITEMS = 6;
+
 /* ────────────────────────────────────────────
-   Accordion — supports JSX or string as body
+   Accordion — calls trackInteraction(id) once on first open
 ─────────────────────────────────────────────*/
-function AccordionItem({ title, children, isOpen, onToggle }) {
+function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }) {
+  const [counted, setCounted] = useState(false);
+
+  const handleToggle = useCallback(() => {
+    if (!isOpen && !counted) {
+      setCounted(true);
+      onInteract?.(itemId);
+    }
+    onToggle();
+  }, [isOpen, counted, onToggle, onInteract, itemId]);
+
   return (
     <div className="chap-accordion-item">
       <button
         className={`chap-accordion-header ${isOpen ? 'open' : ''}`}
-        onClick={onToggle}
+        onClick={handleToggle}
       >
         <span>{title}</span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>
@@ -51,14 +69,25 @@ function AccordionItem({ title, children, isOpen, onToggle }) {
 }
 
 /* ────────────────────────────────────────────
-   Flip Card — image front, text back
+   Flip Card — calls onInteract(id) once on first flip
 ─────────────────────────────────────────────*/
-function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡' }) {
+function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
+  const [counted, setCounted] = useState(false);
+
+  const handleClick = useCallback(() => {
+    const next = !flipped;
+    setFlipped(next);
+    if (next && !counted) {
+      setCounted(true);
+      onInteract?.(itemId);
+    }
+  }, [flipped, counted, onInteract, itemId]);
+
   return (
     <div
       className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
-      onClick={() => setFlipped(f => !f)}
+      onClick={handleClick}
     >
       <div className="chap-flip-card-inner">
         <div className="chap-flip-card-front">
@@ -108,6 +137,23 @@ function CircleProgress({ percent = 0, active = false }) {
 }
 
 /* ────────────────────────────────────────────
+   Linear Progress Bar
+─────────────────────────────────────────────*/
+function LinearProgressBar({ percent = 0 }) {
+  return (
+    <div style={{ marginTop: 4, height: 5, borderRadius: 4, background: '#f0d0d5', overflow: 'hidden' }}>
+      <div style={{
+        height: '100%',
+        width: `${percent}%`,
+        background: 'linear-gradient(90deg, #A50034, #c8102e)',
+        borderRadius: 4,
+        transition: 'width 0.4s ease',
+      }} />
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
    Nav items
 ─────────────────────────────────────────────*/
 const navItems = [
@@ -121,13 +167,18 @@ function Chapter5() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('software');
 
-  // Accordion / dropdown state
-  const [sysFuncOpen,   setSysFuncOpen]   = useState(false);
-  const [sysExOpen,     setSysExOpen]     = useState(false);
-  const [appExOpen,     setAppExOpen]     = useState(false);
-  const [tableOpen,     setTableOpen]     = useState(false);
+  // Single lesson tracker
+  const tracker = useProgressTracker(MODULE_ID, 'software', TOTAL_ITEMS);
 
-  const progress = { software: 0 };
+  const progress = {
+    software: Math.round(tracker.progress),
+  };
+
+  // Accordion / dropdown open state
+  const [sysFuncOpen, setSysFuncOpen] = useState(false);
+  const [sysExOpen,   setSysExOpen]   = useState(false);
+  const [tableOpen,   setTableOpen]   = useState(false);
+  const [tableCounted, setTableCounted] = useState(false);
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
@@ -140,63 +191,34 @@ function Chapter5() {
 
   /* ── Comparison table rows ── */
   const compareRows = [
-    {
-      feature: 'Definition',
-      system: 'Software that controls and manages computer hardware.',
-      os: 'The main system software that manages the entire computer.',
-      app: 'Software designed to help users perform specific tasks.',
-    },
-    {
-      feature: 'Purpose',
-      system: 'Makes the computer work properly.',
-      os: 'Acts as a bridge between hardware, software, and users.',
-      app: 'Helps users accomplish tasks.',
-    },
-    {
-      feature: 'User Interaction',
-      system: 'Usually works in the background.',
-      os: 'Users interact with it when using the computer.',
-      app: 'Users directly use it.',
-    },
-    {
-      feature: 'Necessity',
-      system: 'Required for the computer to function.',
-      os: 'Required for the computer to operate.',
-      app: 'Optional, depending on the user\'s needs.',
-    },
-    {
-      feature: 'Runs First?',
-      system: 'Yes',
-      os: 'Yes, it loads when the computer starts.',
-      app: 'No, it runs after the operating system loads.',
-    },
-    {
-      feature: 'Examples',
-      system: 'Operating Systems, Device Drivers, Utility Programs, Antivirus Software',
-      os: 'Windows, macOS, Linux, Android, iOS',
-      app: 'Microsoft Word, Excel, PowerPoint, Chrome, VLC, Games',
-    },
+    { feature: 'Definition',       system: 'Software that controls and manages computer hardware.',         os: 'The main system software that manages the entire computer.',             app: 'Software designed to help users perform specific tasks.' },
+    { feature: 'Purpose',          system: 'Makes the computer work properly.',                             os: 'Acts as a bridge between hardware, software, and users.',                 app: 'Helps users accomplish tasks.' },
+    { feature: 'User Interaction', system: 'Usually works in the background.',                              os: 'Users interact with it when using the computer.',                         app: 'Users directly use it.' },
+    { feature: 'Necessity',        system: 'Required for the computer to function.',                        os: 'Required for the computer to operate.',                                   app: "Optional, depending on the user's needs." },
+    { feature: 'Runs First?',      system: 'Yes',                                                           os: 'Yes, it loads when the computer starts.',                                 app: 'No, it runs after the operating system loads.' },
+    { feature: 'Examples',         system: 'Operating Systems, Device Drivers, Utility Programs, Antivirus Software', os: 'Windows, macOS, Linux, Android, iOS',                        app: 'Microsoft Word, Excel, PowerPoint, Chrome, VLC, Games' },
   ];
 
   /* ── Software examples ── */
   const softwareExamples = [
-    { label: 'Microsoft Word',    img: wordImg },
-    { label: 'Microsoft Excel',   img: excelImg },
-    { label: 'PowerPoint',        img: powerpointImg },
-    { label: 'Google Chrome',     img: chromeImg },
-    { label: 'VLC Media Player',  img: vlcImg },
-    { label: 'Mobile Apps',       img: appsImg },
-    { label: 'Computer Games',    img: computerImg },
+    { label: 'Microsoft Word',   img: wordImg },
+    { label: 'Microsoft Excel',  img: excelImg },
+    { label: 'PowerPoint',       img: powerpointImg },
+    { label: 'Google Chrome',    img: chromeImg },
+    { label: 'VLC Media Player', img: vlcImg },
+    { label: 'Mobile Apps',      img: appsImg },
+    { label: 'Computer Games',   img: computerImg },
   ];
 
-  /* ── App software examples ── */
-  const appSoftwareExamples = [
-    { label: 'Microsoft Word',    img: wordImg },
-    { label: 'Microsoft Excel',   img: excelImg },
-    { label: 'Microsoft PowerPoint', img: powerpointImg },
-    { label: 'VLC Media Player',  img: vlcImg },
-    { label: 'Google Chrome',     img: chromeImg },
-  ];
+  /* ── Table dropdown — count only on first open ── */
+  const handleTableToggle = useCallback(() => {
+    const next = !tableOpen;
+    setTableOpen(next);
+    if (next && !tableCounted) {
+      setTableCounted(true);
+      tracker.trackInteraction('s5-dropdown-toggle');
+    }
+  }, [tableOpen, tableCounted, tracker]);
 
   return (
     <motion.div
@@ -239,11 +261,16 @@ function Chapter5() {
         {/* ── Main Right Card ── */}
         <div className="chap-card-main">
 
-          {/* ══════════════════════════════════════════
-              BUTTON 1 — Types of Software
-          ══════════════════════════════════════════ */}
           {activeSection === 'software' && (
             <>
+              {/* Progress bar */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 2 }}>
+                  <span>Lesson Progress</span>
+                  <span>{progress.software}%</span>
+                </div>
+                <LinearProgressBar percent={progress.software} />
+              </div>
 
               {/* ── Title ── */}
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
@@ -280,7 +307,6 @@ function Chapter5() {
                 ))}
               </div>
 
-              {/* ── Divider ── */}
               <div className="s2-section-divider" />
 
               {/* ── Types of Software ── */}
@@ -296,21 +322,23 @@ function Chapter5() {
                 </ul>
               </div>
 
-              {/* ── System Software flip card ── */}
+              {/* ── Two flip cards ── */}
               <div className="s5-flip-row" style={{ marginTop: 20 }}>
                 <FlipCard
                   frontImage={systemImg}
                   frontLabel="System Software"
                   backIcon="⚙️"
                   backText="System software is the software that manages and controls the computer's hardware. It helps the computer run properly and provides a platform for other software to work. It serves as the interface between the computer hardware and the user."
+                  itemId="s5-fc-system"
+                  onInteract={tracker.trackInteraction}
                 />
-
-                {/* ── Application Software flip card ── */}
                 <FlipCard
                   frontImage={appSoftwareImg}
                   frontLabel="Application Software"
                   backIcon="📱"
                   backText="Application software consists of programs developed to help users perform specific tasks or solve particular problems. These programs run on top of the operating system and directly assist the user in completing work."
+                  itemId="s5-fc-app"
+                  onInteract={tracker.trackInteraction}
                 />
               </div>
 
@@ -325,6 +353,8 @@ function Chapter5() {
                   title="Functions of System Software"
                   isOpen={sysFuncOpen}
                   onToggle={() => setSysFuncOpen(o => !o)}
+                  itemId="s5-accordion-sys-func"
+                  onInteract={tracker.trackInteraction}
                 >
                   <ul className="s3-bullet-list" style={{ margin: 0 }}>
                     <li>Starts the computer</li>
@@ -335,11 +365,12 @@ function Chapter5() {
                   </ul>
                 </AccordionItem>
 
-                {/* Examples accordion */}
                 <AccordionItem
                   title="Examples of System Software"
                   isOpen={sysExOpen}
                   onToggle={() => setSysExOpen(o => !o)}
+                  itemId="s5-accordion-sys-ex"
+                  onInteract={tracker.trackInteraction}
                 >
                   <ul className="s3-bullet-list" style={{ margin: 0 }}>
                     <li>Operating Systems (Windows, macOS, Android, iOS)</li>
@@ -360,7 +391,6 @@ function Chapter5() {
                 </p>
               </div>
 
-              {/* ── Divider ── */}
               <div className="s2-section-divider" />
 
               {/* ── Application Software detail ── */}
@@ -383,34 +413,25 @@ function Chapter5() {
                 </ul>
               </div>
 
-              {/* App software examples accordion */}
-              <div className="chap-accordion" style={{ marginTop: 12 }}>
-                <AccordionItem
-                  title="Examples of Application Software"
-                  isOpen={appExOpen}
-                  onToggle={() => setAppExOpen(o => !o)}
-                >
-                  <div className="s5-app-examples">
-                    {appSoftwareExamples.map(({ label, img }) => (
-                      <div className="s5-example-card" key={label}>
-                        <img src={img} alt={label} className="s5-example-img" />
-                        <span className="s5-example-label">{label}</span>
-                      </div>
-                    ))}
-                    {/* Text-only examples */}
-                    {['Spotify', 'Brave', 'Mozilla Firefox'].map(name => (
-                      <div className="s5-example-card" key={name}>
-                        <span style={{ fontSize: 36 }}>
-                          {name === 'Spotify' ? '🎵' : name === 'Brave' ? '🦁' : '🦊'}
-                        </span>
-                        <span className="s5-example-label">{name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionItem>
+              {/* Application Software Examples - Displayed directly */}
+              <div className="s2-body-block" style={{ marginTop: 12 }}>
+                <p className="s2-body-text" style={{ fontWeight: 'bold' }}>Examples of Application Software:</p>
+                <div className="s5-app-examples">
+                  {[
+                    { label: 'Microsoft Word', img: wordImg },
+                    { label: 'Microsoft Excel', img: excelImg },
+                    { label: 'Microsoft PowerPoint', img: powerpointImg },
+                    { label: 'VLC Media Player', img: vlcImg },
+                    { label: 'Google Chrome', img: chromeImg },
+                  ].map(({ label, img }) => (
+                    <div className="s5-example-card" key={label}>
+                      <img src={img} alt={label} className="s5-example-img" />
+                      <span className="s5-example-label">{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* ── Divider ── */}
               <div className="s2-section-divider" />
 
               {/* ── Operating System ── */}
@@ -418,13 +439,14 @@ function Chapter5() {
                 <h3 className="chap-section-main-title" style={{ fontSize: 18 }}>Operating System</h3>
               </div>
 
-              {/* OS flip card */}
               <div className="s3-flipcard-single" style={{ marginTop: 12 }}>
                 <FlipCard
                   frontImage={osImg}
                   frontLabel="Operating System"
                   backIcon="🖥️"
                   backText="An Operating System (OS) is the most important type of system software. It acts as a bridge between the user, software, and hardware. The operating system is the boss of the computer — it controls everything and makes sure all programs and hardware work together."
+                  itemId="s5-fc-os"
+                  onInteract={tracker.trackInteraction}
                 />
               </div>
 
@@ -444,13 +466,12 @@ function Chapter5() {
                 </div>
               </div>
 
-              {/* ── Divider ── */}
               <div className="s2-section-divider" />
 
-              {/* ── Comparison Table (dropdown) ── */}
+              {/* ── Comparison Table (custom dropdown with tracking) ── */}
               <button
                 className={`s5-dropdown-toggle ${tableOpen ? 'open' : ''}`}
-                onClick={() => setTableOpen(o => !o)}
+                onClick={handleTableToggle}
               >
                 <span>📊 Comparison: System Software vs Operating System vs Application Software</span>
                 <span>{tableOpen ? '∧' : '∨'}</span>
@@ -495,32 +516,16 @@ function Chapter5() {
                         Imagine a computer as a school:
                       </p>
                       <ul className="s5-reallife-list">
-                        <li>
-                          <span className="s5-rl-icon">🏫</span>
-                          <span><strong>Hardware</strong> = The school building and equipment.</span>
-                        </li>
-                        <li>
-                          <span className="s5-rl-icon">🏢</span>
-                          <span><strong>Operating System</strong> = The school administration that manages everything.</span>
-                        </li>
-                        <li>
-                          <span className="s5-rl-icon">👷</span>
-                          <span><strong>System Software</strong> = The staff who keep the school running.</span>
-                        </li>
-                        <li>
-                          <span className="s5-rl-icon">📚</span>
-                          <span><strong>Application Software</strong> = The classrooms and activities where students perform tasks.</span>
-                        </li>
-                        <li>
-                          <span className="s5-rl-icon">🧑‍🎓</span>
-                          <span><strong>User</strong> = The student using the school's resources.</span>
-                        </li>
+                        <li><span className="s5-rl-icon">🏫</span><span><strong>Hardware</strong> = The school building and equipment.</span></li>
+                        <li><span className="s5-rl-icon">🏢</span><span><strong>Operating System</strong> = The school administration that manages everything.</span></li>
+                        <li><span className="s5-rl-icon">👷</span><span><strong>System Software</strong> = The staff who keep the school running.</span></li>
+                        <li><span className="s5-rl-icon">📚</span><span><strong>Application Software</strong> = The classrooms and activities where students perform tasks.</span></li>
+                        <li><span className="s5-rl-icon">🧑‍🎓</span><span><strong>User</strong> = The student using the school's resources.</span></li>
                       </ul>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-
             </>
           )}
 
@@ -531,6 +536,3 @@ function Chapter5() {
 }
 
 export default Chapter5;
-
-
-

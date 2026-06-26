@@ -1,4 +1,3 @@
-/* student_modules.css — RESPONSIVE VERSION */
 .lm-panel {
   width: 100vw;
   height: 100vh;
@@ -178,17 +177,66 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.sub-panel-1:hover,
-.sub-panel-2:hover,
-.sub-panel-3:hover,
-.sub-panel-4:hover,
-.sub-panel-5:hover,
-.sub-panel-6:hover,
-.sub-panel-7:hover,
-.sub-panel-8:hover,
-.sub-panel-9:hover {
+.sub-panel-1:hover:not(.locked),
+.sub-panel-2:hover:not(.locked),
+.sub-panel-3:hover:not(.locked),
+.sub-panel-4:hover:not(.locked),
+.sub-panel-5:hover:not(.locked),
+.sub-panel-6:hover:not(.locked),
+.sub-panel-7:hover:not(.locked),
+.sub-panel-8:hover:not(.locked),
+.sub-panel-9:hover:not(.locked) {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ── LOCKED MODULE STYLES - BRIGHTER GRAY/DIM WHITE ── */
+.sub-panel-1.locked,
+.sub-panel-2.locked,
+.sub-panel-3.locked,
+.sub-panel-4.locked,
+.sub-panel-5.locked,
+.sub-panel-6.locked,
+.sub-panel-7.locked,
+.sub-panel-8.locked,
+.sub-panel-9.locked {
+  filter: grayscale(40%) brightness(0.5);
+  opacity: 8;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sub-panel-1.locked .panel-title,
+.sub-panel-2.locked .panel-title,
+.sub-panel-3.locked .panel-title,
+.sub-panel-4.locked .panel-title,
+.sub-panel-5.locked .panel-title,
+.sub-panel-6.locked .panel-title,
+.sub-panel-7.locked .panel-title,
+.sub-panel-8.locked .panel-title,
+.sub-panel-9.locked .panel-title {
+  opacity: 0.9;
+}
+
+/* ── LOCK OVERLAY - STATIC LOCK ICON ── */
+.lock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.lock-icon {
+  font-size: 40px;
+  opacity: 9;
+  text-shadow: 0 2px 8px rgba(109, 86, 86, 0.2);
+  /* Static - no animation */
 }
 
 .panel-content {
@@ -196,6 +244,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .panel-title {
@@ -208,6 +257,7 @@
   font-family: Arial, sans-serif;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   text-align: center;
+  z-index: 1;
 }
 
 .panel-image-wrapper {
@@ -509,6 +559,10 @@
   .top-btn { padding: 6px 12px; font-size: 12px; }
   .bottom-nav-label { font-size: 11px; letter-spacing: 0.5px; }
   .bottom-nav-icon { font-size: 18px; }
+  
+  .lock-icon {
+    font-size: 36px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -536,4 +590,8 @@
   .avatar-trigger { top: 70px; right: 10px; }
   .sidebar { width: 150px; top: 110px; right: 8px; }
   .sidebar-avatar { width: 52px; height: 52px; font-size: 18px; }
+  
+  .lock-icon {
+    font-size: 30px;
+  }
 }
