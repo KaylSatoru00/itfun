@@ -1,10 +1,10 @@
-// student_modules.jsx
+// student_modules.jsx - Add this useEffect for route protection
 import { useState, useEffect } from 'react';
 import './student_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { db } from '../firebase';
 import {
@@ -40,8 +40,6 @@ function toPascalCase(str = '') {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-
-
 /* ════════════════════════════════════════════
    Main Component
 ═════════════════════════════════════════════*/
@@ -69,6 +67,7 @@ function LearningModules() {
   const [progressLoading, setProgressLoading] = useState(true);
 
   const navigate  = useNavigate();
+  const location  = useLocation();
   const { user }  = useUser();
   const initials  = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
 
@@ -145,9 +144,32 @@ function LearningModules() {
   /* ── Navigation guard: only allow access if unlocked ── */
   const handleModuleClick = (module) => {
     const state = moduleStates[module.id];
-    if (!state?.unlocked) return; // silently block locked modules
+    if (!state?.unlocked) {
+      // Show a toast or alert message
+      alert(`Please complete all lessons in the previous module to unlock "${module.label}".`);
+      return;
+    }
     navigate(module.route);
   };
+
+  /* ── Route Protection: Prevent direct URL access to locked modules ── */
+  useEffect(() => {
+    // Check if the current path is a student chapter route
+    const path = location.pathname;
+    const chapterMatch = path.match(/\/student-chapter-(\d+)/);
+    
+    if (chapterMatch) {
+      const chapterNum = parseInt(chapterMatch[1]);
+      const moduleId = `module${chapterNum}`;
+      const state = moduleStates[moduleId];
+      
+      // If the module is locked, redirect back to learning modules
+      if (state && !state.unlocked) {
+        alert(`Module ${chapterNum} is locked. Please complete all lessons in Module ${chapterNum - 1} first.`);
+        navigate('/learning-modules');
+      }
+    }
+  }, [location.pathname, moduleStates, navigate]);
 
   /* ── Join Course handlers ── */
   const handleCloseModal = () => {
@@ -282,10 +304,44 @@ function LearningModules() {
                   filter: locked ? 'grayscale(100%) brightness(0.5)' : 'none',
                   transition: 'filter 0.3s ease',
                   userSelect: 'none',
+                  position: 'relative',
                 }}
               >
+                {/* ── Lock overlay ── */}
+                {locked && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.4)',
+                    borderRadius: '12px',
+                    zIndex: 2,
+                    pointerEvents: 'none',
+                  }}>
+                    <span style={{
+                      fontSize: '48px',
+                      color: 'white',
+                      textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                    }}>🔒</span>
+                  </div>
+                )}
+                
                 <div className="panel-content">
-                  <h3 className="panel-title">{module.label}</h3>
+                  <h3 className="panel-title">
+                    {module.label}
+                    {!locked && state.completed && (
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '14px',
+                        color: '#2e7d32',
+                      }}>✅</span>
+                    )}
+                  </h3>
                   <div className="panel-image-wrapper">
                     <img src={module.img} alt={`Module ${module.num}`} className="panel-image" />
                   </div>

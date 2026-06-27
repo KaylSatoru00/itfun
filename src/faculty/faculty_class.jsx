@@ -45,46 +45,45 @@ const MODULE_DEFINITIONS = {
     lessons: ['lesson1', 'lesson2', 'lesson3', 'lesson4'],
     totalLessons: 4,
   },
-  // Modules 3-9 will be added later
   module3: {
     displayName: 'Number System & Conversions',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['lesson1', 'lesson2'],
+    totalLessons: 2,
   },
   module4: {
     displayName: 'Hardware Components, Input and Output Devices & Basic PC-Building',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['parts', 'iodevices'],
+    totalLessons: 2,
   },
   module5: {
     displayName: 'Types of Software',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['software'],
+    totalLessons: 1,
   },
   module6: {
     displayName: 'Networking Fundamentals',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['characteristics', 'internet', 'areas'],
+    totalLessons: 3,
   },
   module7: {
     displayName: 'Microsoft Office Applications',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['intro', 'powerpoint', 'word', 'excel'],
+    totalLessons: 4,
   },
   module8: {
     displayName: 'Application of Computers in Different Fields',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['applications'],
+    totalLessons: 1,
   },
   module9: {
     displayName: 'Keyboarding',
-    lessons: [],
-    totalLessons: 0,
+    lessons: ['keyboarding'],
+    totalLessons: 1,
   },
 };
 
-// ── For display, only modules 1 and 2 have lessons defined ──
-const VISIBLE_MODULES = ['module1', 'module2'];
+// ── For display, show all modules 1-9 ──
+const VISIBLE_MODULES = ['module1', 'module2', 'module3', 'module4', 'module5', 'module6', 'module7', 'module8', 'module9'];
 
 function getInitials(name) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -104,6 +103,19 @@ function formatName(s) {
   const lastName = parts[parts.length - 1];
   const firstName = parts.slice(0, -1).join(' ');
   return `${lastName}, ${firstName}`;
+}
+
+// ── Helper function to extract last name for sorting ──
+function getLastNameForSorting(student) {
+  if (student.studentLastName) {
+    return student.studentLastName.toLowerCase();
+  }
+  // If no separate last name field, try to extract from studentName
+  const name = student.studentName || '';
+  const parts = name.trim().split(' ');
+  if (parts.length === 1) return name.toLowerCase();
+  // Assume last part is the last name
+  return parts[parts.length - 1].toLowerCase();
 }
 
 function DonutChart({ percent, size = 100, strokeWidth = 10 }) {
@@ -191,7 +203,13 @@ function FacultyClass() {
     const q = query(collection(db, 'enrollments'), where('classId', '==', activeClass.firestoreId));
     const unsub = onSnapshot(q, (snap) => {
       const students = snap.docs.map(d => ({ enrollmentDocId: d.id, ...d.data() }));
-      setEnrolledStudents(students);
+      // ── Sort students alphabetically by last name ──
+      const sortedStudents = students.sort((a, b) => {
+        const lastNameA = getLastNameForSorting(a);
+        const lastNameB = getLastNameForSorting(b);
+        return lastNameA.localeCompare(lastNameB);
+      });
+      setEnrolledStudents(sortedStudents);
       setLoadingStudents(false);
     });
     return () => unsub();
@@ -306,9 +324,20 @@ function FacultyClass() {
     setConfirmRemoveStudentId(null);
   };
 
-  const filteredStudents = enrolledStudents.filter(s =>
-    s.studentName.toLowerCase().includes(studentSearch.toLowerCase())
-  );
+  // ── Filter and sort students for display ──
+  const getFilteredAndSortedStudents = () => {
+    const filtered = enrolledStudents.filter(s =>
+      s.studentName.toLowerCase().includes(studentSearch.toLowerCase())
+    );
+    // Sort filtered results by last name
+    return filtered.sort((a, b) => {
+      const lastNameA = getLastNameForSorting(a);
+      const lastNameB = getLastNameForSorting(b);
+      return lastNameA.localeCompare(lastNameB);
+    });
+  };
+
+  const filteredStudents = getFilteredAndSortedStudents();
 
   function avatarColor(uid = '') {
     let hash = 0;
