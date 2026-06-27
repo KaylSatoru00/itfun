@@ -14,10 +14,18 @@
   font-size: clamp(22px, 4vw, 36px);
   font-weight: bold;
   color: #1a1a1a;
-  margin: 0 0 32px 0;
+  margin: 0 0 8px 0;
   font-family: Arial, sans-serif;
   letter-spacing: 0.5px;
   text-align: center;
+}
+
+.sm-subtitle {
+  font-size: 16px;
+  color: #888;
+  text-align: center;
+  margin: 0 0 32px 0;
+  font-family: Arial, sans-serif;
 }
 
 /* 2-column grid */
@@ -140,6 +148,26 @@
 .sm-btn-disabled:hover {
   background: #A50034;
   transform: none;
+}
+
+/* ─── Locked Module Styles ─── */
+.sm-card-locked {
+  opacity: 0.7;
+  filter: grayscale(0.5) brightness(0.8);
+  cursor: not-allowed;
+}
+
+.sm-card-locked .sm-card-img {
+  filter: brightness(0.7);
+}
+
+.sm-card-locked .sm-card-label {
+  color: #ccc;
+}
+
+.sm-card-locked:hover {
+  box-shadow: none;
+  transform: none !important;
 }
 
 /* ─── Responsive: Laptop (≤ 1024px) ─── */

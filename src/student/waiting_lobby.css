@@ -1,0 +1,244 @@
+/* waiting_lobby.css */
+
+.waiting-lobby-panel {
+  min-height: 100vh;
+  background: #f5e6e8;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ── */
+.lobby-topbar {
+  width: 100%;
+  background: #A50034;
+  padding: 14px 0;
+  text-align: center;
+}
+
+.lobby-brand {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* ── Main layout: sidebar + right area ── */
+.waiting-lobby-content {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  padding: 30px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Left sidebar ── */
+.lobby-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #A50034;
+  border-radius: 16px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  color: #fff;
+}
+
+.pin-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pin-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #ffcdd2;
+  text-transform: uppercase;
+}
+
+.pin-code {
+  font-size: 36px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 4px;
+}
+
+.copy-btn {
+  margin-top: 6px;
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ── Module card inside sidebar ── */
+.module-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.module-card-img {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.module-card-text {
+  font-size: 12px;
+  color: #333;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ── Right main area ── */
+.lobby-main {
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  margin-left: 20px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.waiting-text {
+  font-size: 18px;
+  color: #555;
+  font-weight: 500;
+  margin-bottom: 28px;
+}
+
+/* ── Player avatars grid ── */
+.players-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  flex: 1;
+  align-content: flex-start;
+  width: 100%;
+}
+
+.player-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #333;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.player-avatar-name {
+  font-size: 11px;
+  color: #555;
+  text-align: center;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Actions ── */
+.lobby-actions {
+  margin-top: auto;
+  padding-top: 24px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.start-quiz-btn {
+  padding: 13px 40px;
+  background: #A50034;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.start-quiz-btn:hover:not(:disabled) {
+  background: #c8102e;
+  transform: translateY(-1px);
+}
+
+.start-quiz-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.host-waiting-text {
+  font-size: 15px;
+  color: #888;
+  font-style: italic;
+}
+
+.leave-btn {
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.leave-btn:hover {
+  color: #A50034;
+}
+
+/* ── Error state ── */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+.error-icon { font-size: 48px; }
+.error-text { font-size: 18px; color: #c8102e; }
+
+.back-btn {
+  padding: 10px 28px;
+  background: #A50034;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+}

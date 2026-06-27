@@ -14,10 +14,18 @@
   font-size: clamp(20px, 3.5vw, 28px);
   font-weight: bold;
   color: #1a1a1a;
-  margin: 0 0 28px 0;
+  margin: 0 0 8px 0;
   font-family: Arial, sans-serif;
   letter-spacing: 0.5px;
   text-align: center;
+}
+
+.st-subtitle {
+  font-size: 16px;
+  color: #888;
+  text-align: center;
+  margin: 0 0 28px 0;
+  font-family: Arial, sans-serif;
 }
 
 /* 1-column grid */
@@ -95,6 +103,20 @@
   font-size: 15px;
   font-weight: bold;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Error message */
+.st-error {
+  color: #c8102e;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  margin: 10px 0 0 0;
+  text-align: center;
+  background: #fde8e8;
+  padding: 10px 20px;
+  border-radius: 8px;
+  max-width: 460px;
+  width: 100%;
 }
 
 /* Bottom nav */
@@ -245,6 +267,11 @@
     font-size: 12px;
     top: -7px;
     right: -7px;
+  }
+
+  .st-error {
+    font-size: 12px;
+    padding: 8px 14px;
   }
 
   .st-bottom {

@@ -1,9 +1,9 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import './index.css'
 import { UserProvider } from './user_context'
+import { SocketProvider } from './socket_context'
 import Gamified1 from './student/gamified1.jsx'
 import Gamified9 from './student/gamified9.jsx'
 
@@ -17,6 +17,9 @@ import LearningModules from './student/student_modules.jsx'
 import PvpQuiz from './student/pvp_quiz.jsx'
 import SelectModule from './student/select_module.jsx'
 import SelectType from './student/select_type.jsx'
+import WaitingLobby from './student/waiting_lobby_host.jsx'
+import WaitingLobbyJoin from './student/waiting_lobby_join.jsx'
+import QuizArena from './student/quiz_arena.jsx'
 import Chapter1 from './student/s1.jsx'
 import Chapter2 from './student/s2.jsx'
 import Chapter3 from './student/s3.jsx'
@@ -54,6 +57,9 @@ function AnimatedRoutes() {
         <Route path="/pvp-quiz" element={<PvpQuiz />} />
         <Route path="/select-module" element={<SelectModule />} />
         <Route path="/select-type" element={<SelectType />} />
+        <Route path="/waiting-lobby" element={<WaitingLobby />} />
+        <Route path="/waiting-lobby-join" element={<WaitingLobbyJoin />} />
+        <Route path="/quiz-arena" element={<QuizArena />} />
         <Route path="/student-chapter-1" element={<Chapter1 />} />
         <Route path="/student-chapter-2" element={<Chapter2 />} />
         <Route path="/student-chapter-3" element={<Chapter3 />} />
@@ -80,11 +86,11 @@ function AnimatedRoutes() {
 }
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <BrowserRouter>
-      <UserProvider>
+  <BrowserRouter>
+    <UserProvider>
+      <SocketProvider>
         <AnimatedRoutes />
-      </UserProvider>
-    </BrowserRouter>
-  </StrictMode>,
+      </SocketProvider>
+    </UserProvider>
+  </BrowserRouter>,
 )

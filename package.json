@@ -7,12 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node --experimental-specifier-resolution=node backend/server.js",
+    "server:dev": "node --watch --experimental-specifier-resolution=node backend/server.js",
+    "dev:full": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
+    "@google/genai": "^2.10.0",
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^5.2.1",
     "firebase": "^12.14.0",
     "framer-motion": "^12.39.0",
+    "openai": "^6.45.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-icons": "^5.6.0",
@@ -25,13 +33,15 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^8.2.2",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "nodemon": "^3.0.1",
     "vite": "^8.0.10"
   },
-  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "description": "IT Fundamentals Learning Platform with PVP Quiz Arena",
   "main": "eslint.config.js",
   "repository": {
     "type": "git",
