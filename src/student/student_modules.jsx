@@ -1,4 +1,4 @@
-// student_modules.jsx - Add this useEffect for route protection
+// student_modules.jsx
 import { useState, useEffect } from 'react';
 import './student_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -332,16 +332,7 @@ function LearningModules() {
                 )}
                 
                 <div className="panel-content">
-                  <h3 className="panel-title">
-                    {module.label}
-                    {!locked && state.completed && (
-                      <span style={{
-                        marginLeft: '8px',
-                        fontSize: '14px',
-                        color: '#2e7d32',
-                      }}>✅</span>
-                    )}
-                  </h3>
+                  <h3 className="panel-title">{module.label}</h3>
                   <div className="panel-image-wrapper">
                     <img src={module.img} alt={`Module ${module.num}`} className="panel-image" />
                   </div>
