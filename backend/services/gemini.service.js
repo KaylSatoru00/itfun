@@ -1,5 +1,4 @@
 // backend/services/gemini.service.js
-import { GoogleGenAI } from '@google/genai';
 
 function getGeminiService() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -8,22 +7,40 @@ function getGeminiService() {
     throw new Error('GEMINI_API_KEY is not set in your .env file.');
   }
 
-  console.log('✅ Gemini API key loaded, length:', apiKey.length);
-
-  const ai = new GoogleGenAI({ apiKey });
+  console.log('✅ Groq API key loaded, length:', apiKey.length);
 
   return {
     async generateQuestions(prompt) {
       try {
-        console.log('📤 Sending prompt to Gemini...');
+        console.log('📤 Sending prompt to Groq...');
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
-        });
+        const response = await fetch(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages: [
+                { role: 'user', content: prompt }
+              ],
+              temperature: 0.7,
+              max_tokens: 8192,
+            }),
+          }
+        );
 
-        const text = response.text;
-        console.log('📥 Raw Gemini response (first 300 chars):', text.substring(0, 300));
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(JSON.stringify(data));
+        }
+
+        const text = data.choices[0].message.content;
+        console.log('📥 Raw Groq response (first 300 chars):', text.substring(0, 300));
 
         let cleanedContent = text.trim();
         if (cleanedContent.startsWith('```json')) {
@@ -33,12 +50,12 @@ function getGeminiService() {
         }
 
         const questions = JSON.parse(cleanedContent);
-        console.log(`✅ Parsed ${questions.length} questions from Gemini`);
+        console.log(`✅ Parsed ${questions.length} questions from Groq`);
         return questions;
 
       } catch (error) {
-        console.error('❌ Gemini service error:', error.message);
-        throw new Error(`Gemini failed: ${error.message}`);
+        console.error('❌ Groq service error:', error.message);
+        throw new Error(`Groq failed: ${error.message}`);
       }
     },
   };
