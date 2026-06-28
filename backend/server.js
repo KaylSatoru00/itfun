@@ -9,11 +9,10 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: join(__dirname, '.env') });
+dotenv.config();
 
-console.log('🔑 DeepSeek API Key exists:', !!process.env.DEEPSEEK_API_KEY);
-console.log('📏 DeepSeek API Key length:', process.env.DEEPSEEK_API_KEY?.length || 0);
-console.log('🤖 AI Provider:', process.env.AI_PROVIDER || 'deepseek');
+console.log('🔑 Groq API Key exists:', !!process.env.GEMINI_API_KEY);
+console.log('🤖 AI Provider:', process.env.AI_PROVIDER || 'groq');
 
 import { RoomManager } from './rooms/room.manager.js';
 import { QuizEngine } from './quiz/quiz.engine.js';
@@ -22,8 +21,12 @@ import { generateQuiz } from './services/ai.service.js';
 import { getLessonContent } from './services/lesson.service.js';
 
 const app = express();
+const allowedOrigins = process.env.CLIENT_URL
+  ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174']
+  : ['http://localhost:5173', 'http://localhost:5174'];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: allowedOrigins,
   methods: ['GET', 'POST'],
   credentials: true,
 }));
@@ -32,7 +35,7 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
   },
