@@ -828,3 +828,44 @@
   .ic-student-id { font-size: 10px; }
   .ic-unenroll-btn { font-size: 11px; padding: 4px 8px; }
 }
+
+/* ── Mobile: card layout para sa students ── */
+@media (max-width: 768px) {
+  .ic-table-header {
+    display: none;
+  }
+
+  .ic-table-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid #f0d0d5;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    grid-template-columns: unset;
+  }
+
+  .ic-student-cell {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .ic-email-cell {
+    font-size: 12px;
+    color: #888;
+  }
+
+  .ic-section-cell {
+    font-size: 12px;
+  }
+
+  .ic-progress-cell {
+    width: 100%;
+  }
+
+  .ic-unenroll-btn {
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+}
