@@ -775,3 +775,56 @@
   .top-btn { padding: 5px 10px; font-size: 11px; }
   .modal-section-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Mobile fix: table + profile ── */
+@media (max-width: 768px) {
+  .inside-class-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .inside-class-view {
+    overflow-y: auto;
+  }
+
+  .ic-table-panel {
+    overflow: visible;
+  }
+
+  .ic-table-body {
+    overflow-x: auto;
+  }
+
+  .ic-table-header,
+  .ic-table-row {
+    grid-template-columns: minmax(120px, 1.5fr) minmax(120px, 1.5fr) 90px 120px 90px;
+    font-size: 11px;
+    column-gap: 8px;
+  }
+
+  .ic-profile-panel {
+    display: flex !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .ic-table-header,
+  .ic-table-row {
+    grid-template-columns: minmax(100px, 1.5fr) minmax(100px, 1.5fr) 80px 100px 80px;
+    font-size: 10px;
+    column-gap: 6px;
+    padding: 8px 4px;
+  }
+
+  .ic-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+
+  .ic-student-name { font-size: 12px; }
+  .ic-student-id { font-size: 10px; }
+  .ic-unenroll-btn { font-size: 11px; padding: 4px 8px; }
+}
