@@ -166,6 +166,8 @@ function FacultyClass() {
   // ── State for selected student's progress ──
   const [selectedStudentProgress, setSelectedStudentProgress] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
+  // ── State for all students' overall progress (for table row bars) ──
+  const [allStudentsProgress, setAllStudentsProgress] = useState({});
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
@@ -214,6 +216,36 @@ function FacultyClass() {
     });
     return () => unsub();
   }, [activeClass]);
+
+  // ── Fetch overall progress for all enrolled students (for table row bars) ──
+  useEffect(() => {
+    if (enrolledStudents.length === 0) { setAllStudentsProgress({}); return; }
+    const unsubs = enrolledStudents.map(s => {
+      const progressRef = doc(db, 'studentProgress', s.studentId);
+      return onSnapshot(progressRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          const values = VISIBLE_MODULES.map(key => {
+            const moduleDef = MODULE_DEFINITIONS[key];
+            if (!moduleDef || moduleDef.totalLessons === 0) return 0;
+            const moduleData = data?.modules?.[key] || {};
+            const lessons = moduleData.lessons || {};
+            let total = 0;
+            moduleDef.lessons.forEach(lk => {
+              const ld = lessons[lk];
+              if (ld && typeof ld.progress === 'number') total += ld.progress;
+            });
+            return Math.round((total / moduleDef.totalLessons) * 100) / 100;
+          });
+          const overall = Math.round(values.reduce((sum, p) => sum + p, 0) / VISIBLE_MODULES.length * 100) / 100;
+          setAllStudentsProgress(prev => ({ ...prev, [s.studentId]: overall }));
+        } else {
+          setAllStudentsProgress(prev => ({ ...prev, [s.studentId]: 0 }));
+        }
+      });
+    });
+    return () => unsubs.forEach(u => u());
+  }, [enrolledStudents]);
 
   // ── Listen to selected student's progress in real-time ──
   useEffect(() => {
@@ -521,17 +553,17 @@ function FacultyClass() {
         <div
           className="ic-progress-bar-fill"
           style={{
-            width: `${s.overallProgress ?? 0}%`,
+            width: `${allStudentsProgress[s.studentId] ?? 0}%`,
             background:
-              (s.overallProgress ?? 0) >= 80
+              (allStudentsProgress[s.studentId] ?? 0) >= 80
                 ? '#2e7d32'
-                : (s.overallProgress ?? 0) >= 60
+                : (allStudentsProgress[s.studentId] ?? 0) >= 60
                   ? '#e65100'
                   : '#c8102e',
           }}
         />
       </div>
-      <span className="ic-progress-label">{s.overallProgress ?? 0}%</span>
+      <span className="ic-progress-label">{allStudentsProgress[s.studentId] ?? 0}%</span>
     </div>
 
     <button
@@ -596,7 +628,18 @@ function FacultyClass() {
                         Progress data will appear here as students complete modules.
                       </p>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <DonutChart percent={selectedStudent.overallProgress ?? 0} size={160} strokeWidth={16} />
+                        <DonutChart
+                          percent={(() => {
+                            if (!hasProgress) return 0;
+                            const values = VISIBLE_MODULES.map(key =>
+                              calculateModuleProgress(key, selectedStudentProgress)
+                            );
+                            const total = values.reduce((sum, p) => sum + p, 0);
+                            return Math.round((total / VISIBLE_MODULES.length) * 100) / 100;
+                          })()}
+                          size={160}
+                          strokeWidth={16}
+                        />
                       </div>
                     </div>
 
