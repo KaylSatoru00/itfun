@@ -13,13 +13,6 @@ function Login() {
       initial={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.3, ease: 'easeIn' }}
-      style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        translateX: '-50%',
-        translateY: '-50%',
-      }}
     >
       <h1 className="title">ITFun</h1>
       <p className="subtitle">IT Fundamentals Made Fun</p>
