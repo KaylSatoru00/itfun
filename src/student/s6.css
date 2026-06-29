@@ -625,3 +625,15 @@
   .s6-hardware-name { font-size: 13px; }
   .s6-hardware-desc { font-size: 13px; }
 }
+/* -- Mobile scroll fix -- */
+@media (max-width: 768px) {
+  body:has(.chap-panel) {
+    overflow: auto !important;
+    height: auto !important;
+  }
+  #root:has(.chap-panel) {
+    position: static !important;
+    overflow: auto !important;
+    height: auto !important;
+  }
+}

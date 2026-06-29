@@ -160,3 +160,15 @@
   .chap-card-small { padding: 14px 12px; border-radius: 8px; }
   .chap-card-main { min-height: 300px; padding: 16px 12px; border-radius: 8px; }
 }
+/* -- Mobile scroll fix -- */
+@media (max-width: 768px) {
+  body:has(.chap-panel) {
+    overflow: auto !important;
+    height: auto !important;
+  }
+  #root:has(.chap-panel) {
+    position: static !important;
+    overflow: auto !important;
+    height: auto !important;
+  }
+}

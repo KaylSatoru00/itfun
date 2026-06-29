@@ -452,3 +452,15 @@
   .s9-shortcut-desc { font-size: 12px; }
   .s2-binary-img { max-width: 100%; }
 }
+/* -- Mobile scroll fix -- */
+@media (max-width: 768px) {
+  body:has(.chap-panel) {
+    overflow: auto !important;
+    height: auto !important;
+  }
+  #root:has(.chap-panel) {
+    position: static !important;
+    overflow: auto !important;
+    height: auto !important;
+  }
+}
