@@ -1,5 +1,6 @@
 // s4.jsx — Hardware Components, Input and Output Devices & Basic PC-Building
 import { useEffect, useState } from 'react';
+import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -192,7 +193,7 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function FacultyChapter4() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('parts');
+  const [activeSection, setActiveSection] = useFacultyModuleSection('parts', ['parts', 'iodevices']);
 
   // Accordion state for each group (index-based)
   const [hwOpenIdx,   setHwOpenIdx]   = useState(null);
@@ -1023,6 +1024,3 @@ function FacultyChapter4() {
 }
 
 export default FacultyChapter4;
-
-
-

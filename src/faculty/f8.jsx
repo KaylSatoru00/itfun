@@ -1,5 +1,6 @@
 // f8.jsx — Faculty: Application of Computers in Different Fields
 import { useState } from 'react';
+import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -57,7 +58,7 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function FacultyChapter8() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('applications');
+  const [activeSection, setActiveSection] = useFacultyModuleSection('applications', ['applications']);
 
   return (
     <motion.div
@@ -316,6 +317,3 @@ function FacultyChapter8() {
 }
 
 export default FacultyChapter8;
-
-
-

@@ -1,5 +1,6 @@
 // f2.jsx — Language & Types of Computers with Their Uses (Faculty View)
 import { useEffect, useState } from 'react';
+import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import binaryImg from '../assets/binary.webp';
@@ -83,7 +84,7 @@ const navItems = [
 
 function FacultyChapter2() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('language');
+  const [activeSection, setActiveSection] = useFacultyModuleSection('language', ['language', 'personal', 'workstation', 'minicomputer']);
   const [langOpenIndex, setLangOpenIndex] = useState(null);
   const [wsOpenIndex, setWsOpenIndex] = useState(null);
   const [miniOpenIndex, setMiniOpenIndex] = useState(null);
@@ -318,6 +319,3 @@ function FacultyChapter2() {
 }
 
 export default FacultyChapter2;
-
-
-
