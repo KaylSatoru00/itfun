@@ -209,14 +209,14 @@ function StudentLogin() {
   };
 
   return (
-    <motion.div
-      className="panel"
-      initial={{ opacity: 0, scale: 0.3 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 180, damping: 22 }}
-      style={{ position: 'absolute', top: '50%', left: '50%', translateX: '-50%', translateY: '-50%' }}
-    >
-      <AnimatePresence mode="wait">
+    <div className="login-wrapper">
+      <motion.div
+        className="panel"
+        initial={{ opacity: 0, scale: 0.3 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+      >
+        <AnimatePresence mode="wait">
 
         {/* ── VERIFY SCREEN ── */}
         {screen === 'verify' && (
@@ -408,8 +408,9 @@ function StudentLogin() {
           </motion.div>
         )}
 
-      </AnimatePresence>
-    </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
 

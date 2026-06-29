@@ -8,28 +8,30 @@ function Login() {
   const navigate = useNavigate();
 
   return (
-    <motion.div
-      className="panel"
-      initial={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ duration: 0.3, ease: 'easeIn' }}
-    >
-      <h1 className="title">ITFun</h1>
-      <p className="subtitle">IT Fundamentals Made Fun</p>
+    <div className="login-wrapper">
+      <motion.div
+        className="panel"
+        initial={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        transition={{ duration: 0.3, ease: 'easeIn' }}
+      >
+        <h1 className="title">ITFun</h1>
+        <p className="subtitle">IT Fundamentals Made Fun</p>
 
-      <div className="buttons">
-        <button className="btn1" onClick={() => navigate('/student-login')}>
-          <PiStudentThin size={60} />
-          Student
-        </button>
-        <button className="btn2" onClick={() => navigate('/faculty-login')}>
-          <GiTeacher size={60} />
-          Faculty
-        </button>
-      </div>
+        <div className="buttons">
+          <button className="btn1" onClick={() => navigate('/student-login')}>
+            <PiStudentThin size={60} />
+            Student
+          </button>
+          <button className="btn2" onClick={() => navigate('/faculty-login')}>
+            <GiTeacher size={60} />
+            Faculty
+          </button>
+        </div>
 
-      <p className="role-text">Choose your role to sign in or sign up</p>
-    </motion.div>
+        <p className="role-text">Choose your role to sign in or sign up</p>
+      </motion.div>
+    </div>
   );
 }
 

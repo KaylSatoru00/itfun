@@ -7,6 +7,17 @@ html, body {
   min-height: 100%;
 }
 
+.login-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
 .panel {
   width: min(800px, 92vw);
   background: #fff;
