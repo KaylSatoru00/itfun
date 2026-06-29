@@ -13,6 +13,7 @@ import healthcareImg from '../assets/healthcare.jpg';
 import './s8.css';
 
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 
 /* ─────────────────────────────────────────────
    Module / Lesson config for Chapter 8
@@ -123,7 +124,10 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function Chapter8() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('applications');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'applications',
+    ['applications']
+  );
 
   /* ── Progress tracking hook ── */
   const { lessonProgress, recordInteraction } = useProgressTracker(

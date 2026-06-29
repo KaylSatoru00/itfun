@@ -8,6 +8,7 @@ import handImg from '../assets/hand.png';
 import './s9.css';
 
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 
 /* ─────────────────────────────────────────────
    Module / Lesson config for Chapter 9
@@ -293,7 +294,10 @@ const excelShortcuts = [
 ═════════════════════════════════════════════*/
 function Chapter9() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('keyboarding');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'keyboarding',
+    ['keyboarding']
+  );
   const [openAccordion, setOpenAccordion] = useState(null);
 
   /* ── Progress tracking hook ── */

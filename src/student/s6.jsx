@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 
 // ── Assets ──
 import comnetImg       from '../assets/comnet.webp';
@@ -194,7 +195,10 @@ const hardwareItems = [
 ═════════════════════════════════════════════*/
 function Chapter6() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('characteristics');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'characteristics',
+    ['characteristics', 'internet', 'areas']
+  );
 
   // ── Use individual trackers per lesson ──
   const characteristicsTracker = useProgressTracker(MODULE_ID, 'characteristics', LESSON_TOTALS.characteristics);

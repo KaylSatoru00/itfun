@@ -1,5 +1,6 @@
 // s7.jsx — Microsoft Office Applications
 import { useState } from 'react';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './s7.css';
@@ -40,7 +41,10 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function Chapter7() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('intro');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'intro',
+    ['intro', 'powerpoint', 'word', 'excel']
+  );
 
   return (
     <motion.div
@@ -94,6 +98,3 @@ function Chapter7() {
 }
 
 export default Chapter7;
-
-
-

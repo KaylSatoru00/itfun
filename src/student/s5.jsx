@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 
 // ── Assets ──
 import softwareImg      from '../assets/software.jpg';
@@ -165,7 +166,10 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function Chapter5() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('software');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'software',
+    ['software']
+  );
 
   // Single lesson tracker
   const tracker = useProgressTracker(MODULE_ID, 'software', TOTAL_ITEMS);

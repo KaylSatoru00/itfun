@@ -10,6 +10,7 @@ import minicomputerImg from '../assets/minicomputers.webp';
 import mainframeImg from '../assets/mainframe.jpg';
 import supercomputerImg from '../assets/supercomputers.jpg';
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 import './s2.css';
 
 // ── Lesson totals ──
@@ -100,7 +101,10 @@ const navItems = [
 
 function Chapter2() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('language');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'language',
+    ['language', 'personal', 'workstation', 'minicomputer']
+  );
   const [langOpenIndex, setLangOpenIndex] = useState(null);
   const [wsOpenIndex, setWsOpenIndex] = useState(null);
   const [miniOpenIndex, setMiniOpenIndex] = useState(null);

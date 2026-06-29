@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 
 // ── Assets ──
 import hardwareImg    from '../assets/hardware.jpg';
@@ -243,7 +244,10 @@ const LESSON_TOTALS = {
 function Chapter4() {
   const navigate = useNavigate();
   const moduleId = 'module4';
-  const [activeSection, setActiveSection] = useState('parts');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'parts',
+    ['parts', 'iodevices']
+  );
 
   // Progress tracker per lesson
   const partsTracker = useProgressTracker(moduleId, 'parts',     LESSON_TOTALS.parts);

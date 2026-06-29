@@ -11,6 +11,7 @@ import b1Img from '../assets/b1.png';
 import b2Img from '../assets/b2.png';
 import d1Img from '../assets/d1.png';
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 import './s3.css';
 
 // ── Lesson totals ──
@@ -116,7 +117,10 @@ const navItems = [
 
 function Chapter3() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('numbersystem');
+  const [activeSection, setActiveSection] = useModuleSection(
+    'numbersystem',
+    ['numbersystem', 'conversions']
+  );
   const [nsOpenIndex, setNsOpenIndex] = useState(null);
 
   const nsT   = useProgressTracker('module3', 'lesson1', LESSON_TOTALS.numbersystem);
