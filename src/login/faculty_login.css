@@ -7,13 +7,13 @@ html, body {
 }
 
 .login-wrapper {
-  width: 100%;
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
   overflow-y: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px 0;
+  padding: 40px 16px;
   box-sizing: border-box;
 }
 
@@ -21,7 +21,7 @@ html, body {
   width: min(800px, 92vw);
   background: #fff;
   border-radius: 20px;
-  margin: 40px auto;
+  margin: auto;
   position: relative;
   display: flex;
   flex-direction: column;
