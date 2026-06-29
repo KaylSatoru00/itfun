@@ -225,3 +225,16 @@
     font-size: 22px;
   }
 }
+
+/* ── Mobile scroll fix ── */
+@media (max-width: 768px) {
+  body:has(.pvp-panel) {
+    overflow: auto !important;
+    height: auto !important;
+  }
+  #root:has(.pvp-panel) {
+    position: static !important;
+    overflow: auto !important;
+    height: auto !important;
+  }
+}
