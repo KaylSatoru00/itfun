@@ -259,9 +259,9 @@ function LearningModules() {
     setSearchQuery('');
     setShowDropdown(false);
 
-    // For lessons, pass the section key via location state so the module page can activate it
+    // For lessons, pass the section key as ?section= query param
     if (item.type === 'lesson') {
-      navigate(item.route.split('#')[0], { state: { activeSection: item.lessonKey } });
+      navigate(`${item.route.split('#')[0]}?section=${item.lessonKey}`);
     } else {
       navigate(item.route);
     }

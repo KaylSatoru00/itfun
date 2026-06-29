@@ -33,6 +33,7 @@ import gen3Img from '../assets/3rdgen.png';
 import gen4Img from '../assets/4thgen.jpg';
 import gen5Img from '../assets/5thgen.jpg';
 import { useProgressTracker } from '../hooks/useProgressTracker';
+import { useModuleSection } from '../hooks/useModuleSection';
 import './s1.css';
 
 // ── Lesson item totals ──
@@ -204,7 +205,12 @@ const sectionData = {
 
 function Chapter1() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('introduction');
+
+  // ── Section from URL ?section= param (search bar navigation) ──
+  const [activeSection, setActiveSection] = useModuleSection(
+    'introduction',
+    ['introduction', 'functionalities', 'history']
+  );
   const [openIndex, setOpenIndex] = useState(null);
   const [advOpenIndex, setAdvOpenIndex] = useState(null);
   const [pascalOpenIndex, setPascalOpenIndex] = useState(null);
