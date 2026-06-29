@@ -4,7 +4,7 @@ import './faculty_class.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { db } from '../firebase';
 import {
@@ -160,6 +160,7 @@ function FacultyClass() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
 
@@ -192,6 +193,20 @@ function FacultyClass() {
     });
     return () => unsub();
   }, [user]);
+
+  // ── Restore activeClass from URL on refresh ──
+  useEffect(() => {
+    if (classes.length === 0) return;
+    const params = new URLSearchParams(location.search);
+    const classId = params.get('classId');
+    if (classId && !activeClass) {
+      const found = classes.find(c => c.firestoreId === classId);
+      if (found) {
+        setActiveClass(found);
+        setStudentSearch('');
+      }
+    }
+  }, [classes, location.search]);
 
   // Load enrolled students when a class is opened
   useEffect(() => {
@@ -435,7 +450,7 @@ function FacultyClass() {
                     <div
                       key={cls.firestoreId}
                       className="class-card"
-                      onClick={() => { setActiveClass(cls); setStudentSearch(''); }}
+                      onClick={() => { setActiveClass(cls); setStudentSearch(''); navigate(`/faculty-class?classId=${cls.firestoreId}`); }}
                     >
                       <div className="class-card-subject">{cls.subject}</div>
                       <div className="class-card-name">{cls.name}</div>
@@ -468,7 +483,7 @@ function FacultyClass() {
             exit={{ opacity: 0 }}
           >
             <div className="inside-class-header">
-              <button className="ic-back-btn" onClick={() => { setActiveClass(null); setSelectedStudent(null); }}>
+              <button className="ic-back-btn" onClick={() => { setActiveClass(null); setSelectedStudent(null); navigate('/faculty-class'); }}>
                 ← Back
               </button>
               <div className="ic-class-info">
