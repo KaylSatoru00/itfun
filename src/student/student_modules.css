@@ -37,6 +37,7 @@
   border-bottom: 1px solid #f0d0d5;
 }
 
+/* ── SEARCH BAR ── */
 .search-bar {
   display: flex;
   align-items: center;
@@ -46,8 +47,11 @@
   padding: 0 14px 0 10px;
   gap: 6px;
   flex: 0 0 auto;
-  height: 30px;
+  height: 36px;
   box-sizing: border-box;
+  /* IMPORTANT: dropdown is positioned relative to this */
+  position: relative;
+  z-index: 100;
 }
 
 .search-icon {
@@ -74,6 +78,110 @@
 
 .search-input::placeholder {
   color: #c8102e;
+  opacity: 0.7;
+}
+
+/* ── SEARCH DROPDOWN ── */
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  /* wider than the bar so results are readable */
+  min-width: 320px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(165, 0, 52, 0.13);
+  border: 1px solid #f0d0d5;
+  z-index: 9999;
+  overflow: hidden;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.search-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #fdecea;
+  background: #fff;
+  transition: background 0.15s;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.search-dropdown-item.unlocked {
+  cursor: pointer;
+}
+
+.search-dropdown-item.unlocked:hover {
+  background: #fdecea;
+}
+
+.search-dropdown-item.locked {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.search-dropdown-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.search-dropdown-icon.unlocked {
+  background: #A50034;
+}
+
+.search-dropdown-icon.locked {
+  background: #ccc;
+}
+
+.search-dropdown-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-dropdown-label {
+  font-family: Poppins, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-dropdown-label.unlocked { color: #222; }
+.search-dropdown-label.locked   { color: #999; }
+
+.search-dropdown-sublabel {
+  font-family: Poppins, Arial, sans-serif;
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.search-dropdown-sublabel.unlocked { color: #A50034; }
+.search-dropdown-sublabel.locked   { color: #bbb; }
+
+.search-dropdown-arrow {
+  color: #A50034;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.search-dropdown-empty {
+  padding: 18px 16px;
+  text-align: center;
+  font-family: Poppins, Arial, sans-serif;
+  font-size: 13px;
+  color: #aaa;
 }
 
 .navbar-spacer {
@@ -190,7 +298,6 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* ── LOCKED MODULE STYLES - BRIGHTER GRAY/DIM WHITE ── */
 .sub-panel-1.locked,
 .sub-panel-2.locked,
 .sub-panel-3.locked,
@@ -218,7 +325,6 @@
   opacity: 0.9;
 }
 
-/* ── LOCK OVERLAY - STATIC LOCK ICON ── */
 .lock-overlay {
   position: absolute;
   top: 0;
@@ -236,7 +342,6 @@
   font-size: 40px;
   opacity: 9;
   text-shadow: 0 2px 8px rgba(109, 86, 86, 0.2);
-  /* Static - no animation */
 }
 
 .panel-content {
@@ -541,7 +646,7 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1280px) {
-  .search-input { width: 100px; }
+  .search-input { width: 140px; }
   .top-btn {
     padding: 8px 14px;
     font-size: 13px;
@@ -554,20 +659,26 @@
     padding: 80px 16px 80px 16px;
     gap: 16px;
   }
-  .search-input { width: 90px; }
+  .search-input { width: 110px; }
+  /* dropdown stretches right on mobile since left space is tight */
+  .search-dropdown {
+    left: 0;
+    right: auto;
+    min-width: 280px;
+  }
   .top-center-btns { gap: 6px; }
   .top-btn { padding: 6px 12px; font-size: 12px; }
   .bottom-nav-label { font-size: 11px; letter-spacing: 0.5px; }
   .bottom-nav-icon { font-size: 18px; }
-  
-  .lock-icon {
-    font-size: 36px;
-  }
+  .lock-icon { font-size: 36px; }
 }
 
 @media (max-width: 480px) {
   .top-navbar { padding: 0 10px; gap: 8px; }
-  .search-input { width: 60px; }
+  .search-input { width: 70px; }
+  .search-dropdown {
+    min-width: 240px;
+  }
   .top-center-btns { gap: 4px; }
   .top-btn { padding: 5px 10px; font-size: 11px; }
   .bottom-nav-btn { flex-direction: column; gap: 2px; }
@@ -590,8 +701,5 @@
   .avatar-trigger { top: 70px; right: 10px; }
   .sidebar { width: 150px; top: 110px; right: 8px; }
   .sidebar-avatar { width: 52px; height: 52px; font-size: 18px; }
-  
-  .lock-icon {
-    font-size: 30px;
-  }
+  .lock-icon { font-size: 30px; }
 }

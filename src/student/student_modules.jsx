@@ -1,5 +1,5 @@
 // student_modules.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './student_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdAccountCircle } from 'react-icons/md';
@@ -36,9 +36,94 @@ const MODULES = [
   { id: 'module9', num: 9, route: '/student-chapter-9', label: 'Keyboarding',                                         img: img9 },
 ];
 
+/* ─────────────────────────────────────────────
+   Lessons per module (from navItems in each s*.jsx)
+   Used for search results — links to module route,
+   the section key is passed as URL hash so the
+   module page can auto-scroll/activate that lesson.
+──────────────────────────────────────────────*/
+const MODULE_LESSONS = {
+  module1: [
+    { key: 'introduction',    label: 'Introduction of Computer' },
+    { key: 'functionalities', label: 'Functionalities of a Computer' },
+    { key: 'history',         label: 'History of Computers' },
+  ],
+  module2: [
+    { key: 'language',     label: 'Language of Computer' },
+    { key: 'personal',     label: 'Personal Computers (PC)' },
+    { key: 'workstation',  label: 'Workstation' },
+    { key: 'minicomputer', label: 'Minicomputer, Mainframe & Supercomputer' },
+  ],
+  module3: [
+    { key: 'numbersystem', label: 'Decimal & Binary Number System' },
+    { key: 'conversions',  label: 'Number System Conversions (Binary, Decimal)' },
+  ],
+  module4: [
+    { key: 'parts',     label: 'Parts of Computer' },
+    { key: 'iodevices', label: 'Input and Output Devices' },
+  ],
+  module5: [
+    { key: 'software', label: 'Types of Software (System, Application and Operating System)' },
+  ],
+  module6: [
+    { key: 'characteristics', label: 'Characteristics of a Computer Network' },
+    { key: 'internet',        label: 'Internet and Intranet' },
+    { key: 'areas',           label: 'Areas of Network' },
+  ],
+  module7: [
+    { key: 'intro',      label: 'Introduction to MS Office' },
+    { key: 'powerpoint', label: 'Microsoft PowerPoint' },
+    { key: 'word',       label: 'Microsoft Word' },
+    { key: 'excel',      label: 'Microsoft Excel' },
+  ],
+  module8: [
+    { key: 'applications', label: 'Application of Computers in Different Fields' },
+  ],
+  module9: [
+    { key: 'keyboarding', label: 'Keyboarding' },
+  ],
+};
+
 function toPascalCase(str = '') {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
+
+/* ─────────────────────────────────────────────
+   Build flat search index from modules + lessons
+──────────────────────────────────────────────*/
+function buildSearchIndex() {
+  const index = [];
+
+  MODULES.forEach((mod) => {
+    // Module-level entry
+    index.push({
+      type: 'module',
+      moduleId: mod.id,
+      moduleNum: mod.num,
+      route: mod.route,
+      label: mod.label,
+      sublabel: `Learning Module ${mod.num}`,
+    });
+
+    // Lesson-level entries
+    const lessons = MODULE_LESSONS[mod.id] || [];
+    lessons.forEach((lesson) => {
+      index.push({
+        type: 'lesson',
+        moduleId: mod.id,
+        moduleNum: mod.num,
+        route: `${mod.route}#${lesson.key}`,
+        label: lesson.label,
+        sublabel: `Module ${mod.num} › Lesson`,
+        lessonKey: lesson.key,
+      });
+    });
+  });
+
+  return index;
+}
+
+const SEARCH_INDEX = buildSearchIndex();
 
 /* ════════════════════════════════════════════
    Main Component
@@ -47,6 +132,11 @@ function LearningModules() {
   const [showLogoutModal, setShowLogoutModal]   = useState(false);
   const [showMyCourse, setShowMyCourse]         = useState(false);
   const [myCourses, setMyCourses]               = useState([]);
+
+  // ── Search state ──
+  const [searchQuery, setSearchQuery]     = useState('');
+  const [showDropdown, setShowDropdown]   = useState(false);
+  const searchRef                         = useRef(null);
 
   // ── Join Course modal states ──
   const [joinStep, setJoinStep]       = useState('input');
@@ -57,7 +147,6 @@ function LearningModules() {
   const [foundClass, setFoundClass]   = useState(null);
 
   // ── Module unlock/progress state ──
-  // moduleStates[moduleId] = { unlocked: bool, completed: bool, overallPercent: number }
   const [moduleStates, setModuleStates] = useState(() =>
     Object.fromEntries(MODULES.map((m, i) => [
       m.id,
@@ -81,6 +170,17 @@ function LearningModules() {
     };
   }, []);
 
+  /* ── Close search dropdown on outside click ── */
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   /* ── Real-time listener for enrollments ── */
   useEffect(() => {
     if (!user) return;
@@ -91,12 +191,7 @@ function LearningModules() {
     return () => unsub();
   }, [user]);
 
-  /* ── Real-time listener for module progress ──
-     Listens to the student's progress doc and rebuilds moduleStates.
-     Doc path: studentProgress/{uid}
-     Structure mirrors the spec:
-       modules.module1.unlocked / completed / lessons.lessonKey.progress
-  ── */
+  /* ── Real-time listener for module progress ── */
   useEffect(() => {
     if (!user) return;
     setProgressLoading(true);
@@ -104,7 +199,6 @@ function LearningModules() {
     const progressRef = doc(db, 'studentProgress', user.uid);
     const unsub = onSnapshot(progressRef, (snap) => {
       if (!snap.exists()) {
-        // First-time student: only module1 unlocked, rest locked
         setModuleStates(
           Object.fromEntries(MODULES.map((m, i) => [
             m.id,
@@ -124,7 +218,6 @@ function LearningModules() {
         const unlocked = i === 0 ? true : (mData.unlocked ?? false);
         const completed = mData.completed ?? false;
 
-        // Calculate average lesson progress for display
         const lessons = mData.lessons || {};
         const lessonValues = Object.values(lessons).map(l => l.progress ?? 0);
         const overallPercent = lessonValues.length > 0
@@ -141,11 +234,43 @@ function LearningModules() {
     return () => unsub();
   }, [user]);
 
+  /* ── Search results computed from query ── */
+  const searchResults = (() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+
+    return SEARCH_INDEX.filter(item =>
+      item.label.toLowerCase().includes(q) ||
+      item.sublabel.toLowerCase().includes(q)
+    ).slice(0, 8); // max 8 results
+  })();
+
+  /* ── Handle search input change ── */
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowDropdown(true);
+  };
+
+  /* ── Handle search result click ── */
+  const handleSearchResultClick = (item) => {
+    const state = moduleStates[item.moduleId];
+    if (!state?.unlocked) return; // locked — unclickable
+
+    setSearchQuery('');
+    setShowDropdown(false);
+
+    // For lessons, pass the section key via location state so the module page can activate it
+    if (item.type === 'lesson') {
+      navigate(item.route.split('#')[0], { state: { activeSection: item.lessonKey } });
+    } else {
+      navigate(item.route);
+    }
+  };
+
   /* ── Navigation guard: only allow access if unlocked ── */
   const handleModuleClick = (module) => {
     const state = moduleStates[module.id];
     if (!state?.unlocked) {
-      // Show a toast or alert message
       alert(`Please complete all lessons in the previous module to unlock "${module.label}".`);
       return;
     }
@@ -154,16 +279,14 @@ function LearningModules() {
 
   /* ── Route Protection: Prevent direct URL access to locked modules ── */
   useEffect(() => {
-    // Check if the current path is a student chapter route
     const path = location.pathname;
     const chapterMatch = path.match(/\/student-chapter-(\d+)/);
-    
+
     if (chapterMatch) {
       const chapterNum = parseInt(chapterMatch[1]);
       const moduleId = `module${chapterNum}`;
       const state = moduleStates[moduleId];
-      
-      // If the module is locked, redirect back to learning modules
+
       if (state && !state.unlocked) {
         alert(`Module ${chapterNum} is locked. Please complete all lessons in Module ${chapterNum - 1} first.`);
         navigate('/learning-modules');
@@ -246,7 +369,7 @@ function LearningModules() {
     return `hsl(${Math.abs(hash) % 360}, 60%, 45%)`;
   }
 
-  /* ── Panel CSS class names (unchanged from original) ── */
+  /* ── Panel CSS class names ── */
   const panelClass = (num) => `sub-panel-${num}`;
 
   return (
@@ -258,10 +381,68 @@ function LearningModules() {
     >
       {/* ── Top Navbar ── */}
       <div className="top-navbar">
-        <div className="search-bar">
+
+        {/* ── Search Bar with Dropdown ── */}
+        <div className="search-bar" ref={searchRef} style={{ position: 'relative' }}>
           <IoSearchCircle className="search-icon" />
-          <input type="text" className="search-input" placeholder="Search" />
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search modules or lessons..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+          />
+
+          {/* ── Search Dropdown ── */}
+          <AnimatePresence>
+            {showDropdown && searchQuery.trim() && (
+              <motion.div
+                className="search-dropdown"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+              >
+                {searchResults.length === 0 ? (
+                  <div className="search-dropdown-empty">
+                    No modules or lessons found for "<strong>{searchQuery}</strong>"
+                  </div>
+                ) : (
+                  searchResults.map((item, idx) => {
+                    const unlocked = moduleStates[item.moduleId]?.unlocked ?? false;
+                    return (
+                      <div
+                        key={idx}
+                        className={`search-dropdown-item ${unlocked ? 'unlocked' : 'locked'}`}
+                        onClick={() => handleSearchResultClick(item)}
+                      >
+                        {/* Icon */}
+                        <div className={`search-dropdown-icon ${unlocked ? 'unlocked' : 'locked'}`}>
+                          {!unlocked ? '🔒' : item.type === 'module' ? '📚' : '📖'}
+                        </div>
+
+                        {/* Text */}
+                        <div className="search-dropdown-text">
+                          <div className={`search-dropdown-label ${unlocked ? 'unlocked' : 'locked'}`}>
+                            {item.label}
+                          </div>
+                          <div className={`search-dropdown-sublabel ${unlocked ? 'unlocked' : 'locked'}`}>
+                            {item.sublabel}{!unlocked && ' · Locked'}
+                          </div>
+                        </div>
+
+                        {/* Arrow (unlocked only) */}
+                        {unlocked && <span className="search-dropdown-arrow">›</span>}
+                      </div>
+                    );
+                  })
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
         <div className="navbar-spacer" />
         <div className="top-center-btns">
           <button className="top-btn" onClick={() => setShowMyCourse(true)}>
@@ -307,30 +488,20 @@ function LearningModules() {
                   position: 'relative',
                 }}
               >
-                {/* ── Lock overlay ── */}
                 {locked && (
                   <div style={{
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'rgba(0,0,0,0.4)',
                     borderRadius: '12px',
                     zIndex: 2,
                     pointerEvents: 'none',
                   }}>
-                    <span style={{
-                      fontSize: '48px',
-                      color: 'white',
-                      textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                    }}>🔒</span>
+                    <span style={{ fontSize: '48px', color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>🔒</span>
                   </div>
                 )}
-                
+
                 <div className="panel-content">
                   <h3 className="panel-title">{module.label}</h3>
                   <div className="panel-image-wrapper">
