@@ -275,13 +275,12 @@
   }
 }
 
-/* ── Mobile scroll fix ── */
 @media (max-width: 768px) {
-  body:has(.pvp-panel) {
+  body:has(.sm-panel) {
     overflow: auto !important;
     height: auto !important;
   }
-  #root:has(.pvp-panel) {
+  #root:has(.sm-panel) {
     position: static !important;
     overflow: auto !important;
     height: auto !important;
