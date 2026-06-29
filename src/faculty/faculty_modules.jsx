@@ -1,5 +1,5 @@
 // faculty_modules.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './faculty_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdAccountCircle } from 'react-icons/md';
@@ -16,8 +16,97 @@ import img7 from '../assets/panel7.webp';
 import img8 from '../assets/panel8.png';
 import img9 from '../assets/panel9.jpg';
 
+/* ─────────────────────────────────────────────
+   Module + Lesson search index
+   Faculty side — all modules unlocked, all searchable
+──────────────────────────────────────────────*/
+const MODULES = [
+  { num: 1, route: '/faculty-chapter-1', label: 'Introduction to Computers and History of Computers' },
+  { num: 2, route: '/faculty-chapter-2', label: 'Language & Types of Computers with Their Uses' },
+  { num: 3, route: '/faculty-chapter-3', label: 'Number System & Conversions' },
+  { num: 4, route: '/faculty-chapter-4', label: 'Hardware Components, Input and Output Devices & Basic PC-Building' },
+  { num: 5, route: '/faculty-chapter-5', label: 'Types of Software' },
+  { num: 6, route: '/faculty-chapter-6', label: 'Networking Fundamentals' },
+  { num: 7, route: '/faculty-chapter-7', label: 'Microsoft Office Applications' },
+  { num: 8, route: '/faculty-chapter-8', label: 'Application of Computers in Different Fields' },
+  { num: 9, route: '/faculty-chapter-9', label: 'Keyboarding' },
+];
+
+const MODULE_LESSONS = {
+  1: [
+    { key: 'introduction',    label: 'Introduction of Computer' },
+    { key: 'functionalities', label: 'Functionalities of a Computer' },
+    { key: 'history',         label: 'History of Computers' },
+  ],
+  2: [
+    { key: 'language',     label: 'Language of Computer' },
+    { key: 'personal',     label: 'Personal Computers (PC)' },
+    { key: 'workstation',  label: 'Workstation' },
+    { key: 'minicomputer', label: 'Minicomputer, Mainframe & Supercomputer' },
+  ],
+  3: [
+    { key: 'numbersystem', label: 'Decimal & Binary Number System' },
+    { key: 'conversions',  label: 'Number System Conversions (Binary, Decimal)' },
+  ],
+  4: [
+    { key: 'parts',     label: 'Parts of Computer' },
+    { key: 'iodevices', label: 'Input and Output Devices' },
+  ],
+  5: [
+    { key: 'software', label: 'Types of Software (System, Application and Operating System)' },
+  ],
+  6: [
+    { key: 'characteristics', label: 'Characteristics of a Computer Network' },
+    { key: 'internet',        label: 'Internet and Intranet' },
+    { key: 'areas',           label: 'Areas of Network' },
+  ],
+  7: [
+    { key: 'intro',      label: 'Introduction to MS Office' },
+    { key: 'powerpoint', label: 'Microsoft PowerPoint' },
+    { key: 'word',       label: 'Microsoft Word' },
+    { key: 'excel',      label: 'Microsoft Excel' },
+  ],
+  8: [
+    { key: 'applications', label: 'Application of Computers in Different Fields' },
+  ],
+  9: [
+    { key: 'keyboarding', label: 'Keyboarding' },
+  ],
+};
+
+function buildSearchIndex() {
+  const index = [];
+  MODULES.forEach((mod) => {
+    index.push({
+      type: 'module',
+      num: mod.num,
+      route: mod.route,
+      label: mod.label,
+      sublabel: `Learning Module ${mod.num}`,
+    });
+    (MODULE_LESSONS[mod.num] || []).forEach((lesson) => {
+      index.push({
+        type: 'lesson',
+        num: mod.num,
+        route: `${mod.route}?section=${lesson.key}`,
+        label: lesson.label,
+        sublabel: `Module ${mod.num} › Lesson`,
+      });
+    });
+  });
+  return index;
+}
+
+const SEARCH_INDEX = buildSearchIndex();
+
+/* ════════════════════════════════════════════
+   Main Component
+═════════════════════════════════════════════*/
 function FacultyModules() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [searchQuery, setSearchQuery]         = useState('');
+  const [showDropdown, setShowDropdown]       = useState(false);
+  const searchRef                             = useRef(null);
 
   const navigate = useNavigate();
   const { user } = useUser();
@@ -32,6 +121,39 @@ function FacultyModules() {
     };
   }, []);
 
+  /* ── Close dropdown on outside click ── */
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  /* ── Search results ── */
+  const searchResults = (() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return SEARCH_INDEX.filter(item =>
+      item.label.toLowerCase().includes(q) ||
+      item.sublabel.toLowerCase().includes(q)
+    ).slice(0, 8);
+  })();
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowDropdown(true);
+  };
+
+  const handleResultClick = (item) => {
+    setSearchQuery('');
+    setShowDropdown(false);
+    navigate(item.route);
+  };
+
+  const IMAGES = [img1, img2, img3, img4, img5, img6, img7, img8, img9];
 
   return (
     <motion.div
@@ -42,29 +164,65 @@ function FacultyModules() {
     >
       {/* ── Top Navbar ── */}
       <div className="top-navbar">
-        {/* Search bar */}
-        <div className="search-bar">
+
+        {/* ── Search Bar ── */}
+        <div className="search-bar" ref={searchRef}>
           <IoSearchCircle className="search-icon" />
-          <input type="text" className="search-input" placeholder="Search" />
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search modules or lessons..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+          />
+
+          {/* ── Dropdown ── */}
+          <AnimatePresence>
+            {showDropdown && searchQuery.trim() && (
+              <motion.div
+                className="search-dropdown"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+              >
+                {searchResults.length === 0 ? (
+                  <div className="search-dropdown-empty">
+                    No modules or lessons found for "<strong>{searchQuery}</strong>"
+                  </div>
+                ) : (
+                  searchResults.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="search-dropdown-item unlocked"
+                      onClick={() => handleResultClick(item)}
+                    >
+                      <div className="search-dropdown-icon unlocked">
+                        {item.type === 'module' ? '📚' : '📖'}
+                      </div>
+                      <div className="search-dropdown-text">
+                        <div className="search-dropdown-label unlocked">{item.label}</div>
+                        <div className="search-dropdown-sublabel unlocked">{item.sublabel}</div>
+                      </div>
+                      <span className="search-dropdown-arrow">›</span>
+                    </div>
+                  ))
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Spacer */}
         <div className="navbar-spacer" />
 
-        {/* Modules + Class + Avatar buttons */}
         <div className="top-center-btns">
-          <button className="top-btn active-btn">
-            Modules
-          </button>
-          <button className="top-btn" onClick={() => navigate('/faculty-class')}>
-            Class
-          </button>
-          {/* Avatar — beside Class, opens logout modal */}
+          <button className="top-btn active-btn">Modules</button>
+          <button className="top-btn" onClick={() => navigate('/faculty-class')}>Class</button>
           <div
             className="avatar-circle"
             onClick={() => setShowLogoutModal(true)}
             title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
-            style={{ cursor: 'pointer', flexShrink: 0 }}
           >
             {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
           </div>
@@ -73,98 +231,29 @@ function FacultyModules() {
 
       {/* ── Module panels ── */}
       <div className="modules-grid">
-
-        <div className="sub-panel-1" onClick={() => navigate('/faculty-chapter-1')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Introduction to Computers and History of Computers</h3>
-            <div className="panel-image-wrapper">
-              <img src={img1} alt="Module 1" className="panel-image" />
+        {MODULES.map((mod) => (
+          <div
+            key={mod.num}
+            className={`sub-panel-${mod.num}`}
+            onClick={() => navigate(mod.route)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="panel-content">
+              <h3 className="panel-title">{mod.label}</h3>
+              <div className="panel-image-wrapper">
+                <img src={IMAGES[mod.num - 1]} alt={`Module ${mod.num}`} className="panel-image" />
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="sub-panel-2" onClick={() => navigate('/faculty-chapter-2')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Language & Types of Computers with Their Uses</h3>
-            <div className="panel-image-wrapper">
-              <img src={img2} alt="Module 2" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-3" onClick={() => navigate('/faculty-chapter-3')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Number System & Conversions</h3>
-            <div className="panel-image-wrapper">
-              <img src={img3} alt="Module 3" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-4" onClick={() => navigate('/faculty-chapter-4')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Hardware Components, Input and Output Devices & Basic PC-Building</h3>
-            <div className="panel-image-wrapper">
-              <img src={img4} alt="Module 4" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-5" onClick={() => navigate('/faculty-chapter-5')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Types of Software</h3>
-            <div className="panel-image-wrapper">
-              <img src={img5} alt="Module 5" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-6" onClick={() => navigate('/faculty-chapter-6')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Networking Fundamentals</h3>
-            <div className="panel-image-wrapper">
-              <img src={img6} alt="Module 6" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-7" onClick={() => navigate('/faculty-chapter-7')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Microsoft Office Applications</h3>
-            <div className="panel-image-wrapper">
-              <img src={img7} alt="Module 7" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-8" onClick={() => navigate('/faculty-chapter-8')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Application of Computers in Different Fields</h3>
-            <div className="panel-image-wrapper">
-              <img src={img8} alt="Module 8" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
-        <div className="sub-panel-9" onClick={() => navigate('/faculty-chapter-9')} style={{ cursor: 'pointer' }}>
-          <div className="panel-content">
-            <h3 className="panel-title">Keyboarding</h3>
-            <div className="panel-image-wrapper">
-              <img src={img9} alt="Module 9" className="panel-image" />
-            </div>
-          </div>
-        </div>
-
+        ))}
       </div>
 
-      {/* ── LOGOUT CONFIRMATION MODAL ── */}
+      {/* ── LOGOUT MODAL ── */}
       <AnimatePresence>
         {showLogoutModal && (
           <motion.div
             className="modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setShowLogoutModal(false)}
           >
             <motion.div
@@ -176,7 +265,7 @@ function FacultyModules() {
               onClick={e => e.stopPropagation()}
             >
               <div className="modal-header">
-                <h3 className="modal-title">Confirm Logout</h3>
+                <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>Confirm Logout</h3>
                 <button className="modal-close" onClick={() => setShowLogoutModal(false)}>✕</button>
               </div>
               <div className="modal-body" style={{ flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '28px 20px 20px' }}>
@@ -203,6 +292,3 @@ function FacultyModules() {
 }
 
 export default FacultyModules;
-
-
-
