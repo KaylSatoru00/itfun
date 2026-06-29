@@ -1,6 +1,6 @@
 // s1.jsx — Introduction to Computers and History of Computers
 import { useEffect, useState } from 'react';
-import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import pic1 from '../assets/pic1.jpg';
@@ -313,7 +313,7 @@ const sectionData = {
 
 function FacultyChapter1() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useFacultyModuleSection('introduction', ['introduction', 'functionalities', 'history']);
+  const [activeSection, setActiveSection] = useModuleSection('introduction', ['introduction', 'functionalities', 'history']);
   const [openIndex, setOpenIndex] = useState(null);
   const [advOpenIndex, setAdvOpenIndex] = useState(null);
   const [pascalOpenIndex, setPascalOpenIndex] = useState(null);

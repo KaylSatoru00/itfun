@@ -1,6 +1,6 @@
 // f7.jsx — Faculty: Microsoft Office Applications
 import { useState } from 'react';
-import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './f7.css';
@@ -14,7 +14,7 @@ const navItems = [
 
 function FacultyChapter7() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useFacultyModuleSection('intro', ['intro', 'powerpoint', 'word', 'excel']);
+  const [activeSection, setActiveSection] = useModuleSection('intro', ['intro', 'powerpoint', 'word', 'excel']);
 
   return (
     <motion.div

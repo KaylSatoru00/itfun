@@ -1,6 +1,6 @@
 // f6.jsx — Faculty: Networking Fundamentals
 import { useEffect, useState } from 'react';
-import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -143,7 +143,7 @@ const hardwareItems = [
 ═════════════════════════════════════════════*/
 function FacultyChapter6() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useFacultyModuleSection('characteristics', ['characteristics', 'internet', 'areas']);
+  const [activeSection, setActiveSection] = useModuleSection('characteristics', ['characteristics', 'internet', 'areas']);
 
   // Hardware accordion states
   const [hw0, setHw0] = useState(false);

@@ -1,6 +1,6 @@
 // f5.jsx — Faculty: Types of Software (System, Application and Operating System)
 import { useEffect, useState } from 'react';
-import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -99,7 +99,7 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function FacultyChapter5() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useFacultyModuleSection('software', ['software']);
+  const [activeSection, setActiveSection] = useModuleSection('software', ['software']);
 
   // Accordion / dropdown state
   const [sysFuncOpen,   setSysFuncOpen]   = useState(false);

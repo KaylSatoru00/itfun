@@ -1,6 +1,6 @@
 // f9.jsx — Keyboarding (Faculty View)
 import { useState } from 'react';
-import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -230,7 +230,7 @@ const excelShortcuts = [
 ═════════════════════════════════════════════*/
 function FacultyChapter9() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useFacultyModuleSection('keyboarding', ['keyboarding']);
+  const [activeSection, setActiveSection] = useModuleSection('keyboarding', ['keyboarding']);
   const [openAccordion, setOpenAccordion] = useState(null);
 
   const toggle = (key) => setOpenAccordion(prev => prev === key ? null : key);

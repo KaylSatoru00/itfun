@@ -1,6 +1,6 @@
 // f3.jsx — Decimal & Binary Number System (Faculty)
 import { useEffect, useState } from 'react';
-import { useFacultyModuleSection } from '../hooks/useFacultyModuleSection';
+import { useModuleSection } from '../hooks/useModuleSection';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import numberImg from '../assets/number.jpg';
@@ -118,7 +118,7 @@ const navItems = [
 
 function FacultyChapter3() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useFacultyModuleSection('numbersystem', ['numbersystem', 'conversions']);
+  const [activeSection, setActiveSection] = useModuleSection('numbersystem', ['numbersystem', 'conversions']);
   const [nsOpenIndex, setNsOpenIndex] = useState(null);
 
   useEffect(() => {
