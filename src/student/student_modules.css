@@ -29,12 +29,13 @@
   height: 64px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  gap: 12px;
+  padding: 0 clamp(10px, 4vw, 20px);
+  gap: clamp(6px, 2vw, 12px);
   background: #fff;
   z-index: 10;
   box-sizing: border-box;
   border-bottom: 1px solid #f0d0d5;
+  flex-wrap: nowrap;
 }
 
 /* ── SEARCH BAR ── */
@@ -44,9 +45,10 @@
   background: transparent;
   border: 2px solid #c8102e;
   border-radius: 20px;
-  padding: 0 14px 0 10px;
+  padding: 0 clamp(8px, 2vw, 14px) 0 clamp(6px, 1.5vw, 10px);
   gap: 6px;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-width: 0;
   height: 36px;
   box-sizing: border-box;
   /* IMPORTANT: dropdown is positioned relative to this */
@@ -68,9 +70,10 @@
   border: none;
   outline: none;
   color: #333;
-  font-size: 14px;
+  font-size: clamp(11px, 2.6vw, 14px);
   font-family: Arial, sans-serif;
-  width: 200px;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   padding: 0;
   line-height: 1;
@@ -87,7 +90,7 @@
   top: calc(100% + 6px);
   left: 0;
   /* wider than the bar so results are readable */
-  min-width: 320px;
+  min-width: min(320px, 90vw);
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(165, 0, 52, 0.13);
@@ -185,29 +188,35 @@
 }
 
 .navbar-spacer {
-  flex: 1;
+  flex: 0 1 16px;
 }
 
 .top-center-btns {
   display: flex;
-  gap: 10px;
-  flex: 0 0 auto;
+  gap: clamp(4px, 1.5vw, 10px);
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
 }
 
 .top-btn {
-  padding: 0 20px;
-  height: 38px;
+  padding: 0 clamp(8px, 2.5vw, 20px);
+  height: clamp(30px, 8vw, 38px);
   border-radius: 20px;
   border: 2px solid #c8102e;
   background: #fff;
   color: #c8102e;
-  font-size: 14px;
+  font-size: clamp(10px, 2.4vw, 14px);
   font-family: Arial, sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   white-space: nowrap;
   box-sizing: border-box;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top-btn:hover {
@@ -231,15 +240,15 @@
 }
 
 .avatar-circle {
-  width: 38px;
-  height: 38px;
+  width: clamp(28px, 7vw, 38px);
+  height: clamp(28px, 7vw, 38px);
   border-radius: 50%;
   background: #c8102e;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: clamp(10px, 2.4vw, 14px);
   font-weight: bold;
   font-family: Arial, sans-serif;
   user-select: none;
@@ -645,66 +654,23 @@
 .modal-cancel-btn:hover { background: #e0e0e0; }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 1280px) {
-  .search-input { width: 140px; }
-  .top-btn {
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-}
-
 @media (max-width: 768px) {
   .modules-grid {
     grid-template-columns: repeat(2, 1fr);
     padding: 80px 16px 80px 16px;
     gap: 16px;
   }
-  .search-bar { flex: 1 1 auto; min-width: 0; }
-  .search-input { width: 100%; min-width: 0; }
   /* dropdown stretches right on mobile since left space is tight */
   .search-dropdown {
     left: 0;
     right: auto;
-    min-width: 280px;
   }
-  .top-center-btns { gap: 6px; flex-shrink: 1; min-width: 0; }
-  .top-btn { padding: 6px 12px; font-size: 12px; flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bottom-nav-label { font-size: 11px; letter-spacing: 0.5px; }
   .bottom-nav-icon { font-size: 18px; }
   .lock-icon { font-size: 36px; }
 }
 
 @media (max-width: 480px) {
-  .top-navbar {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 64px;
-    padding: 8px 10px;
-    gap: 8px;
-    row-gap: 8px;
-  }
-  .search-bar { flex: 1 1 100%; min-width: 0; order: 1; }
-  .search-input { width: 100%; min-width: 0; }
-  .search-dropdown {
-    min-width: 0;
-    width: 100%;
-  }
-  .navbar-spacer { display: none; }
-  .top-center-btns {
-    flex: 1 1 100%;
-    order: 2;
-    gap: 6px;
-    justify-content: space-between;
-  }
-  .top-btn {
-    padding: 6px 10px;
-    font-size: 11px;
-    white-space: nowrap;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
   .bottom-nav-btn { flex-direction: column; gap: 2px; }
   .bottom-nav-label { font-size: 9px; letter-spacing: 0; }
 
@@ -716,16 +682,10 @@
 
   .modules-grid {
     grid-template-columns: 1fr;
-    padding-top: 110px;
+    padding-top: 76px;
     padding-bottom: 76px;
   }
 
-  .avatar-circle {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    flex-shrink: 0;
-  }
   .account-icon { font-size: 34px; }
   .avatar-trigger { top: 70px; right: 10px; }
   .sidebar { width: 150px; top: 110px; right: 8px; }
