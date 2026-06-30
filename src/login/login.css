@@ -23,24 +23,24 @@ html, body {
   background-repeat: no-repeat;
 }
 
-.login-stack {
+.title-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin: auto;
+  gap: 14px;
 }
 
 .login-logo {
-  width: min(140px, 30vw);
-  height: auto;
+  width: clamp(40px, 8vw, 64px);
+  height: clamp(40px, 8vw, 64px);
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .panel {
   width: min(800px, 92vw);
   background: #fff;
   border-radius: 20px;
+  margin: auto;
   position: relative;
   display: flex;
   flex-direction: column;
