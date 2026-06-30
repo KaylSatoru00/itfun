@@ -3,15 +3,12 @@ import { PiStudentThin } from "react-icons/pi";
 import { GiTeacher } from "react-icons/gi";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import logo from '../assets/LOGO_NAMEN.png';
 
 function Login() {
   const navigate = useNavigate();
 
   return (
     <div className="login-wrapper">
-      <img src={logo} alt="" className="login-logo-bg" />
-
       <motion.div
         className="panel"
         initial={{ opacity: 1, scale: 1 }}

@@ -10,7 +10,7 @@ html, body {
 .login-wrapper {
   position: fixed;
   inset: 0;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -21,19 +21,6 @@ html, body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-}
-
-.login-logo-bg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(700px, 80vw);
-  height: auto;
-  object-fit: contain;
-  opacity: 0.12;
-  z-index: 0;
-  pointer-events: none;
 }
 
 .panel {
@@ -126,7 +113,8 @@ html, body {
     font-size: 15px;
     border-radius: 14px;
   }
-}
+
+    }
 
 @media (max-width: 400px) {
   .btn1, .btn2 {
