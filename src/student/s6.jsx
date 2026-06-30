@@ -265,19 +265,22 @@ function Chapter6() {
       <div className="chap-layout">
 
         {/* ── Left Nav Card ── */}
-        <div className="chap-card-small">
-          <nav className="chap-nav-buttons">
-            {navItems.map(({ key, label }) => (
-              <button
-                key={key}
-                className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                onClick={() => setActiveSection(key)}
-              >
-                <CircleProgress percent={progress[key]} active={activeSection === key} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <nav className="chap-nav-buttons">
+              {navItems.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
+                  onClick={() => setActiveSection(key)}
+                >
+                  <CircleProgress percent={progress[key]} active={activeSection === key} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+          <button className="chap-start-game-btn" onClick={() => navigate('/gamified-6')}>START GAME</button>
         </div>
 
         {/* ── Main Right Card ── */}

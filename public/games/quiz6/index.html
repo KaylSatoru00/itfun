@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>Unity Web Player | Bookw</title>
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        overflow: hidden;
+        background: #231F20;
+      }
+      #unity-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: #231F20;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+    <script src="Build/quiz6.loader.js"></script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      createUnityInstance(canvas, {
+        arguments: [],
+        dataUrl: "Build/quiz6.data.br",
+        frameworkUrl: "Build/quiz6.framework.js.br",
+        codeUrl: "Build/quiz6.wasm.br",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Bookw",
+        productVersion: "1.0",
+        matchWebGLToCanvasSize: true, // keep the WebGL render buffer in sync with the CSS-stretched canvas size
+        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+      }).then((unityInstance) => {
+        window.unityInstance = unityInstance;
+      }).catch((message) => {
+        alert(message);
+      });
+    </script>
+  </body>
+</html>

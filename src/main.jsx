@@ -4,8 +4,7 @@ import { AnimatePresence } from 'framer-motion'
 import './index.css'
 import { UserProvider } from './user_context'
 import { SocketProvider } from './socket_context'
-import Gamified1 from './student/gamified1.jsx'
-import Gamified9 from './student/gamified9.jsx'
+
 
 // Login
 import Login from './login/login.jsx'
@@ -43,6 +42,12 @@ import FacultyChapter7 from './faculty/f7.jsx'
 import FacultyChapter8 from './faculty/f8.jsx'
 import FacultyChapter9 from './faculty/f9.jsx'
 
+// Gamified Quiz
+import Gamified1 from './student/gamified1.jsx'
+import Gamified6 from './student/gamified6.jsx';
+import Gamified9 from './student/gamified9.jsx'
+
+
 function AnimatedRoutes() {
   const location = useLocation();
   return (
@@ -79,6 +84,7 @@ function AnimatedRoutes() {
         <Route path="/faculty-chapter-8" element={<FacultyChapter8 />} />
         <Route path="/faculty-chapter-9" element={<FacultyChapter9 />} />
         <Route path="/gamified-1" element={<Gamified1 />} />
+        <Route path="/gamified-6" element={<Gamified6 />} />
         <Route path="/gamified-9" element={<Gamified9 />} />
       </Routes>
     </AnimatePresence>
