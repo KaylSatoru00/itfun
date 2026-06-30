@@ -675,18 +675,32 @@
 }
 
 @media (max-width: 480px) {
-  .top-navbar { padding: 0 10px; gap: 6px; }
-  .search-bar { flex: 1 1 auto; min-width: 0; padding: 0 8px 0 8px; }
+  .top-navbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
+    padding: 8px 10px;
+    gap: 8px;
+    row-gap: 8px;
+  }
+  .search-bar { flex: 1 1 100%; min-width: 0; order: 1; }
   .search-input { width: 100%; min-width: 0; }
   .search-dropdown {
-    min-width: 240px;
+    min-width: 0;
+    width: 100%;
   }
-  .top-center-btns { gap: 4px; flex-shrink: 1; min-width: 0; }
+  .navbar-spacer { display: none; }
+  .top-center-btns {
+    flex: 1 1 100%;
+    order: 2;
+    gap: 6px;
+    justify-content: space-between;
+  }
   .top-btn {
-    padding: 5px 8px;
-    font-size: 10px;
+    padding: 6px 10px;
+    font-size: 11px;
     white-space: nowrap;
-    flex-shrink: 1;
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -702,14 +716,14 @@
 
   .modules-grid {
     grid-template-columns: 1fr;
-    padding-top: 76px;
+    padding-top: 110px;
     padding-bottom: 76px;
   }
 
   .avatar-circle {
-    width: 30px;
-    height: 30px;
-    font-size: 11px;
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
     flex-shrink: 0;
   }
   .account-icon { font-size: 34px; }
