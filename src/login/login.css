@@ -23,11 +23,24 @@ html, body {
   background-repeat: no-repeat;
 }
 
+.login-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: auto;
+}
+
+.login-logo {
+  width: min(140px, 30vw);
+  height: auto;
+  object-fit: contain;
+}
+
 .panel {
   width: min(800px, 92vw);
   background: #fff;
   border-radius: 20px;
-  margin: auto;
   position: relative;
   display: flex;
   flex-direction: column;
