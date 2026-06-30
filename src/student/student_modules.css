@@ -679,8 +679,12 @@
   .search-dropdown {
     min-width: 240px;
   }
-  .top-center-btns { gap: 4px; }
-  .top-btn { padding: 5px 10px; font-size: 11px; }
+  .top-center-btns { gap: 4px; flex-shrink: 0; }
+  .top-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
   .bottom-nav-btn { flex-direction: column; gap: 2px; }
   .bottom-nav-label { font-size: 9px; letter-spacing: 0; }
 
@@ -696,7 +700,12 @@
     padding-bottom: 76px;
   }
 
-  .avatar-circle { width: 34px; height: 34px; font-size: 12px; }
+  .avatar-circle {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
   .account-icon { font-size: 34px; }
   .avatar-trigger { top: 70px; right: 10px; }
   .sidebar { width: 150px; top: 110px; right: 8px; }
