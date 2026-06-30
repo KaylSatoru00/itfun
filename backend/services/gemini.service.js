@@ -23,7 +23,7 @@ function getGeminiService() {
               'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
+              model: 'mimo-v2.5-free',
               messages: [
                 { role: 'user', content: prompt }
               ],
