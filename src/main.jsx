@@ -47,6 +47,9 @@ import Gamified1 from './student/gamified1.jsx'
 import Gamified6 from './student/gamified6.jsx';
 import Gamified9 from './student/gamified9.jsx'
 
+// Forgot Password
+import ResetPassword from './login/reset_password.jsx'
+
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -86,6 +89,7 @@ function AnimatedRoutes() {
         <Route path="/gamified-1" element={<Gamified1 />} />
         <Route path="/gamified-6" element={<Gamified6 />} />
         <Route path="/gamified-9" element={<Gamified9 />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </AnimatePresence>
   )
