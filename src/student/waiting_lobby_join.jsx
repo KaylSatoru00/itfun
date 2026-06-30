@@ -5,6 +5,14 @@ import { useUser } from '../user_context';
 import { useSocket } from '../socket_context';
 import './waiting_lobby.css';
 
+// Same multi-color avatar palette pattern used on the faculty-class page
+const AVATAR_COLORS = ['#7c3aed', '#0891b2', '#16a34a', '#ea580c', '#A50034', '#2563eb'];
+const getAvatarColor = (id = '') => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
 function WaitingLobbyJoin() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,10 +108,6 @@ function WaitingLobbyJoin() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="lobby-topbar">
-        <span className="lobby-brand">ITFun</span>
-      </div>
-
       <div className="waiting-lobby-content">
 
         {/* Left sidebar: PIN display (read-only) + host info */}
@@ -128,7 +132,10 @@ function WaitingLobbyJoin() {
           <div className="players-grid">
             {players.map((player, index) => (
               <div key={player.id || index} className="player-avatar-wrap">
-                <div className="player-avatar">
+                <div
+                  className="player-avatar"
+                  style={{ background: getAvatarColor(player.id || player.name) }}
+                >
                   {player.name ? player.name.charAt(0).toUpperCase() : '?'}
                 </div>
                 <span className="player-avatar-name">
