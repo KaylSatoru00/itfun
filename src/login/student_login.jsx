@@ -2,7 +2,6 @@ import { useState } from 'react';
 import './student_login.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { PiKeyReturnFill } from "react-icons/pi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { auth, db } from '../firebase';
 import {
@@ -301,9 +300,7 @@ function StudentLogin() {
               Don't have an account?{' '}
               <span onClick={() => { setScreen('signup'); setError(''); }}>Sign Up</span>
             </p>
-            <button className="back-btn" onClick={() => navigate('/')}>
-              <PiKeyReturnFill size={28} />
-            </button>
+            <button className="go-back-btn" onClick={() => navigate('/')}>Go back</button>
           </motion.div>
         )}
 
@@ -402,9 +399,7 @@ function StudentLogin() {
               Already have an account?{' '}
               <span onClick={() => { setScreen('login'); setError(''); }}>Login</span>
             </p>
-            <button className="back-btn" onClick={() => navigate('/')}>
-              <PiKeyReturnFill size={28} />
-            </button>
+            <button className="go-back-btn" onClick={() => navigate('/')}>Go back</button>
           </motion.div>
         )}
 
