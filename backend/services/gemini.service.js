@@ -7,15 +7,15 @@ function getGeminiService() {
     throw new Error('GEMINI_API_KEY is not set in your .env file.');
   }
 
-  console.log('✅ Groq API key loaded, length:', apiKey.length);
+  console.log('✅ NaraRouter API key loaded, length:', apiKey.length);
 
   return {
     async generateQuestions(prompt) {
       try {
-        console.log('📤 Sending prompt to Groq...');
+        console.log('📤 Sending prompt to NaraRouter...');
 
         const response = await fetch(
-          'https://api.groq.com/openai/v1/chat/completions',
+          'https://router.bynara.id/v1/chat/completions',
           {
             method: 'POST',
             headers: {
@@ -40,7 +40,7 @@ function getGeminiService() {
         }
 
         const text = data.choices[0].message.content;
-        console.log('📥 Raw Groq response (first 300 chars):', text.substring(0, 300));
+        console.log('📥 Raw response (first 300 chars):', text.substring(0, 300));
 
         let cleanedContent = text.trim();
         if (cleanedContent.startsWith('```json')) {
@@ -50,12 +50,12 @@ function getGeminiService() {
         }
 
         const questions = JSON.parse(cleanedContent);
-        console.log(`✅ Parsed ${questions.length} questions from Groq`);
+        console.log(`✅ Parsed ${questions.length} questions`);
         return questions;
 
       } catch (error) {
-        console.error('❌ Groq service error:', error.message);
-        throw new Error(`Groq failed: ${error.message}`);
+        console.error('❌ NaraRouter service error:', error.message);
+        throw new Error(`NaraRouter failed: ${error.message}`);
       }
     },
   };
