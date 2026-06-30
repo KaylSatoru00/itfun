@@ -10,16 +10,15 @@ function Login() {
 
   return (
     <div className="login-wrapper">
+      <img src={logo} alt="" className="login-logo-bg" />
+
       <motion.div
         className="panel"
         initial={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.3, ease: 'easeIn' }}
       >
-        <div className="title-row">
-          <img src={logo} alt="ITFun Logo" className="login-logo" />
-          <h1 className="title">ITFun</h1>
-        </div>
+        <h1 className="title">ITFun</h1>
         <p className="subtitle">IT Fundamentals Made Fun</p>
 
         <div className="buttons">
