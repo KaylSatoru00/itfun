@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useUser } from '../user_context';
@@ -110,6 +111,11 @@ function FacultyLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // forgot password state
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetTouched, setResetTouched] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
   const passwordValid = passwordRules.every(r => r.test(signupPassword));
 
   const handleLogin = async () => {
@@ -205,6 +211,31 @@ function FacultyLogin() {
     setLoading(false);
   };
 
+  const handleForgotPassword = async () => {
+    setResetTouched(true);
+    setError('');
+    if (!resetEmail) {
+      setError('Please enter your email.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetSent(true);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        setResetSent(true);
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please try again later.');
+      } else {
+        setError('Failed to send reset email. Please try again.');
+      }
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="login-wrapper">
       <motion.div
@@ -258,6 +289,77 @@ function FacultyLogin() {
           </motion.div>
         )}
 
+        {/* ── FORGOT PASSWORD SCREEN ── */}
+        {screen === 'forgot' && (
+          <motion.div
+            key="forgot"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+            style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}
+          >
+            {!resetSent ? (
+              <>
+                <h1 className="form-title">Reset Password</h1>
+                <p style={{ fontSize: '13px', color: '#777', fontFamily: 'Arial, sans-serif', textAlign: 'center', margin: '0' }}>
+                  Enter the email linked to your account and we'll send you a link to reset your password.
+                </p>
+                {error && <p style={{ color: '#c8102e', fontSize: '13px', fontFamily: 'Arial, sans-serif', margin: '0', textAlign: 'center' }}>{error}</p>}
+
+                <div className="input-group">
+                  <RequiredLabel label="Email" touched={resetTouched} value={resetEmail} />
+                  <input
+                    type="email" className="input" placeholder="example@gmail.com"
+                    value={resetEmail}
+                    onChange={e => setResetEmail(e.target.value)}
+                    onBlur={() => setResetTouched(true)}
+                    onKeyDown={e => e.key === 'Enter' && handleForgotPassword()}
+                    style={{ borderColor: resetTouched && !resetEmail ? '#c8102e' : undefined }}
+                  />
+                </div>
+
+                <button className="submit-btn" onClick={handleForgotPassword} disabled={loading}>
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+                <button className="go-back-btn" onClick={() => { setScreen('login'); setError(''); }}>Back to Login</button>
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
+                  style={{
+                    width: '90px', height: '90px', borderRadius: '50%',
+                    background: '#fff3e0', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: '48px',
+                  }}
+                >
+                  📧
+                </motion.div>
+                <h1 className="form-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
+                <p style={{ fontSize: '14px', color: '#555', fontFamily: 'Arial, sans-serif', textAlign: 'center', margin: '0' }}>
+                  If an account exists for<br />
+                  <strong style={{ color: '#c8102e' }}>{resetEmail}</strong>, a password reset link has been sent.
+                </p>
+                <p style={{ fontSize: '13px', color: '#777', fontFamily: 'Arial, sans-serif', textAlign: 'center', margin: '0' }}>
+                  Click the link in the email to set a new password, then come back to log in.
+                </p>
+                <button className="submit-btn" onClick={() => { setScreen('login'); setError(''); }}>
+                  Go to Login
+                </button>
+                <p className="toggle-text">
+                  Didn't receive it?{' '}
+                  <span onClick={handleForgotPassword} style={{ color: '#c8102e', cursor: 'pointer', fontWeight: 'bold' }}>
+                    {loading ? 'Sending...' : 'Resend'}
+                  </span>
+                </p>
+              </>
+            )}
+          </motion.div>
+        )}
+
         {/* ── LOGIN SCREEN ── */}
         {screen === 'login' && (
           <motion.div
@@ -290,7 +392,18 @@ function FacultyLogin() {
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
               />
             </div>
-            <p className="forgot">Forgot password?</p>
+            <p
+              className="forgot"
+              onClick={() => {
+                setError('');
+                setResetEmail(loginEmail);
+                setResetSent(false);
+                setResetTouched(false);
+                setScreen('forgot');
+              }}
+            >
+              Forgot password?
+            </p>
             <button className="submit-btn" onClick={handleLogin} disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </button>
