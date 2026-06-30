@@ -130,9 +130,12 @@ export default function Gamified6() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: isPseudoFullscreen ? "flex-start" : "center",
         position: "relative",
-        overflow: "hidden",
+        overflowX: "hidden",
+        overflowY: isPseudoFullscreen ? "hidden" : "auto",
+        padding: isPseudoFullscreen ? 0 : "76px 16px 24px",
+        boxSizing: "border-box",
         background: `linear-gradient(135deg, ${COLORS.black} 0%, #1a0008 100%)`,
       }}
     >
@@ -170,58 +173,61 @@ export default function Gamified6() {
         </>
       )}
 
-      {/* Back button */}
+      {/* Top row: Back button + Mute toggle, sits above the panel in normal flow */}
       {!isPseudoFullscreen && (
-        <button
-          onClick={() => navigate(-1)}
+        <div
           style={{
-            position: "absolute",
-            top: 24,
-            left: 24,
-            zIndex: 20,
+            width: "100%",
+            maxWidth: GAME_WIDTH,
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            padding: "10px 18px",
-            borderRadius: 9999,
-            background: "rgba(255,255,255,0.08)",
-            color: COLORS.white,
-            border: `1px solid ${COLORS.rose}55`,
-            backdropFilter: "blur(8px)",
-            cursor: "pointer",
-            fontSize: 14,
-            fontWeight: 500,
+            justifyContent: "space-between",
+            marginBottom: 12,
+            zIndex: 20,
           }}
         >
-          <ArrowLeft size={18} />
-          Back
-        </button>
-      )}
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 14px",
+              borderRadius: 9999,
+              background: "rgba(255,255,255,0.08)",
+              color: COLORS.white,
+              border: `1px solid ${COLORS.rose}55`,
+              backdropFilter: "blur(8px)",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
 
-      {/* Mute toggle */}
-      {!isPseudoFullscreen && (
-        <button
-          onClick={toggleMute}
-          style={{
-            position: "absolute",
-            top: 24,
-            right: 24,
-            zIndex: 20,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.08)",
-            color: COLORS.white,
-            border: `1px solid ${COLORS.rose}55`,
-            backdropFilter: "blur(8px)",
-            cursor: "pointer",
-          }}
-        >
-          {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
+          <button
+            onClick={toggleMute}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 38,
+              height: 38,
+              flexShrink: 0,
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)",
+              color: COLORS.white,
+              border: `1px solid ${COLORS.rose}55`,
+              backdropFilter: "blur(8px)",
+              cursor: "pointer",
+            }}
+          >
+            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+        </div>
       )}
 
       {/* Fixed-size game panel — stretches to fill screen in fullscreen mode.
@@ -249,9 +255,10 @@ export default function Gamified6() {
               }
             : {
                 position: "relative",
-                width: isFullscreen ? "100vw" : GAME_WIDTH,
-                height: isFullscreen ? "100vh" : GAME_HEIGHT,
-                maxWidth: isFullscreen ? "100vw" : "95vw",
+                width: isFullscreen ? "100vw" : "min(960px, 96vw)",
+                height: isFullscreen
+                  ? "100vh"
+                  : "min(600px, calc(min(960px, 96vw) * 0.625), 75vh)",
                 borderRadius: isFullscreen ? 0 : 18,
                 overflow: "hidden",
                 border: isFullscreen ? "none" : `2px solid ${COLORS.red}`,
@@ -259,6 +266,7 @@ export default function Gamified6() {
                   ? "none"
                   : `0 0 60px ${COLORS.red}40, 0 0 120px ${COLORS.maroon}20`,
                 background: COLORS.black,
+                flexShrink: 0,
               }
         }
       >
