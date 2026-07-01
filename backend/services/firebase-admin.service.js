@@ -1,4 +1,5 @@
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 // The service account key is stored as a JSON string in an environment
 // variable (e.g. in Railway's Variables tab), since we can't easily
@@ -11,19 +12,16 @@ import admin from 'firebase-admin';
 // 4. Paste it as the value of FIREBASE_SERVICE_ACCOUNT in Railway's
 //    environment variables (as a single-line JSON string)
 
-if (!admin.apps.length) {
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-    console.error('❌ Missing FIREBASE_SERVICE_ACCOUNT environment variable');
-  } else {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  console.error('❌ Missing FIREBASE_SERVICE_ACCOUNT environment variable');
+} else if (!getApps().length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+  initializeApp({
+    credential: cert(serviceAccount),
+  });
 
-    console.log('🔥 Firebase Admin initialized');
-  }
+  console.log('🔥 Firebase Admin initialized');
 }
 
-export const adminAuth = admin.auth();
-export default admin;
+export const adminAuth = getAuth();
