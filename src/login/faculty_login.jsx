@@ -220,7 +220,11 @@ function FacultyLogin() {
     }
     setLoading(true);
     try {
-      await sendPasswordResetEmail(auth, resetEmail);
+      const actionCodeSettings = {
+        url: 'https://itfun.vercel.app/reset-password',
+        handleCodeInApp: false,
+      };
+      await sendPasswordResetEmail(auth, resetEmail, actionCodeSettings);
       setResetSent(true);
     } catch (err) {
       if (err.code === 'auth/user-not-found') {
