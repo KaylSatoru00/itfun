@@ -1,4 +1,13 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Force IPv4 resolution for all outbound connections from this transporter.
+// Railway's network has no outbound IPv6 route to Gmail, and the `family: 4`
+// transport option alone wasn't reliably respected on the TLS (port 465)
+// connection — this custom lookup guarantees an IPv4 address is used.
+function lookupIPv4(hostname, options, callback) {
+  return dns.lookup(hostname, { family: 4 }, callback);
+}
 
 // Uses a dedicated Gmail account (NOT a personal one) as the sender.
 // Requires an App Password (not the regular Gmail password) — see:
@@ -12,7 +21,7 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true, // true for port 465, false for 587
-  family: 4, // force IPv4 — Railway's network has no outbound IPv6 route to Gmail, which was causing ENETUNREACH
+  lookup: lookupIPv4, // force IPv4 — Railway's network has no outbound IPv6 route to Gmail, which was causing ENETUNREACH
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_APP_PASSWORD,
