@@ -23,12 +23,32 @@ import { adminAuth } from './services/firebase-admin.service.js';
 import { sendPasswordResetEmail } from './services/email.service.js';
 
 const app = express();
+
+// Fixed, known-good origins (production + local dev)
 const allowedOrigins = process.env.CLIENT_URL
   ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174']
   : ['http://localhost:5173', 'http://localhost:5174'];
 
+// Vercel preview deployments get a random URL per build, e.g.
+// https://itfun-p4ib9yon3-kaylsatoru00s-projects.vercel.app
+// This regex allows ANY preview URL for this specific Vercel project,
+// so we don't have to hardcode a new origin every time we deploy a preview.
+const vercelPreviewRegex = /^https:\/\/itfun-[a-z0-9]+-kaylsatoru00s-projects\.vercel\.app$/;
+
+function corsOriginCheck(origin, callback) {
+  // Allow requests with no origin (e.g. curl, server-to-server, mobile apps)
+  if (!origin) return callback(null, true);
+
+  if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+    return callback(null, true);
+  }
+
+  console.warn(`🚫 Blocked by CORS: ${origin}`);
+  return callback(new Error('Not allowed by CORS'));
+}
+
 app.use(cors({
-  origin: allowedOrigins,
+  origin: corsOriginCheck,
   methods: ['GET', 'POST'],
   credentials: true,
 }));
@@ -37,7 +57,7 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: corsOriginCheck,
     methods: ['GET', 'POST'],
     credentials: true,
   },
