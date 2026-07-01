@@ -19,6 +19,8 @@ import { QuizEngine } from './quiz/quiz.engine.js';
 import { ScoringService } from './scoring/scoring.service.js';
 import { generateQuiz } from './services/ai.service.js';
 import { getLessonContent } from './services/lesson.service.js';
+import { adminAuth } from './services/firebase-admin.service.js';
+import { sendPasswordResetEmail } from './services/email.service.js';
 
 const app = express();
 const allowedOrigins = process.env.CLIENT_URL
@@ -46,6 +48,52 @@ const scoringService = new ScoringService();
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+  console.log('📨 Received forgot-password request');
+
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    // Generate the reset link ourselves via Firebase Admin SDK.
+    // This bypasses the Firebase Console's "Customize action URL" setting
+    // entirely, so it always points to our own branded reset-password page.
+    const actionCodeSettings = {
+      url: 'https://itfun.vercel.app/reset-password',
+    };
+
+    let resetLink;
+    try {
+      resetLink = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
+    } catch (err) {
+      // Don't reveal whether the email exists — respond with success
+      // regardless, but only actually send an email if the account exists.
+      if (err.code === 'auth/user-not-found') {
+        console.log(`⚠️ Reset requested for non-existent email: ${email}`);
+        return res.json({ success: true });
+      }
+      throw err;
+    }
+
+    await sendPasswordResetEmail(email, resetLink);
+    console.log(`✅ Password reset email sent to ${email}`);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Forgot-password error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send reset email. Please try again.',
+    });
+  }
 });
 
 app.post('/api/generate-quiz', async (req, res) => {

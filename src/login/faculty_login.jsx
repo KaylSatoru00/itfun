@@ -8,7 +8,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
-  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useUser } from '../user_context';
@@ -220,22 +219,18 @@ function FacultyLogin() {
     }
     setLoading(true);
     try {
-      const actionCodeSettings = {
-        url: 'https://itfun.vercel.app/reset-password',
-        handleCodeInApp: false,
-      };
-      await sendPasswordResetEmail(auth, resetEmail, actionCodeSettings);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send reset email.');
+      }
       setResetSent(true);
     } catch (err) {
-      if (err.code === 'auth/user-not-found') {
-        setResetSent(true);
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please try again later.');
-      } else {
-        setError('Failed to send reset email. Please try again.');
-      }
+      setError('Failed to send reset email. Please try again.');
     }
     setLoading(false);
   };
