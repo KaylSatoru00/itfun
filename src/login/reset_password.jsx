@@ -88,19 +88,23 @@ function ResetPassword() {
   const passwordValid = passwordRules.every(r => r.test(newPassword));
 
   useEffect(() => {
-    if (!oobCode) {
+  console.log('Full search params:', searchParams.toString());
+  console.log('oobCode:', oobCode);
+
+  if (!oobCode) {
+    setStage('invalid');
+    return;
+  }
+  verifyPasswordResetCode(auth, oobCode)
+    .then(verifiedEmail => {
+      setEmail(verifiedEmail);
+      setStage('form');
+    })
+    .catch((err) => {
+      console.error('Verify reset code failed:', err.code, err.message);
       setStage('invalid');
-      return;
-    }
-    verifyPasswordResetCode(auth, oobCode)
-      .then(verifiedEmail => {
-        setEmail(verifiedEmail);
-        setStage('form');
-      })
-      .catch(() => {
-        setStage('invalid');
-      });
-  }, [oobCode]);
+    });
+}, [oobCode]);
 
   const handleReset = async () => {
     setTouched(true);
