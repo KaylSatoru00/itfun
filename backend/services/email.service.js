@@ -1,35 +1,19 @@
-import nodemailer from 'nodemailer';
-import dns from 'dns';
-
-// Force IPv4 resolution for all outbound connections from this transporter.
-// Railway's network has no outbound IPv6 route to Gmail, and the `family: 4`
-// transport option alone wasn't reliably respected on the TLS (port 465)
-// connection — this custom lookup guarantees an IPv4 address is used.
-function lookupIPv4(hostname, options, callback) {
-  return dns.lookup(hostname, { family: 4 }, callback);
-}
-
-// Uses a dedicated Gmail account (NOT a personal one) as the sender.
-// Requires an App Password (not the regular Gmail password) — see:
-// myaccount.google.com/security -> 2-Step Verification -> App passwords
+// Sends email via Brevo's HTTP API instead of raw SMTP.
+// We switched away from nodemailer/SMTP because Railway blocks outbound
+// SMTP connections (port 465/587) at the network level — this was causing
+// ENETUNREACH / Connection timeout errors that no SMTP config could fix.
+// Brevo's API is a plain HTTPS POST, so it isn't affected by that block.
+//
+// Setup (one-time):
+//   1. Sign up at https://www.brevo.com (free tier)
+//   2. Verify your sender email (Senders, Domains & Dedicated IPs -> Senders)
+//   3. Create an API key (SMTP & API -> API Keys)
 //
 // Set these in Railway's environment variables:
-//   EMAIL_USER          -> e.g. itfun.dct@gmail.com
-//   EMAIL_APP_PASSWORD  -> the 16-character app password (no spaces)
+//   BREVO_API_KEY    -> the API key from step 3
+//   EMAIL_USER       -> the sender email you verified in step 2, e.g. itfun.dct@gmail.com
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // true for port 465, false for 587
-  lookup: lookupIPv4, // force IPv4 — Railway's network has no outbound IPv6 route to Gmail, which was causing ENETUNREACH
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD,
-  },
-  connectionTimeout: 15000, // 15s instead of nodemailer's default (fails fast so the request doesn't hang forever)
-  greetingTimeout: 15000,
-  socketTimeout: 15000,
-});
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 /**
  * Sends a branded password reset email containing the Firebase-generated
@@ -60,10 +44,23 @@ export async function sendPasswordResetEmail(toEmail, resetLink) {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: '"ITFun" <' + process.env.EMAIL_USER + '>',
-    to: toEmail,
-    subject: 'Reset your ITFun password',
-    html,
+  const response = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: 'ITFun', email: process.env.EMAIL_USER },
+      to: [{ email: toEmail }],
+      subject: 'Reset your ITFun password',
+      htmlContent: html,
+    }),
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
+  }
 }
