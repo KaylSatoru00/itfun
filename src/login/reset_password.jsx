@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import {
   verifyPasswordResetCode,
   confirmPasswordReset,
 } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const passwordRules = [
   { id: 'length',  label: 'At least 8 characters',                       test: p => p.length >= 8 },
@@ -78,6 +79,7 @@ function ResetPassword() {
   // 'checking' | 'invalid' | 'form' | 'success'
   const [stage, setStage] = useState('checking');
   const [email, setEmail] = useState('');
+  const [loginPath, setLoginPath] = useState('/'); // where "Go to Login" should send the user
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -96,8 +98,28 @@ function ResetPassword() {
     return;
   }
   verifyPasswordResetCode(auth, oobCode)
-    .then(verifiedEmail => {
+    .then(async (verifiedEmail) => {
       setEmail(verifiedEmail);
+
+      // Figure out whether this account belongs to a student or faculty,
+      // so the "Go to Login" button sends them to the right login page.
+      try {
+        const studentQuery = query(collection(db, 'students'), where('email', '==', verifiedEmail));
+        const studentSnap = await getDocs(studentQuery);
+        if (!studentSnap.empty) {
+          setLoginPath('/student-login');
+        } else {
+          const facultyQuery = query(collection(db, 'faculty'), where('email', '==', verifiedEmail));
+          const facultySnap = await getDocs(facultyQuery);
+          if (!facultySnap.empty) {
+            setLoginPath('/faculty-login');
+          }
+        }
+      } catch (lookupErr) {
+        console.error('Role lookup failed:', lookupErr);
+        // Not critical — loginPath just falls back to '/' (role selection page)
+      }
+
       setStage('form');
     })
     .catch((err) => {
@@ -369,7 +391,7 @@ function ResetPassword() {
               <p style={{ fontSize: '14px', color: '#555', fontFamily: 'Arial, sans-serif', textAlign: 'center', margin: '0' }}>
                 Your password has been changed successfully. You can now log in with your new password.
               </p>
-              <button className="submit-btn" onClick={() => navigate('/')}>
+              <button className="submit-btn" onClick={() => navigate(loginPath)}>
                 Go to Login
               </button>
             </motion.div>

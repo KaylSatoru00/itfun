@@ -80,16 +80,27 @@ app.post('/api/forgot-password', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email is required' });
     }
 
-    // Generate the reset link ourselves via Firebase Admin SDK.
-    // This bypasses the Firebase Console's "Customize action URL" setting
-    // entirely, so it always points to our own branded reset-password page.
+    // Generate the reset link via Firebase Admin SDK. By default, this link
+    // points to Firebase's own hosted UI (firebaseapp.com/__/auth/action),
+    // NOT our custom reset_password.jsx page — actionCodeSettings.url only
+    // becomes a "continue" link shown after Firebase's own page finishes.
+    // To send users straight to OUR page, we extract the oobCode from the
+    // generated link and build our own URL with it. The frontend page then
+    // uses the Firebase client SDK's verifyPasswordResetCode/confirmPasswordReset
+    // functions with that code.
     const actionCodeSettings = {
       url: 'https://itfun.vercel.app/reset-password',
     };
 
     let resetLink;
     try {
-      resetLink = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
+      const firebaseHostedLink = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
+
+      // The Firebase-generated link looks like:
+      //   https://<project>.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=XXXX&apiKey=...&continueUrl=...
+      // We only need the oobCode — pull it out and build our own link.
+      const oobCode = new URL(firebaseHostedLink).searchParams.get('oobCode');
+      resetLink = `https://itfun.vercel.app/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
     } catch (err) {
       // Don't reveal whether the email exists — respond with success
       // regardless, but only actually send an email if the account exists.
