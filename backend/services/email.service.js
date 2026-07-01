@@ -9,11 +9,16 @@ import nodemailer from 'nodemailer';
 //   EMAIL_APP_PASSWORD  -> the 16-character app password (no spaces)
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // true for port 465, false for 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_APP_PASSWORD,
   },
+  connectionTimeout: 15000, // 15s instead of nodemailer's default (fails fast so the request doesn't hang forever)
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
 });
 
 /**
