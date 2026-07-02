@@ -127,6 +127,31 @@ function QuizArena() {
   };
 
   const timerPercent = (timer / maxTimer) * 100;
+  const isUrgent = timer <= 5;
+
+  // Circular timer ring math
+  const RADIUS = 52;
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+  const dashOffset = CIRCUMFERENCE * (1 - timerPercent / 100);
+
+  const TimerRing = () => (
+    <div className={`timer-ring-wrap ${isUrgent ? 'danger' : ''}`}>
+      <svg className="timer-ring-svg" viewBox="0 0 120 120">
+        <circle className="timer-ring-bg" cx="60" cy="60" r={RADIUS} />
+        <circle
+          className="timer-ring-fill"
+          cx="60"
+          cy="60"
+          r={RADIUS}
+          style={{
+            strokeDasharray: CIRCUMFERENCE,
+            strokeDashoffset: dashOffset,
+          }}
+        />
+      </svg>
+      <span className="timer-ring-label">{timer}</span>
+    </div>
+  );
 
   // SCREEN: Game Finished
   if (gameFinished) {
@@ -136,10 +161,6 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="arena-topbar">
-          <span className="arena-brand">ITFun</span>
-        </div>
-
         <div className="results-page">
           <p className="round-label">FINAL RESULTS</p>
 
@@ -147,7 +168,7 @@ function QuizArena() {
             {finalRankings.map((player, index) => (
               <motion.div
                 key={player.id}
-                className="rank-row"
+                className={`rank-row ${index === 0 ? 'first-place' : ''}`}
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.08 }}
@@ -178,10 +199,6 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="arena-topbar">
-          <span className="arena-brand">ITFun</span>
-        </div>
-
         <div className="results-page">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
 
@@ -189,7 +206,7 @@ function QuizArena() {
             {rankings.map((player, index) => (
               <motion.div
                 key={player.id}
-                className="rank-row"
+                className={`rank-row ${index === 0 ? 'first-place' : ''}`}
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.08 }}
@@ -214,9 +231,6 @@ function QuizArena() {
   if (!currentQuestion) {
     return (
       <div className="arena-panel">
-        <div className="arena-topbar">
-          <span className="arena-brand">ITFun</span>
-        </div>
         <div className="arena-loading">
           <p>Waiting for the quiz to start...</p>
         </div>
@@ -231,11 +245,13 @@ function QuizArena() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <div className="arena-topbar">
-        <span className="arena-brand">ITFun</span>
-      </div>
+      <TimerRing />
 
       <div className="arena-body">
+
+        <span className="question-progress">
+          Question {questionIndex + 1} of {totalQuestions}
+        </span>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -334,17 +350,6 @@ function QuizArena() {
             ✅ Answer submitted! Waiting for others...
           </motion.p>
         )}
-
-        <div className="timer-bar-wrap">
-          <div
-            className="timer-bar-fill"
-            style={{
-              width: `${timerPercent}%`,
-              background: timer <= 5 ? '#c8102e' : '#333',
-            }}
-          />
-          <span className="timer-label">{timer}</span>
-        </div>
 
       </div>
     </motion.div>
