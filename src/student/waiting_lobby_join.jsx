@@ -38,19 +38,51 @@ function WaitingLobbyJoin() {
       ? `${user.firstName} ${user.lastName}`
       : 'Player';
 
-    socket.emit('join-room', {
-      pin,
-      playerName: playerDisplayName,
-    }, (response) => {
-      console.log('👥 join-room response:', response);
-      if (response.success) {
-        setPlayers(response.room.players);
-        setHostName(response.room.hostName);
-      } else {
-        setError(response.error || 'Failed to join room');
-        setTimeout(() => navigate('/pvp-quiz'), 2000);
-      }
-    });
+    const doJoinRoom = () => {
+      socket.emit('join-room', {
+        pin,
+        playerName: playerDisplayName,
+      }, (response) => {
+        console.log('👥 join-room response:', response);
+        if (response.success) {
+          setPlayers(response.room.players);
+          setHostName(response.room.hostName);
+
+          sessionStorage.setItem('itfun_roomPin', pin);
+          sessionStorage.setItem('itfun_playerName', playerDisplayName);
+          sessionStorage.setItem('itfun_isHost', 'false');
+        } else {
+          setError(response.error || 'Failed to join room');
+          setTimeout(() => navigate('/pvp-quiz'), 2000);
+        }
+      });
+    };
+
+    // Kung nag-refresh (may existing session na tumutugma sa pin na 'to),
+    // i-attempt munang mag-rejoin bago mag-join ulit as bagong player.
+    const savedPin = sessionStorage.getItem('itfun_roomPin');
+    const savedName = sessionStorage.getItem('itfun_playerName');
+
+    if (savedPin === pin && savedName === playerDisplayName) {
+      socket.emit('rejoin-room', { pin, playerName: playerDisplayName }, (response) => {
+        console.log('🔁 join rejoin-room response:', response);
+        if (response?.success) {
+          setPlayers(response.state.players);
+          setHostName(response.room?.hostName || hostName);
+
+          if (response.state.finished || response.state.question) {
+            navigate(`/quiz-arena?pin=${pin}`);
+          }
+        } else {
+          sessionStorage.removeItem('itfun_roomPin');
+          sessionStorage.removeItem('itfun_playerName');
+          sessionStorage.removeItem('itfun_isHost');
+          doJoinRoom();
+        }
+      });
+    } else {
+      doJoinRoom();
+    }
 
     socket.on('room-update', (data) => {
       setPlayers(data.players);
@@ -74,6 +106,9 @@ function WaitingLobbyJoin() {
     });
 
     socket.on('room-closed', () => {
+      sessionStorage.removeItem('itfun_roomPin');
+      sessionStorage.removeItem('itfun_playerName');
+      sessionStorage.removeItem('itfun_isHost');
       alert('The room has been closed by the host.');
       navigate('/pvp-quiz');
     });
@@ -156,6 +191,9 @@ function WaitingLobbyJoin() {
             className="leave-btn"
             onClick={() => {
               if (window.confirm('Are you sure you want to leave?')) {
+                sessionStorage.removeItem('itfun_roomPin');
+                sessionStorage.removeItem('itfun_playerName');
+                sessionStorage.removeItem('itfun_isHost');
                 navigate('/pvp-quiz');
               }
             }}

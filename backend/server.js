@@ -66,6 +66,12 @@ const io = new Server(server, {
 const roomManager = new RoomManager();
 const scoringService = new ScoringService();
 
+// Pag nag-disconnect ang isang socket (e.g. dahil sa page refresh), hindi
+// natin agad tinatanggal yung player sa room — bibigyan muna natin ng grace
+// period para makapag-rejoin. Key: `${pin}:${playerName}` -> setTimeout handle.
+const disconnectTimers = new Map();
+const REJOIN_GRACE_MS = 15000;
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -253,6 +259,81 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Rejoin Room (e.g. after page refresh) ──
+  socket.on('rejoin-room', async (data, callback) => {
+    try {
+      const { pin, playerName } = data;
+
+      const room = roomManager.getRoom(pin);
+      if (!room) {
+        callback({ success: false, error: 'Room not found' });
+        return;
+      }
+
+      const existingPlayer = roomManager.findPlayerByName(pin, playerName);
+      if (!existingPlayer) {
+        callback({ success: false, error: 'Player not found in room' });
+        return;
+      }
+
+      // Kung may naka-schedule pang pagtanggal galing sa disconnect handler,
+      // kanselahin na — nag-rejoin naman pala siya sa oras.
+      const timerKey = `${pin}:${playerName}`;
+      const pendingTimer = disconnectTimers.get(timerKey);
+      if (pendingTimer) {
+        clearTimeout(pendingTimer);
+        disconnectTimers.delete(timerKey);
+      }
+
+      const wasHost = existingPlayer.id === room.hostId;
+      roomManager.reassignPlayerSocket(pin, playerName, socket.id);
+
+      socket.join(pin);
+      socket.data.roomPin = pin;
+      socket.data.playerId = socket.id;
+      socket.data.playerName = playerName;
+      socket.data.isHost = wasHost;
+
+      let state;
+      if (room.status === 'playing' && room.quizEngine) {
+        state = room.quizEngine.getState();
+      } else if (room.status === 'finished') {
+        state = {
+          finished: true,
+          players: room.players
+            .slice()
+            .sort((a, b) => b.score - a.score)
+            .map((p, i) => ({ ...p, rank: i + 1 })),
+        };
+      } else {
+        // Room pa lang naka-'waiting' — hindi pa nagsisimula yung quiz
+        state = {
+          finished: false,
+          resultsShown: false,
+          question: null,
+          questionIndex: 0,
+          totalQuestions: room.questions.length,
+          timeLeft: 30,
+          maxTime: 30,
+          players: room.players,
+        };
+      }
+
+      console.log(`🔁 ${playerName} rejoined room ${pin} as ${socket.id}`);
+
+      callback({ success: true, state, isHost: wasHost, room });
+
+      io.to(pin).emit('room-update', {
+        players: room.players,
+        hostName: room.hostName,
+        isHost: wasHost,
+      });
+    } catch (error) {
+      console.error('Rejoin room error:', error);
+      callback({ success: false, error: error.message });
+    }
+  });
+
   // ── Start Quiz ──
   socket.on('start-quiz', async (data, callback) => {
     try {
@@ -343,16 +424,44 @@ io.on('connection', (socket) => {
 
   // ── Disconnect ──
   socket.on('disconnect', () => {
-    console.log(`🔴 Client disconnected: ${socket.id}`);
-
     const pin = socket.data.roomPin;
-    if (!pin) return;
+    const playerName = socket.data.playerName;
+    if (!pin || !playerName) return;
 
     const room = roomManager.getRoom(pin);
     if (!room) return;
 
-    const wasHost = socket.id === room.hostId;
-    roomManager.removePlayer(pin, socket.id);
+    console.log(`🔴 Client disconnected: ${socket.id} (${playerName}) — ${REJOIN_GRACE_MS / 1000}s grace period bago tanggalin`);
+
+    const timerKey = `${pin}:${playerName}`;
+
+    // Kung may naunang timer na (edge case), i-clear muna
+    const existingTimer = disconnectTimers.get(timerKey);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    const timer = setTimeout(() => {
+      disconnectTimers.delete(timerKey);
+      finalizePlayerRemoval(pin, socket.id, playerName);
+    }, REJOIN_GRACE_MS);
+
+    disconnectTimers.set(timerKey, timer);
+  });
+
+  // ── Helper: Finalize player removal after grace period expires ──
+  function finalizePlayerRemoval(pin, socketId, playerName) {
+    const room = roomManager.getRoom(pin);
+    if (!room) return;
+
+    // Kung nag-rejoin na yung player gamit ang ibang bagong socket.id,
+    // huwag na siyang tanggalin — yung dating socket.id lang ang "patay".
+    const currentPlayer = room.players.find((p) => p.name === playerName);
+    if (currentPlayer && currentPlayer.id !== socketId) {
+      console.log(`↩️ ${playerName} already rejoined with a new socket — skipping removal`);
+      return;
+    }
+
+    const wasHost = socketId === room.hostId;
+    roomManager.removePlayer(pin, socketId);
 
     if (room.players.length === 0) {
       roomManager.deleteRoom(pin);
@@ -371,7 +480,7 @@ io.on('connection', (socket) => {
     }
 
     io.to(pin).emit('player-left', {
-      playerId: socket.id,
+      playerId: socketId,
       playerCount: room.players.length,
     });
 
@@ -380,7 +489,7 @@ io.on('connection', (socket) => {
       hostName: room.hostName,
       isHost: false,
     });
-  });
+  }
 
   // ── Helper: Send Question ──
   function sendQuestion(pin) {
@@ -408,8 +517,11 @@ io.on('connection', (socket) => {
     });
 
     let timeLeft = 30;
+    room.quizEngine.setTimeLeft(timeLeft);
+
     const timerInterval = setInterval(() => {
       timeLeft--;
+      room.quizEngine.setTimeLeft(timeLeft);
       io.to(pin).emit('timer-update', { timeLeft });
 
       if (timeLeft <= 0) {

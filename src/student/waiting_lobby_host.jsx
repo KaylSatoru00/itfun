@@ -41,25 +41,62 @@ function WaitingLobby() {
       ? `${user.firstName} ${user.lastName}`
       : 'Player';
 
-    console.log('🏠 Creating room with', questions.length, 'questions');
+    const doCreateRoom = () => {
+      console.log('🏠 Creating room with', questions.length, 'questions');
 
-    socket.emit('create-room', {
-      hostName: playerDisplayName,
-      moduleId,
-      quizType,
-      questions,
-    }, (response) => {
-      console.log('🏠 create-room response:', response);
-      if (response.success) {
-        const pin = response.room.pin;
-        setRoomPin(pin);
-        roomPinRef.current = pin;
-        setPlayers(response.room.players);
-        setHostName(response.room.hostName);
-      } else {
-        setError(response.error || 'Failed to create room');
-      }
-    });
+      socket.emit('create-room', {
+        hostName: playerDisplayName,
+        moduleId,
+        quizType,
+        questions,
+      }, (response) => {
+        console.log('🏠 create-room response:', response);
+        if (response.success) {
+          const pin = response.room.pin;
+          setRoomPin(pin);
+          roomPinRef.current = pin;
+          setPlayers(response.room.players);
+          setHostName(response.room.hostName);
+
+          sessionStorage.setItem('itfun_roomPin', pin);
+          sessionStorage.setItem('itfun_playerName', playerDisplayName);
+          sessionStorage.setItem('itfun_isHost', 'true');
+        } else {
+          setError(response.error || 'Failed to create room');
+        }
+      });
+    };
+
+    // Kung nag-refresh yung host (may existing session na tumutugma), i-attempt
+    // munang mag-rejoin sa dati niyang room bago gumawa ng panibago.
+    const savedPin = sessionStorage.getItem('itfun_roomPin');
+    const savedName = sessionStorage.getItem('itfun_playerName');
+    const savedIsHost = sessionStorage.getItem('itfun_isHost') === 'true';
+
+    if (savedPin && savedName === playerDisplayName && savedIsHost) {
+      socket.emit('rejoin-room', { pin: savedPin, playerName: playerDisplayName }, (response) => {
+        console.log('🔁 host rejoin-room response:', response);
+        if (response?.success) {
+          setRoomPin(savedPin);
+          roomPinRef.current = savedPin;
+          setPlayers(response.state.players);
+          setHostName(playerDisplayName);
+
+          // Kung nagsimula na pala yung quiz habang naka-refresh, deretso na
+          if (response.state.question || response.state.finished) {
+            navigate(`/quiz-arena?pin=${savedPin}`);
+          }
+        } else {
+          // Wala nang mahanap na room/player — gumawa na lang ng bago
+          sessionStorage.removeItem('itfun_roomPin');
+          sessionStorage.removeItem('itfun_playerName');
+          sessionStorage.removeItem('itfun_isHost');
+          doCreateRoom();
+        }
+      });
+    } else {
+      doCreateRoom();
+    }
 
     socket.on('room-update', (data) => {
       setPlayers(data.players);
@@ -83,6 +120,9 @@ function WaitingLobby() {
     });
 
     socket.on('room-closed', () => {
+      sessionStorage.removeItem('itfun_roomPin');
+      sessionStorage.removeItem('itfun_playerName');
+      sessionStorage.removeItem('itfun_isHost');
       alert('The room has been closed.');
       navigate('/pvp-quiz');
     });
@@ -189,6 +229,9 @@ function WaitingLobby() {
             className="leave-btn"
             onClick={() => {
               if (window.confirm('Are you sure you want to leave?')) {
+                sessionStorage.removeItem('itfun_roomPin');
+                sessionStorage.removeItem('itfun_playerName');
+                sessionStorage.removeItem('itfun_isHost');
                 navigate('/pvp-quiz');
               }
             }}

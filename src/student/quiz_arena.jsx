@@ -37,6 +37,54 @@ function QuizArena() {
 
     console.log('🔌 QuizArena socket connected:', socket.id);
 
+    // I-save yung session info para pag-refresh, may makuha tayong
+    // pin + playerName kahit nawala na yung React state at nagbago socket.id
+    const playerName = sessionStorage.getItem('itfun_playerName');
+    if (playerName) {
+      sessionStorage.setItem('itfun_roomPin', pin);
+    }
+
+    // Kapag may existing session (pin + playerName tumutugma), attempt rejoin
+    const savedPin = sessionStorage.getItem('itfun_roomPin');
+    const savedName = sessionStorage.getItem('itfun_playerName');
+
+    if (savedPin === pin && savedName) {
+      socket.emit('rejoin-room', { pin, playerName: savedName }, (response) => {
+        console.log('🔁 Rejoin response:', response);
+        if (!response?.success) {
+          // Room no longer exists o hindi na-verify — balik sa lobby
+          sessionStorage.removeItem('itfun_roomPin');
+          sessionStorage.removeItem('itfun_playerName');
+          alert('Hindi na-resume yung room. Baka natapos na o expired na.');
+          navigate('/pvp-quiz');
+          return;
+        }
+
+        const state = response.state;
+        if (state.finished) {
+          setFinalRankings(state.players);
+          setGameFinished(true);
+          return;
+        }
+
+        setTotalQuestions(state.totalQuestions);
+        setPlayers(state.players);
+        setQuestionIndex(state.questionIndex);
+        setTimer(state.timeLeft);
+        setMaxTimer(state.maxTime);
+
+        if (state.resultsShown) {
+          setRankings(state.players);
+          setShowRoundResults(true);
+          setCurrentRound(state.questionIndex + 1);
+        } else if (state.question) {
+          setCurrentQuestion(state.question);
+          setCurrentRound(state.questionIndex + 1);
+          setStartTime(Date.now());
+        }
+      });
+    }
+
     socket.on('quiz-started', (data) => {
       console.log('🎮 Quiz started:', data);
       setTotalQuestions(data.totalQuestions);
@@ -84,6 +132,8 @@ function QuizArena() {
     });
 
     socket.on('room-closed', () => {
+      sessionStorage.removeItem('itfun_roomPin');
+      sessionStorage.removeItem('itfun_playerName');
       alert('The room has been closed.');
       navigate('/pvp-quiz');
     });
@@ -183,7 +233,14 @@ function QuizArena() {
             ))}
           </div>
 
-          <button className="exit-btn" onClick={() => navigate('/pvp-quiz')}>
+          <button
+            className="exit-btn"
+            onClick={() => {
+              sessionStorage.removeItem('itfun_roomPin');
+              sessionStorage.removeItem('itfun_playerName');
+              navigate('/pvp-quiz');
+            }}
+          >
             Exit
           </button>
         </div>

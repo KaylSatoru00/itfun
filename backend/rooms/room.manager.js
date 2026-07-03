@@ -57,6 +57,30 @@ class RoomManager {
     this.rooms.delete(pin);
   }
 
+  findPlayerByName(pin, playerName) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+    return room.players.find((p) => p.name === playerName) || null;
+  }
+
+  reassignPlayerSocket(pin, playerName, newSocketId) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+
+    const player = room.players.find((p) => p.name === playerName);
+    if (!player) return null;
+
+    const oldId = player.id;
+    player.id = newSocketId;
+
+    // Keep hostId in sync kung yung player na nag-rejoin ay siya ring host
+    if (room.hostId === oldId) {
+      room.hostId = newSocketId;
+    }
+
+    return player;
+  }
+
   updatePlayerScore(pin, playerId, score) {
     const room = this.rooms.get(pin);
     if (!room) return;

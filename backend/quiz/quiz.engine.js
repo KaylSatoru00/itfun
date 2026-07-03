@@ -7,6 +7,33 @@ class QuizEngine {
     this.roundResults = [];
     this.timer = null;
     this.resultsShown = false;
+    this.timeLeft = 30;
+    this.maxTime = 30;
+  }
+
+  setTimeLeft(seconds) {
+    this.timeLeft = seconds;
+  }
+
+  getTimeLeft() {
+    return this.timeLeft;
+  }
+
+  // Ginagamit ng rejoin-room handler para i-resync yung reconnecting client
+  // sa current state ng laro (question, timer, scores) nang hindi nag-bo-broadcast
+  // sa buong room.
+  getState() {
+    const current = this.getCurrentQuestion();
+    return {
+      question: current ? current.question : null,
+      questionIndex: this.currentQuestionIndex,
+      totalQuestions: this.room.questions.length,
+      timeLeft: this.timeLeft,
+      maxTime: this.maxTime,
+      resultsShown: this.resultsShown,
+      players: this.room.players.map((p) => ({ id: p.id, name: p.name, score: p.score })),
+      finished: this.currentQuestionIndex >= this.room.questions.length,
+    };
   }
 
   getCurrentQuestion() {
