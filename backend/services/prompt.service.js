@@ -18,14 +18,18 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
 
     identification: `Generate EXACTLY ${questionCount} identification questions.
       - Each question MUST ask for a specific term, name, or concept from the lesson.
-      - The answer MUST be ONE or TWO words ONLY — a single term or short name (e.g. "Motherboard", "Charles Babbage"). NEVER a phrase or sentence.
+      - The answer MUST be a short, exact term or name — NOT a full sentence.
+      - AVOID using acronyms/abbreviations as the answer when the lesson uses (or a common, popular audience would recognize) a full spelled-out form — write out the FULL term instead. Examples: use "Central Processing Unit" NOT "CPU", "Universal Serial Bus" NOT "USB", "Random Access Memory" NOT "RAM". Only use an acronym as the answer if the lesson never spells out the full term, or if the acronym itself IS the commonly-known name (e.g. no need to expand something with no common full form in casual use).
       - NEVER ask a question with multiple possible valid answers (e.g. avoid "Give one example of X" when the lesson lists several examples of X). Only ask questions where exactly ONE answer is correct.
+      - The answer must be a SINGLE term — NEVER combine multiple valid names/terms into one answer using "/", "or", "and", or similar (e.g. "Memory/Storage Unit" is WRONG because it's really two different valid answers joined together — pick only ONE of them and phrase the question so that one specific term is clearly correct).
       - Include a mix of easy, medium, and hard difficulty questions.`,
 
     'fill-in-blank': `Generate EXACTLY ${questionCount} fill-in-the-blank questions.
       - Each question MUST have a blank represented by "_____" that tests a key concept.
-      - The answer MUST be ONE or TWO words ONLY (e.g. "Binary", "Control Unit"). NEVER a phrase or sentence.
+      - The answer MUST be a short, exact term or name — NOT a full sentence.
+      - AVOID using acronyms/abbreviations as the answer when the lesson uses (or a common, popular audience would recognize) a full spelled-out form — write out the FULL term instead. Examples: use "Central Processing Unit" NOT "CPU", "Universal Serial Bus" NOT "USB", "Random Access Memory" NOT "RAM". Only use an acronym as the answer if the lesson never spells out the full term, or if the acronym itself IS the commonly-known name (e.g. no need to expand something with no common full form in casual use).
       - NEVER ask a question with multiple possible valid answers (e.g. avoid "One example of an output device is _____" when the lesson lists several output devices). Only ask questions where exactly ONE answer is correct.
+      - The answer must be a SINGLE term — NEVER combine multiple valid names/terms into one answer using "/", "or", "and", or similar (e.g. "Memory/Storage Unit" is WRONG because it's really two different valid answers joined together — pick only ONE of them and phrase the question so that one specific term is clearly correct).
       - Include a mix of easy, medium, and hard difficulty questions.`,
 
     mixed: `Generate EXACTLY ${questionCount} questions combining different types:
@@ -56,14 +60,14 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
     identification: `Each question MUST follow this EXACT format:
       {
         "question": "Clear question asking for a specific term/concept",
-        "correctAnswer": "One or two word answer only, exact term from the lesson",
+        "correctAnswer": "Exact term from the lesson, written in FULL (not an acronym) when a common full form exists",
         "type": "identification"
       }`,
 
     'fill-in-blank': `Each question MUST follow this EXACT format:
       {
         "question": "Question with a blank represented by _____ that tests a key concept",
-        "correctAnswer": "One or two word answer only that fills the blank",
+        "correctAnswer": "The word/phrase that fills the blank, written in FULL (not an acronym) when a common full form exists",
         "type": "fill-in-blank"
       }`,
 
@@ -89,7 +93,7 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
    - Medium: Understanding concepts (e.g., "Which statement about X is correct?")
    - Hard: Applying or connecting concepts (e.g., "What is the relationship between X and Y?")
 8. DO NOT make all questions too easy or too difficult.
-9. NEVER write a question that has more than one possible valid answer. Since answers are graded by exact match, avoid phrasing like "Give ONE example of X", "Name AN example of X", or "What is A type of X" whenever the lesson lists multiple valid examples/types (e.g., if the lesson lists Word, Excel, and PowerPoint as application software, do NOT ask "Give one example of application software" — instead ask something with exactly one correct answer, like "What type of software helps users perform tasks like word processing?" with answer "Application software"). Every question's correct answer must be the ONLY correct answer the lesson supports.
+9. NEVER write a question that has more than one possible valid answer. Since answers are graded by exact match, avoid phrasing like "Give ONE example of X", "Name AN example of X", or "What is A type of X" whenever the lesson lists multiple valid examples/types (e.g., if the lesson lists Word, Excel, and PowerPoint as application software, do NOT ask "Give one example of application software" — instead ask something with exactly one correct answer, like "What type of software helps users perform tasks like word processing?" with answer "Application software"). Every question's correct answer must be the ONLY correct answer the lesson supports. For the SAME reason, NEVER combine multiple valid terms into a single answer using "/", "or", "and" (e.g. "Memory/Storage Unit" is WRONG — it silently packs two different valid answers into one string). Every correctAnswer must be ONE single term.
 
 📚 LESSON CONTENT (USE ONLY THIS):
 ${cleanLessonContent}
@@ -103,8 +107,8 @@ ${formatInstructions[quizType] || formatInstructions.multiple}
 📋 ADDITIONAL GUIDELINES:
 - For multiple-choice questions: Create 4 distinct options. The correct answer must be clearly correct. Wrong answers should be plausible but incorrect based on the lesson.
 - For true-false questions: Make statements that are clearly true or false. Avoid trick questions or statements that are partially true.
-- For identification questions: Ask for specific terms, names, dates, or concepts. The answer must be ONE or TWO words only, and unambiguous.
-- For fill-in-the-blank: Place the blank at a key term or concept. The answer must be ONE or TWO words only. The blank should test knowledge, not grammar.
+- For identification questions: Ask for specific terms, names, dates, or concepts. The answer must be unambiguous, and written in FULL rather than as an acronym/abbreviation when a common full form exists (e.g. "Central Processing Unit" not "CPU").
+- For fill-in-the-blank: Place the blank at a key term or concept. The answer must be unambiguous, and written in FULL rather than as an acronym/abbreviation when a common full form exists (e.g. "Universal Serial Bus" not "USB"). The blank should test knowledge, not grammar.
 - For mixed type: Distribute questions across all topics in the lesson. Ensure variety.
 
 🚫 WHAT NOT TO DO:
