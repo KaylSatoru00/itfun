@@ -188,7 +188,7 @@ function QuizArena() {
     const sound = new Audio(
       isUserCorrect
         ? '/sounds/mixkit-correct-answer-reward-952.wav'
-        : '/sounds/mixkit-funny-fail-low-tone-2876.wav'
+        : '/sounds/fahhh_KcgAXfs.wav'
     );
     sound.play().catch(() => {
       // Kung na-block man ng browser (bihira dito dahil resulta ito ng
