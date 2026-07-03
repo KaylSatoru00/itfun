@@ -22,7 +22,7 @@ class QuizEngine {
   // Ginagamit ng rejoin-room handler para i-resync yung reconnecting client
   // sa current state ng laro (question, timer, scores) nang hindi nag-bo-broadcast
   // sa buong room.
-  getState() {
+  getState(playerId) {
     const current = this.getCurrentQuestion();
     return {
       question: current ? current.question : null,
@@ -31,6 +31,7 @@ class QuizEngine {
       timeLeft: this.timeLeft,
       maxTime: this.maxTime,
       resultsShown: this.resultsShown,
+      hasAnswered: playerId ? this.answeredPlayers.has(playerId) : false,
       players: this.room.players.map((p) => ({ id: p.id, name: p.name, score: p.score })),
       finished: this.currentQuestionIndex >= this.room.questions.length,
     };
@@ -74,6 +75,20 @@ class QuizEngine {
 
   hasAnswered(playerId) {
     return this.answeredPlayers.has(playerId);
+  }
+
+  // Tinatawag kapag nag-rejoin ang isang player gamit ang bagong socket.id
+  // (hal. pagkatapos ng refresh). Dapat sumama yung "nakasagot na ba siya sa
+  // kasalukuyang tanong" papunta sa bagong id, para hindi siya makapag-sagot
+  // ulit at hindi rin ma-mismatch yung roundResults.
+  reassignPlayerId(oldId, newId) {
+    if (this.answeredPlayers.has(oldId)) {
+      this.answeredPlayers.delete(oldId);
+      this.answeredPlayers.add(newId);
+    }
+    this.roundResults.forEach((r) => {
+      if (r.playerId === oldId) r.playerId = newId;
+    });
   }
 
   checkAllAnswered() {

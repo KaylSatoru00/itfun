@@ -70,7 +70,7 @@ const scoringService = new ScoringService();
 // natin agad tinatanggal yung player sa room — bibigyan muna natin ng grace
 // period para makapag-rejoin. Key: `${pin}:${playerName}` -> setTimeout handle.
 const disconnectTimers = new Map();
-const REJOIN_GRACE_MS = 15000;
+const REJOIN_GRACE_MS = 120000;
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -286,7 +286,15 @@ io.on('connection', (socket) => {
       }
 
       const wasHost = existingPlayer.id === room.hostId;
+      const oldSocketId = existingPlayer.id;
       roomManager.reassignPlayerSocket(pin, playerName, socket.id);
+
+      // Kung may ongoing quiz, dalhin din yung "nakasagot na ba siya" status
+      // papunta sa bagong socket.id — kung hindi, makakasagot siya ulit sa
+      // parehong tanong pagkatapos ng refresh.
+      if (room.quizEngine) {
+        room.quizEngine.reassignPlayerId(oldSocketId, socket.id);
+      }
 
       socket.join(pin);
       socket.data.roomPin = pin;
@@ -296,7 +304,7 @@ io.on('connection', (socket) => {
 
       let state;
       if (room.status === 'playing' && room.quizEngine) {
-        state = room.quizEngine.getState();
+        state = room.quizEngine.getState(socket.id);
       } else if (room.status === 'finished') {
         state = {
           finished: true,

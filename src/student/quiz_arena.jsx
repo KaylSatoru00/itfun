@@ -37,18 +37,19 @@ function QuizArena() {
 
     console.log('🔌 QuizArena socket connected:', socket.id);
 
-    // I-save yung session info para pag-refresh, may makuha tayong
-    // pin + playerName kahit nawala na yung React state at nagbago socket.id
-    const playerName = sessionStorage.getItem('itfun_playerName');
-    if (playerName) {
-      sessionStorage.setItem('itfun_roomPin', pin);
-    }
+    // Ang rejoin-room ay dapat lang mag-fire kapag TALAGANG na-reload yung page
+    // (hal. F5, browser refresh) — hindi kapag normal na SPA navigation lang
+    // galing sa waiting lobby papunta dito (na-navigate via quiz-started event).
+    // Kung hindi natin ito ilalagay, laging true yung savedPin===pin && savedName
+    // (dahil na-save na 'yan agad pagkatapos ng create-room/join-room), kaya
+    // mag-a-attempt ng rejoin-room kahit unang pasok pa lang — walang dahilan.
+    const navEntry = performance.getEntriesByType('navigation')[0];
+    const isPageReload = navEntry?.type === 'reload';
 
-    // Kapag may existing session (pin + playerName tumutugma), attempt rejoin
     const savedPin = sessionStorage.getItem('itfun_roomPin');
     const savedName = sessionStorage.getItem('itfun_playerName');
 
-    if (savedPin === pin && savedName) {
+    if (isPageReload && savedPin === pin && savedName) {
       socket.emit('rejoin-room', { pin, playerName: savedName }, (response) => {
         console.log('🔁 Rejoin response:', response);
         if (!response?.success) {
@@ -80,7 +81,10 @@ function QuizArena() {
         } else if (state.question) {
           setCurrentQuestion(state.question);
           setCurrentRound(state.questionIndex + 1);
-          setStartTime(Date.now());
+          setIsAnswered(!!state.hasAnswered);
+          if (!state.hasAnswered) {
+            setStartTime(Date.now());
+          }
         }
       });
     }
