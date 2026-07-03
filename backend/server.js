@@ -329,7 +329,23 @@ io.on('connection', (socket) => {
 
       console.log(`🔁 ${playerName} rejoined room ${pin} as ${socket.id}`);
 
-      callback({ success: true, state, isHost: wasHost, room });
+      // Huwag ipasa yung buong `room` object — may room.quizEngine na
+      // circular reference pabalik sa room mismo (quizEngine.room === room),
+      // kaya kapag sinubukan ng socket.io i-serialize 'yon, mag-i-infinite
+      // loop ito sa hasBinary() check at mag-crash ng "Maximum call stack
+      // size exceeded". Gumawa na lang ng safe/flat na summary.
+      const roomSummary = {
+        pin: room.pin,
+        hostId: room.hostId,
+        hostName: room.hostName,
+        moduleId: room.moduleId,
+        lessonId: room.lessonId,
+        quizType: room.quizType,
+        status: room.status,
+        players: room.players,
+      };
+
+      callback({ success: true, state, isHost: wasHost, room: roomSummary });
 
       io.to(pin).emit('room-update', {
         players: room.players,
