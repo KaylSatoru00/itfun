@@ -80,10 +80,22 @@ class QuizEngine {
     // para sa dalawang typing-based na types na ito. Hindi apektado ang
     // multiple-choice/true-false, kung saan exact match pa rin dapat (galing
     // sa pinipiling button, hindi sa free text).
+    // Para sa Identification, may exemption tayo sa prompt generation: kung
+    // may parehong acronym AT common full form ang isang term, pwedeng
+    // naka-store ang correctAnswer bilang "CPU / Central Processing Unit"
+    // (dalawang forms, pinaghiwalay ng "/"). Dito, hinahati natin ito sa
+    // "/" at tinatanggap ang sagot ng player kung tumugma ito sa ALINMAN
+    // sa mga forms — hindi kailangang match yung buong "CPU / Central
+    // Processing Unit" string. Kung isang term/form lang naman ang naka-
+    // store (walang "/"), normal na single-value comparison pa rin ito.
     const isTypedAnswer = question.type === 'identification' || question.type === 'fill-in-blank';
     const isCorrect = isTypedAnswer
       ? typeof answer === 'string' &&
-        answer.trim().toUpperCase() === String(question.correctAnswer).trim().toUpperCase()
+        String(question.correctAnswer)
+          .split('/')
+          .map((part) => part.trim().toUpperCase())
+          .filter(Boolean)
+          .includes(answer.trim().toUpperCase())
       : answer === question.correctAnswer;
 
     // Ang timeTaken ay kino-compute dito, base sa server's own timeLeft
