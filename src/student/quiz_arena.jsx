@@ -26,7 +26,6 @@ function QuizArena() {
   const [currentRound, setCurrentRound] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [finalRankings, setFinalRankings] = useState([]);
-  const [startTime, setStartTime] = useState(Date.now());
 
   useEffect(() => {
     if (!pin) {
@@ -84,9 +83,6 @@ function QuizArena() {
           setCurrentQuestion(state.question);
           setCurrentRound(state.questionIndex + 1);
           setIsAnswered(!!state.hasAnswered);
-          if (!state.hasAnswered) {
-            setStartTime(Date.now());
-          }
         }
       });
     }
@@ -108,7 +104,6 @@ function QuizArena() {
       setIsAnswered(false);
       setIdentInput('');
       setShowRoundResults(false);
-      setStartTime(Date.now());
       setCurrentRound(data.questionIndex + 1);
     });
 
@@ -158,17 +153,19 @@ function QuizArena() {
 
   const handleAnswer = (answer) => {
     if (isAnswered || !currentQuestion || !socket) return;
-    const timeTaken = (Date.now() - startTime) / 1000;
     setSelectedAnswer(answer);
     setIsAnswered(true);
 
     console.log('📤 Submitting answer:', { pin, questionIndex, answer });
 
+    // Sadya nang hindi na nagpapadala ng client-computed na timeTaken — ang
+    // server (via quizEngine.timeLeft) na ang bahalang mag-compute nito,
+    // para hindi na maabuso kahit sa reload o sa direktang pag-edit ng
+    // payload sa browser console.
     socket.emit('submit-answer', {
       pin,
       questionIndex,
       answer,
-      timeTaken: Math.min(timeTaken, 30),
     }, (response) => {
       console.log('📥 Submit response:', response);
       if (!response?.success) {

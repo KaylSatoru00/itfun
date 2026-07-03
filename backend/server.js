@@ -431,7 +431,11 @@ io.on('connection', (socket) => {
   // ── Submit Answer ──
   socket.on('submit-answer', async (data, callback) => {
     try {
-      const { pin, questionIndex, answer, timeTaken } = data;
+      // Sadyang hindi na natin dinedestructure/ginagamit ang `timeTaken` na
+      // ipinapadala ng client — ang server.timeLeft (via quizEngine) na ang
+      // authoritative source, para hindi na maaabuso kahit sa reload o sa
+      // direktang pag-edit ng socket payload sa client side.
+      const { pin, questionIndex, answer } = data;
       const room = roomManager.getRoom(pin);
 
       if (!room || room.status !== 'playing') {
@@ -443,7 +447,6 @@ io.on('connection', (socket) => {
         playerId: socket.id,
         questionIndex,
         answer,
-        timeTaken,
       });
 
       if (result) {
@@ -645,7 +648,6 @@ io.on('connection', (socket) => {
             playerId: p.id,
             questionIndex: room.quizEngine.currentQuestionIndex,
             answer: null,
-            timeTaken: 30,
           });
         });
 

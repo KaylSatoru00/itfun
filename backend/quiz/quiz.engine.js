@@ -51,18 +51,26 @@ class QuizEngine {
     };
   }
 
-  submitAnswer({ playerId, questionIndex, answer, timeTaken }) {
+  submitAnswer({ playerId, questionIndex, answer }) {
     if (this.answeredPlayers.has(playerId)) return null;
     if (questionIndex !== this.currentQuestionIndex) return null;
 
     const question = this.room.questions[this.currentQuestionIndex];
     const isCorrect = answer === question.correctAnswer;
 
+    // Ang timeTaken ay kino-compute dito, base sa server's own timeLeft
+    // counter — HINDI kinukuha mula sa client. Kung nagtiwala tayo sa
+    // client-supplied na timeTaken, kahit gaano pa katagal talaga ang
+    // sumagot ang isang player, pwede lang niyang ipadala ang 0 (hal. sa
+    // pag-reload, o sa pag-edit mismo ng request) para laging perfect score
+    // — 'yan mismo ang naging cheating vector dati.
+    const timeTaken = Math.min(Math.max(this.maxTime - this.timeLeft, 0), this.maxTime);
+
     let score = 0;
     if (isCorrect) {
       score = this.scoringService.calculateScore({
         timeTaken,
-        maxTime: 30,
+        maxTime: this.maxTime,
         maxScore: 100,
       });
     }
