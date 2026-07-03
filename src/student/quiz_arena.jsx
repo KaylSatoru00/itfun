@@ -37,25 +37,30 @@ function QuizArena() {
 
     console.log('🔌 QuizArena socket connected:', socket.id);
 
-    // Ang rejoin-room ay dapat lang mag-fire kapag TALAGANG na-reload yung page
-    // (hal. F5, browser refresh) — hindi kapag normal na SPA navigation lang
-    // galing sa waiting lobby papunta dito (na-navigate via quiz-started event).
-    // Kung hindi natin ito ilalagay, laging true yung savedPin===pin && savedName
-    // (dahil na-save na 'yan agad pagkatapos ng create-room/join-room), kaya
-    // mag-a-attempt ng rejoin-room kahit unang pasok pa lang — walang dahilan.
-    const navEntry = performance.getEntriesByType('navigation')[0];
-    const isPageReload = navEntry?.type === 'reload';
+    // Dati, "reload-only" ang check dito (performance navigation type === 'reload')
+    // dahil akala noon ay yun ang dahilan ng rejoin crash. Yung totoong dahilan
+    // pala noon ay circular reference sa serialization (na-fix na sa backend),
+    // kaya safe na ngayon na i-attempt ang rejoin-room sa tuwing may match na
+    // saved session — reload man, bagong tab, o fresh navigation (hal. binuksan
+    // ulit ng user yung /quiz-arena?pin=... galing sa ibang tab/window).
+    //
+    // May dagdag na "freshness" check gamit ang timestamp, tugma sa
+    // REJOIN_GRACE_MS (2 mins) sa backend — kung matagal nang expired ang
+    // naka-save na session, huwag nang subukan pa ang rejoin.
+    const savedPin = localStorage.getItem('itfun_roomPin');
+    const savedName = localStorage.getItem('itfun_playerName');
+    const savedTime = parseInt(localStorage.getItem('itfun_sessionTime') || '0', 10);
+    const isFresh = Date.now() - savedTime < 2 * 60 * 1000; // 2 mins
 
-    const savedPin = sessionStorage.getItem('itfun_roomPin');
-    const savedName = sessionStorage.getItem('itfun_playerName');
-
-    if (isPageReload && savedPin === pin && savedName) {
+    if (savedPin === pin && savedName && isFresh) {
       socket.emit('rejoin-room', { pin, playerName: savedName }, (response) => {
         console.log('🔁 Rejoin response:', response);
         if (!response?.success) {
           // Room no longer exists o hindi na-verify — balik sa lobby
-          sessionStorage.removeItem('itfun_roomPin');
-          sessionStorage.removeItem('itfun_playerName');
+          localStorage.removeItem('itfun_roomPin');
+          localStorage.removeItem('itfun_playerName');
+          localStorage.removeItem('itfun_isHost');
+          localStorage.removeItem('itfun_sessionTime');
           alert('Hindi na-resume yung room. Baka natapos na o expired na.');
           navigate('/pvp-quiz');
           return;
@@ -136,8 +141,10 @@ function QuizArena() {
     });
 
     socket.on('room-closed', () => {
-      sessionStorage.removeItem('itfun_roomPin');
-      sessionStorage.removeItem('itfun_playerName');
+      localStorage.removeItem('itfun_roomPin');
+      localStorage.removeItem('itfun_playerName');
+      localStorage.removeItem('itfun_isHost');
+      localStorage.removeItem('itfun_sessionTime');
       alert('The room has been closed.');
       navigate('/pvp-quiz');
     });
@@ -240,8 +247,10 @@ function QuizArena() {
           <button
             className="exit-btn"
             onClick={() => {
-              sessionStorage.removeItem('itfun_roomPin');
-              sessionStorage.removeItem('itfun_playerName');
+              localStorage.removeItem('itfun_roomPin');
+              localStorage.removeItem('itfun_playerName');
+              localStorage.removeItem('itfun_isHost');
+              localStorage.removeItem('itfun_sessionTime');
               navigate('/pvp-quiz');
             }}
           >

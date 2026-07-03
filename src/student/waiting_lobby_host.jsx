@@ -58,22 +58,29 @@ function WaitingLobby() {
           setPlayers(response.room.players);
           setHostName(response.room.hostName);
 
-          sessionStorage.setItem('itfun_roomPin', pin);
-          sessionStorage.setItem('itfun_playerName', playerDisplayName);
-          sessionStorage.setItem('itfun_isHost', 'true');
+          localStorage.setItem('itfun_roomPin', pin);
+          localStorage.setItem('itfun_playerName', playerDisplayName);
+          localStorage.setItem('itfun_isHost', 'true');
+          localStorage.setItem('itfun_sessionTime', Date.now().toString());
         } else {
           setError(response.error || 'Failed to create room');
         }
       });
     };
 
-    // Kung nag-refresh yung host (may existing session na tumutugma), i-attempt
-    // munang mag-rejoin sa dati niyang room bago gumawa ng panibago.
-    const savedPin = sessionStorage.getItem('itfun_roomPin');
-    const savedName = sessionStorage.getItem('itfun_playerName');
-    const savedIsHost = sessionStorage.getItem('itfun_isHost') === 'true';
+    // Kung may existing session na tumutugma (reload man, bagong tab, o
+    // fresh navigation pagkatapos mag-exit), i-attempt munang mag-rejoin sa
+    // dati niyang room bago gumawa ng panibago. localStorage (hindi
+    // sessionStorage) para hindi mawala kahit isara yung tab/browser.
+    // May "freshness" check tugma sa REJOIN_GRACE_MS (2 mins) sa backend —
+    // kung matagal nang expired, huwag nang subukan pa ang rejoin.
+    const savedPin = localStorage.getItem('itfun_roomPin');
+    const savedName = localStorage.getItem('itfun_playerName');
+    const savedIsHost = localStorage.getItem('itfun_isHost') === 'true';
+    const savedTime = parseInt(localStorage.getItem('itfun_sessionTime') || '0', 10);
+    const isFresh = Date.now() - savedTime < 2 * 60 * 1000; // 2 mins
 
-    if (savedPin && savedName === playerDisplayName && savedIsHost) {
+    if (savedPin && savedName === playerDisplayName && savedIsHost && isFresh) {
       socket.emit('rejoin-room', { pin: savedPin, playerName: playerDisplayName }, (response) => {
         console.log('🔁 host rejoin-room response:', response);
         if (response?.success) {
@@ -88,9 +95,10 @@ function WaitingLobby() {
           }
         } else {
           // Wala nang mahanap na room/player — gumawa na lang ng bago
-          sessionStorage.removeItem('itfun_roomPin');
-          sessionStorage.removeItem('itfun_playerName');
-          sessionStorage.removeItem('itfun_isHost');
+          localStorage.removeItem('itfun_roomPin');
+          localStorage.removeItem('itfun_playerName');
+          localStorage.removeItem('itfun_isHost');
+          localStorage.removeItem('itfun_sessionTime');
           doCreateRoom();
         }
       });
@@ -120,9 +128,10 @@ function WaitingLobby() {
     });
 
     socket.on('room-closed', () => {
-      sessionStorage.removeItem('itfun_roomPin');
-      sessionStorage.removeItem('itfun_playerName');
-      sessionStorage.removeItem('itfun_isHost');
+      localStorage.removeItem('itfun_roomPin');
+      localStorage.removeItem('itfun_playerName');
+      localStorage.removeItem('itfun_isHost');
+      localStorage.removeItem('itfun_sessionTime');
       alert('The room has been closed.');
       navigate('/pvp-quiz');
     });
@@ -229,9 +238,10 @@ function WaitingLobby() {
             className="leave-btn"
             onClick={() => {
               if (window.confirm('Are you sure you want to leave?')) {
-                sessionStorage.removeItem('itfun_roomPin');
-                sessionStorage.removeItem('itfun_playerName');
-                sessionStorage.removeItem('itfun_isHost');
+                localStorage.removeItem('itfun_roomPin');
+                localStorage.removeItem('itfun_playerName');
+                localStorage.removeItem('itfun_isHost');
+                localStorage.removeItem('itfun_sessionTime');
                 navigate('/pvp-quiz');
               }
             }}
