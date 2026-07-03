@@ -41,13 +41,40 @@ class QuizEngine {
     };
   }
 
+  // Sadyang "sanitized" ang ibinabalik dito — TINATANGGAL ang correctAnswer
+  // bago ito umalis papunta sa client. Dati, kasama pa yung correctAnswer sa
+  // buong `question` object na pinapadala sa `new-question`/`getState`, kaya
+  // kahit hindi pa sumasagot ang isang player, makikita na niya agad ang
+  // tamang sagot sa DevTools (Network/Console tab) — mas malaking cheating
+  // vector pa ito kaysa sa client-supplied timeTaken na inayos na natin.
+  // Ang totoong `correctAnswer` ay ipinapadala na lang sa `getRoundResults()`,
+  // matapos sumagot ang lahat o matapos ang timer.
+  sanitizeQuestion(question) {
+    if (!question) return null;
+
+    const { correctAnswer, ...safeQuestion } = question;
+
+    // Para sa fill-in-the-blank, kailangan pa rin ng "clue" habang wala pang
+    // sagot — bilang ng letra ng tamang sagot, ipinapakita bilang underscores
+    // (hal. "_______ ________" para sa "Stepped Reckoner"). Ang totoong text
+    // mismo ang HINDI ipinapadala, kundi ang haba lang nito per word.
+    if (question.type === 'fill-in-blank' && typeof correctAnswer === 'string') {
+      safeQuestion.blankPattern = correctAnswer
+        .split(' ')
+        .map((word) => '_'.repeat(word.length))
+        .join(' ');
+    }
+
+    return safeQuestion;
+  }
+
   getCurrentQuestion() {
     if (this.currentQuestionIndex >= this.room.questions.length) {
       return null;
     }
     return {
       index: this.currentQuestionIndex,
-      question: this.room.questions[this.currentQuestionIndex],
+      question: this.sanitizeQuestion(this.room.questions[this.currentQuestionIndex]),
     };
   }
 
@@ -56,7 +83,20 @@ class QuizEngine {
     if (questionIndex !== this.currentQuestionIndex) return null;
 
     const question = this.room.questions[this.currentQuestionIndex];
-    const isCorrect = answer === question.correctAnswer;
+
+    // Para sa Identification at Fill-in-the-Blank, ini-uppercase ng client
+    // ang typed na sagot ng player (UX decision — hindi na kailangan i-
+    // Capslock). Kung naka-mixed-case naman ang naka-store na correctAnswer
+    // (hal. "Motherboard"), mag-fa-fail palagi ang exact match ("MOTHERBOARD"
+    // !== "Motherboard") — kaya dito, case-insensitive at trimmed ang paghahambing
+    // para sa dalawang typing-based na types na ito. Hindi apektado ang
+    // multiple-choice/true-false, kung saan exact match pa rin dapat (galing
+    // sa pinipiling button, hindi sa free text).
+    const isTypedAnswer = question.type === 'identification' || question.type === 'fill-in-blank';
+    const isCorrect = isTypedAnswer
+      ? typeof answer === 'string' &&
+        answer.trim().toUpperCase() === String(question.correctAnswer).trim().toUpperCase()
+      : answer === question.correctAnswer;
 
     // Ang timeTaken ay kino-compute dito, base sa server's own timeLeft
     // counter — HINDI kinukuha mula sa client. Kung nagtiwala tayo sa
@@ -83,6 +123,14 @@ class QuizEngine {
     const result = { playerId, isCorrect, score, timeTaken };
     this.roundResults.push(result);
     return result;
+  }
+
+  // Ang tanging beses na ipinapasa ang totoong `correctAnswer` sa labas ng
+  // engine na 'to — dahil dito, tapos na ang pagsagot para sa round na 'to
+  // (natapos na ang oras o nakasagot na lahat), kaya safe nang i-reveal.
+  getCurrentCorrectAnswer() {
+    const question = this.room.questions[this.currentQuestionIndex];
+    return question ? question.correctAnswer : null;
   }
 
   hasAnswered(playerId) {

@@ -686,9 +686,15 @@ io.on('connection', (socket) => {
     .sort((a, b) => b.score - a.score)
     .map((p, i) => ({ ...p, rank: i + 1 }));
 
+  // Ngayon lang natin ipinapadala ang totoong correctAnswer papunta sa
+  // client — dito na dahil sarado na ang pagsagot para dito (natapos na ang
+  // oras o nakasagot na lahat), kaya safe nang i-reveal.
+  const correctAnswer = room.quizEngine.getCurrentCorrectAnswer();
+
   io.to(pin).emit('round-results', {
     results,
     rankings,
+    correctAnswer,
   });
 
   setTimeout(() => {

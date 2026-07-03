@@ -174,6 +174,30 @@
   box-shadow: 0 0 0 2px #A50034;
 }
 
+/* Reveal state — shown once round-results arrives */
+.option-btn.correct {
+  background: #2e7d32;
+  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.35);
+  outline: 3px solid #fff;
+  outline-offset: -6px;
+}
+
+.option-btn.incorrect {
+  background: #c62828;
+  box-shadow: 0 4px 10px rgba(198, 40, 40, 0.35);
+  outline: 3px solid #fff;
+  outline-offset: -6px;
+}
+
+/* Fill-in-the-blank underscore clue / reveal, shown inside the question box */
+.blank-clue {
+  margin: 10px 0 0;
+  font-size: clamp(18px, 2.6vw, 26px);
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #A50034;
+}
+
 /* Identification input */
 .ident-wrap {
   width: 100%;
@@ -203,6 +227,20 @@
 .ident-input:disabled {
   background: #f0f0f0;
   color: #888;
+}
+
+.ident-input.correct {
+  border-color: #2e7d32;
+  background: #eaf6ea;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.ident-input.incorrect {
+  border-color: #c62828;
+  background: #fbeaea;
+  color: #c62828;
+  font-weight: 700;
 }
 
 /* Answered hint */

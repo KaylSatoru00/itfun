@@ -26,6 +26,12 @@ function QuizArena() {
   const [currentRound, setCurrentRound] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [finalRankings, setFinalRankings] = useState([]);
+  // Dati, wala nang gagawin dito dahil kasama na yung correctAnswer sa
+  // currentQuestion mula pa sa simula (security issue na inayos na sa
+  // backend). Ngayon, dumarating lang ito pagdating ng `round-results`,
+  // kaya kailangan nating i-store nang hiwalay para magamit sa reveal UI
+  // (highlight sa options, reveal sa input/blank).
+  const [revealedAnswer, setRevealedAnswer] = useState(null);
 
   useEffect(() => {
     if (!pin) {
@@ -105,6 +111,7 @@ function QuizArena() {
       setIdentInput('');
       setShowRoundResults(false);
       setCurrentRound(data.questionIndex + 1);
+      setRevealedAnswer(null);
     });
 
     socket.on('timer-update', (data) => {
@@ -121,7 +128,13 @@ function QuizArena() {
         return updated;
       });
       setRankings(data.rankings);
-      setShowRoundResults(true);
+      setRevealedAnswer(data.correctAnswer ?? null);
+      // Bigyan muna ng ilang segundo bago lumipat sa rankings screen, para
+      // makita ng player yung highlight (True/False, Multiple Choice) o
+      // reveal (Identification, Fill-in-Blank) sa loob mismo ng question
+      // screen — kung diretso agad sa rankings, mawawalan ng saysay yung
+      // buong reveal UI dahil hindi na ito makikita.
+      setTimeout(() => setShowRoundResults(true), 2200);
     });
 
     socket.on('quiz-finished', (data) => {
@@ -327,6 +340,13 @@ function QuizArena() {
             transition={{ duration: 0.25 }}
           >
             <p className="question-text">{currentQuestion.question}</p>
+            {currentQuestion.type === 'fill-in-blank' && (
+              <p className="blank-clue">
+                {revealedAnswer
+                  ? revealedAnswer.toUpperCase()
+                  : currentQuestion.blankPattern}
+              </p>
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -336,25 +356,30 @@ function QuizArena() {
           {currentQuestion.type !== 'true-false' &&
            currentQuestion.type !== 'identification' &&
            currentQuestion.type !== 'fill-in-blank' &&
-            currentQuestion.options?.map((option, index) => (
-              <motion.button
-                key={index}
-                className={`option-btn ${selectedAnswer === option ? 'selected' : ''}`}
-                onClick={() => handleAnswer(option)}
-                disabled={isAnswered}
-                whileHover={!isAnswered ? { scale: 1.02 } : {}}
-                whileTap={!isAnswered ? { scale: 0.98 } : {}}
-              >
-                {option}
-              </motion.button>
-            ))
+            currentQuestion.options?.map((option, index) => {
+              const isRevealed = !!revealedAnswer;
+              const isCorrectOption = isRevealed && option === revealedAnswer;
+              const isWrongSelected = isRevealed && selectedAnswer === option && option !== revealedAnswer;
+              return (
+                <motion.button
+                  key={index}
+                  className={`option-btn ${selectedAnswer === option ? 'selected' : ''} ${isCorrectOption ? 'correct' : ''} ${isWrongSelected ? 'incorrect' : ''}`}
+                  onClick={() => handleAnswer(option)}
+                  disabled={isAnswered}
+                  whileHover={!isAnswered ? { scale: 1.02 } : {}}
+                  whileTap={!isAnswered ? { scale: 0.98 } : {}}
+                >
+                  {option}
+                </motion.button>
+              );
+            })
           }
 
           {/* True / False */}
           {currentQuestion.type === 'true-false' && (
             <>
               <motion.button
-                className={`option-btn ${selectedAnswer === 'True' ? 'selected' : ''}`}
+                className={`option-btn ${selectedAnswer === 'True' ? 'selected' : ''} ${revealedAnswer === 'True' ? 'correct' : ''} ${revealedAnswer && selectedAnswer === 'True' && revealedAnswer !== 'True' ? 'incorrect' : ''}`}
                 onClick={() => handleAnswer('True')}
                 disabled={isAnswered}
                 whileHover={!isAnswered ? { scale: 1.02 } : {}}
@@ -363,7 +388,7 @@ function QuizArena() {
                 True
               </motion.button>
               <motion.button
-                className={`option-btn ${selectedAnswer === 'False' ? 'selected' : ''}`}
+                className={`option-btn ${selectedAnswer === 'False' ? 'selected' : ''} ${revealedAnswer === 'False' ? 'correct' : ''} ${revealedAnswer && selectedAnswer === 'False' && revealedAnswer !== 'False' ? 'incorrect' : ''}`}
                 onClick={() => handleAnswer('False')}
                 disabled={isAnswered}
                 whileHover={!isAnswered ? { scale: 1.02 } : {}}
@@ -379,11 +404,21 @@ function QuizArena() {
             currentQuestion.type === 'fill-in-blank') && (
             <div className="ident-wrap">
               <input
-                className="ident-input"
+                className={`ident-input ${
+                  revealedAnswer
+                    ? (selectedAnswer || '').trim().toUpperCase() === revealedAnswer.trim().toUpperCase()
+                      ? 'correct'
+                      : 'incorrect'
+                    : ''
+                }`}
                 type="text"
                 placeholder="Type your answer here..."
-                value={identInput}
-                onChange={(e) => setIdentInput(e.target.value)}
+                value={
+                  revealedAnswer
+                    ? revealedAnswer.toUpperCase()
+                    : identInput.toUpperCase()
+                }
+                onChange={(e) => setIdentInput(e.target.value.toUpperCase())}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && identInput.trim() && !isAnswered) {
                     handleAnswer(identInput.trim());
