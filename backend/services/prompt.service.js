@@ -18,12 +18,14 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
 
     identification: `Generate EXACTLY ${questionCount} identification questions.
       - Each question MUST ask for a specific term, name, or concept from the lesson.
-      - The answer should be a short word or phrase (1-5 words).
+      - The answer MUST be ONE or TWO words ONLY — a single term or short name (e.g. "Motherboard", "Charles Babbage"). NEVER a phrase or sentence.
+      - NEVER ask a question with multiple possible valid answers (e.g. avoid "Give one example of X" when the lesson lists several examples of X). Only ask questions where exactly ONE answer is correct.
       - Include a mix of easy, medium, and hard difficulty questions.`,
 
     'fill-in-blank': `Generate EXACTLY ${questionCount} fill-in-the-blank questions.
       - Each question MUST have a blank represented by "_____" that tests a key concept.
-      - The answer should be a single word or short phrase (1-3 words).
+      - The answer MUST be ONE or TWO words ONLY (e.g. "Binary", "Control Unit"). NEVER a phrase or sentence.
+      - NEVER ask a question with multiple possible valid answers (e.g. avoid "One example of an output device is _____" when the lesson lists several output devices). Only ask questions where exactly ONE answer is correct.
       - Include a mix of easy, medium, and hard difficulty questions.`,
 
     mixed: `Generate EXACTLY ${questionCount} questions combining different types:
@@ -54,14 +56,14 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
     identification: `Each question MUST follow this EXACT format:
       {
         "question": "Clear question asking for a specific term/concept",
-        "correctAnswer": "Short answer from the lesson",
+        "correctAnswer": "One or two word answer only, exact term from the lesson",
         "type": "identification"
       }`,
 
     'fill-in-blank': `Each question MUST follow this EXACT format:
       {
         "question": "Question with a blank represented by _____ that tests a key concept",
-        "correctAnswer": "The word/phrase that fills the blank",
+        "correctAnswer": "One or two word answer only that fills the blank",
         "type": "fill-in-blank"
       }`,
 
@@ -87,6 +89,7 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
    - Medium: Understanding concepts (e.g., "Which statement about X is correct?")
    - Hard: Applying or connecting concepts (e.g., "What is the relationship between X and Y?")
 8. DO NOT make all questions too easy or too difficult.
+9. NEVER write a question that has more than one possible valid answer. Since answers are graded by exact match, avoid phrasing like "Give ONE example of X", "Name AN example of X", or "What is A type of X" whenever the lesson lists multiple valid examples/types (e.g., if the lesson lists Word, Excel, and PowerPoint as application software, do NOT ask "Give one example of application software" — instead ask something with exactly one correct answer, like "What type of software helps users perform tasks like word processing?" with answer "Application software"). Every question's correct answer must be the ONLY correct answer the lesson supports.
 
 📚 LESSON CONTENT (USE ONLY THIS):
 ${cleanLessonContent}
@@ -100,8 +103,8 @@ ${formatInstructions[quizType] || formatInstructions.multiple}
 📋 ADDITIONAL GUIDELINES:
 - For multiple-choice questions: Create 4 distinct options. The correct answer must be clearly correct. Wrong answers should be plausible but incorrect based on the lesson.
 - For true-false questions: Make statements that are clearly true or false. Avoid trick questions or statements that are partially true.
-- For identification questions: Ask for specific terms, names, dates, or concepts. The answer should be unambiguous.
-- For fill-in-the-blank: Place the blank at a key term or concept. The blank should test knowledge, not grammar.
+- For identification questions: Ask for specific terms, names, dates, or concepts. The answer must be ONE or TWO words only, and unambiguous.
+- For fill-in-the-blank: Place the blank at a key term or concept. The answer must be ONE or TWO words only. The blank should test knowledge, not grammar.
 - For mixed type: Distribute questions across all topics in the lesson. Ensure variety.
 
 🚫 WHAT NOT TO DO:
