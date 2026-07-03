@@ -17,7 +17,7 @@ class RoomManager {
       lessonId,
       quizType,
       questions: questions || [],
-      players: [{ id: hostId, name: hostName, score: 0 }],
+      players: [{ id: hostId, name: hostName, score: 0, disconnected: false }],
       status: 'waiting',
       createdAt: new Date(),
       quizEngine: null,
@@ -43,8 +43,9 @@ class RoomManager {
     const existing = room.players.find((p) => p.id === player.id);
     if (existing) return existing;
 
-    room.players.push(player);
-    return player;
+    const newPlayer = { disconnected: false, ...player };
+    room.players.push(newPlayer);
+    return newPlayer;
   }
 
   removePlayer(pin, playerId) {
@@ -88,6 +89,35 @@ class RoomManager {
     if (player) {
       player.score = score;
     }
+  }
+
+  // Hindi tinatanggal sa `players` array — score at record ay nananatili
+  // para pwede pa ring mag-rejoin ang player anumang oras habang naka-
+  // "playing" ang room. Ginagamit ng disconnect handler mid-quiz.
+  markPlayerDisconnected(pin, socketId) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+    const player = room.players.find((p) => p.id === socketId);
+    if (player) player.disconnected = true;
+    return player;
+  }
+
+  // Ginagamit ng rejoin-room handler pagkatapos i-reassign yung socket id
+  // ng bumalik na player, para lumitaw ulit siya sa leaderboard ng lahat.
+  markPlayerConnected(pin, playerName) {
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+    const player = room.players.find((p) => p.name === playerName);
+    if (player) player.disconnected = false;
+    return player;
+  }
+
+  // Yung mga "disconnected" na players ay hindi na ipinapakita sa leaderboard
+  // ng ibang players, pero nananatili pa rin sila sa `room.players` mismo.
+  getVisiblePlayers(pin) {
+    const room = this.rooms.get(pin);
+    if (!room) return [];
+    return room.players.filter((p) => !p.disconnected);
   }
 }
 

@@ -32,7 +32,11 @@ class QuizEngine {
       maxTime: this.maxTime,
       resultsShown: this.resultsShown,
       hasAnswered: playerId ? this.answeredPlayers.has(playerId) : false,
-      players: this.room.players.map((p) => ({ id: p.id, name: p.name, score: p.score })),
+      // Hindi kasama ang mga naka-"disconnected" na players — hindi sila
+      // dapat makita sa leaderboard hangga't hindi pa sila nag-re-rejoin.
+      players: this.room.players
+        .filter((p) => !p.disconnected)
+        .map((p) => ({ id: p.id, name: p.name, score: p.score })),
       finished: this.currentQuestionIndex >= this.room.questions.length,
     };
   }
@@ -92,7 +96,10 @@ class QuizEngine {
   }
 
   checkAllAnswered() {
-    return this.answeredPlayers.size >= this.room.players.length;
+    // Yung mga naka-disconnect ay hindi dapat pinaghihintay — kung sila na
+    // lang ang natitira, mag-i-stuck ang round habang wala silang balik.
+    const activePlayers = this.room.players.filter((p) => !p.disconnected);
+    return this.answeredPlayers.size >= activePlayers.length;
   }
 
   getRoundResults() {

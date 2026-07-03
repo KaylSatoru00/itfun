@@ -66,11 +66,23 @@ const io = new Server(server, {
 const roomManager = new RoomManager();
 const scoringService = new ScoringService();
 
-// Pag nag-disconnect ang isang socket (e.g. dahil sa page refresh), hindi
-// natin agad tinatanggal yung player sa room — bibigyan muna natin ng grace
-// period para makapag-rejoin. Key: `${pin}:${playerName}` -> setTimeout handle.
+// Pag nag-disconnect ang isang socket (e.g. dahil sa page refresh) HABANG
+// naka-"waiting" pa lang ang room (bago pa mag-start ang quiz), hindi natin
+// agad tinatanggal yung player — bibigyan muna natin ng grace period para
+// makapag-rejoin. Key: `${pin}:${playerName}` -> setTimeout handle.
 const disconnectTimers = new Map();
 const REJOIN_GRACE_MS = 120000;
+
+// Kapag naka-"playing" na ang room, hindi na natin ginagamit ang grace
+// period sa itaas — sa halip, agad na-"disconnected" muna ang player
+// (nananatili ang score, hindi buburahin) at pwede na siyang mag-rejoin
+// anumang oras habang hindi pa "finished" ang quiz. Ang timer sa ibaba ay
+// isang FAILSAFE lang laban sa memory leak — kung talagang inabandona na
+// ng LAHAT ng players ang room (walang connected na kahit isa) nang matagal,
+// saka pa lang natin ito burahin. Hindi ito "kick timer" para sa individual
+// na player.
+const abandonedRoomTimers = new Map();
+const ABANDONED_ROOM_CLEANUP_MS = 30 * 60 * 1000; // 30 mins, failsafe lang
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -276,8 +288,9 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Kung may naka-schedule pang pagtanggal galing sa disconnect handler,
-      // kanselahin na — nag-rejoin naman pala siya sa oras.
+      // Kung may naka-schedule pang pagtanggal galing sa disconnect handler
+      // (waiting-room grace period), kanselahin na — nag-rejoin naman pala
+      // siya sa oras.
       const timerKey = `${pin}:${playerName}`;
       const pendingTimer = disconnectTimers.get(timerKey);
       if (pendingTimer) {
@@ -285,9 +298,20 @@ io.on('connection', (socket) => {
         disconnectTimers.delete(timerKey);
       }
 
+      // Kung naka-schedule ang room para sa abandoned-room cleanup (dahil
+      // dati'y wala nang connected na player), kanselahin na rin — buhay na
+      // ulit ang room.
+      const pendingAbandonTimer = abandonedRoomTimers.get(pin);
+      if (pendingAbandonTimer) {
+        clearTimeout(pendingAbandonTimer);
+        abandonedRoomTimers.delete(pin);
+      }
+
       const wasHost = existingPlayer.id === room.hostId;
       const oldSocketId = existingPlayer.id;
       roomManager.reassignPlayerSocket(pin, playerName, socket.id);
+      // Lumitaw ulit siya sa leaderboard ng ibang players.
+      roomManager.markPlayerConnected(pin, playerName);
 
       // Kung may ongoing quiz, dalhin din yung "nakasagot na ba siya" status
       // papunta sa bagong socket.id — kung hindi, makakasagot siya ulit sa
@@ -347,8 +371,13 @@ io.on('connection', (socket) => {
 
       callback({ success: true, state, isHost: wasHost, room: roomSummary });
 
+      io.to(pin).emit('player-reconnected', {
+        playerId: socket.id,
+        playerName,
+      });
+
       io.to(pin).emit('room-update', {
-        players: room.players,
+        players: roomManager.getVisiblePlayers(pin),
         hostName: room.hostName,
         isHost: wasHost,
       });
@@ -387,7 +416,7 @@ io.on('connection', (socket) => {
 
       io.to(pin).emit('quiz-started', {
         totalQuestions: room.questions.length,
-        players: room.players,
+        players: roomManager.getVisiblePlayers(pin),
       });
 
       setTimeout(() => {
@@ -455,6 +484,37 @@ io.on('connection', (socket) => {
     const room = roomManager.getRoom(pin);
     if (!room) return;
 
+    if (room.status === 'playing') {
+      // Habang ongoing ang quiz: huwag agad tanggalin ang player. I-mark
+      // lang siyang "disconnected" — mananatili ang score at record niya,
+      // pero agad siyang mawawala sa leaderboard ng ibang players. Pwede pa
+      // siyang mag-rejoin anumang oras habang hindi pa "finished" ang quiz
+      // (walang time limit dito, hindi tulad ng waiting-room grace period).
+      const player = roomManager.markPlayerDisconnected(pin, socket.id);
+      if (!player) return;
+
+      console.log(`🔴 ${playerName} disconnected mid-quiz — hidden sa leaderboard, pwede pa mag-rejoin anytime`);
+
+      io.to(pin).emit('player-disconnected', {
+        playerId: socket.id,
+        playerName,
+      });
+
+      io.to(pin).emit('room-update', {
+        players: roomManager.getVisiblePlayers(pin),
+        hostName: room.hostName,
+        isHost: false,
+      });
+
+      // Failsafe lang: kung wala nang kahit isang connected na player sa
+      // buong room, i-schedule ang cleanup pagkalipas ng mahabang panahon.
+      scheduleAbandonedRoomCleanup(pin);
+      return;
+    }
+
+    // Room pa lang naka-"waiting" (hindi pa nagsisimula ang quiz) — hindi pa
+    // sila committed na kasapi, kaya pwede pa rin gamitin ang dating
+    // grace-period + totoong pagtanggal.
     console.log(`🔴 Client disconnected: ${socket.id} (${playerName}) — ${REJOIN_GRACE_MS / 1000}s grace period bago tanggalin`);
 
     const timerKey = `${pin}:${playerName}`;
@@ -470,6 +530,33 @@ io.on('connection', (socket) => {
 
     disconnectTimers.set(timerKey, timer);
   });
+
+  // ── Helper: failsafe cleanup para sa mga room na naka-"playing" pero
+  // wala nang kahit isang connected na player (tuluyan nang inabandona) ──
+  function scheduleAbandonedRoomCleanup(pin) {
+    const room = roomManager.getRoom(pin);
+    if (!room) return;
+
+    const stillHasConnected = room.players.some((p) => !p.disconnected);
+    if (stillHasConnected) return; // may buhay pa, walang dapat gawin
+
+    const existing = abandonedRoomTimers.get(pin);
+    if (existing) clearTimeout(existing);
+
+    const timer = setTimeout(() => {
+      abandonedRoomTimers.delete(pin);
+      const r = roomManager.getRoom(pin);
+      if (!r) return;
+
+      const nowConnected = r.players.some((p) => !p.disconnected);
+      if (!nowConnected) {
+        roomManager.deleteRoom(pin);
+        console.log(`🗑️ Room ${pin} deleted — walang bumalik na player sa loob ng ${ABANDONED_ROOM_CLEANUP_MS / 60000} mins`);
+      }
+    }, ABANDONED_ROOM_CLEANUP_MS);
+
+    abandonedRoomTimers.set(pin, timer);
+  }
 
   // ── Helper: Finalize player removal after grace period expires ──
   function finalizePlayerRemoval(pin, socketId, playerName) {
@@ -589,7 +676,10 @@ io.on('connection', (socket) => {
   }
 
   const results = room.quizEngine.getRoundResults();
-  const rankings = room.players
+  // Hindi kasama ang mga disconnected na players — dito nakikita ang
+  // pinaka-"live" na leaderboard, kaya dapat wala silang makikitang pangalan
+  // hanggang sa mag-rejoin sila.
+  const rankings = roomManager.getVisiblePlayers(pin)
     .slice()
     .sort((a, b) => b.score - a.score)
     .map((p, i) => ({ ...p, rank: i + 1 }));
