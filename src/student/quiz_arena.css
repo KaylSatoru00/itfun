@@ -189,14 +189,9 @@
   outline-offset: -6px;
 }
 
-/* Fill-in-the-blank underscore clue / reveal, shown inside the question box */
-.blank-clue {
-  margin: 10px 0 0;
-  font-size: clamp(18px, 2.6vw, 26px);
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: #A50034;
-}
+/* Fill-in-the-blank reveal now happens inline inside .question-text itself
+   (the "_____" placeholder gets replaced with the real answer), so no
+   separate clue element is needed here. */
 
 /* Identification input */
 .ident-wrap {

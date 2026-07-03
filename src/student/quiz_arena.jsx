@@ -197,6 +197,26 @@ function QuizArena() {
   const timerPercent = (timer / maxTimer) * 100;
   const isUrgent = timer <= 5;
 
+  // Loose/defensive type matching — hindi lang exact `=== 'fill-in-blank'`.
+  // Kahit na-normalize na natin ang type sa backend (gemini.service.js),
+  // extra safety net ito kung sakaling may room pa ring gumagamit ng hindi
+  // pa na-normalize na questions (hal. dating naka-cache sa memory).
+  const questionType = String(currentQuestion?.type || '').toLowerCase();
+  const isFillBlank = questionType.includes('fill');
+  const isIdentification = questionType.includes('ident');
+  const isTrueFalse = questionType.includes('true') && questionType.includes('false');
+
+  // Para sa fill-in-the-blank, naka-embed na yung "_____" placeholder sa
+  // loob mismo ng question text (galing sa AI generation) — kaya dito na
+  // lang natin ito papalitan ng totoong sagot pagdating ng revealedAnswer,
+  // sa halip na maglagay ng hiwalay na "clue" na text sa ibaba.
+  const displayQuestionText = (() => {
+    if (isFillBlank && revealedAnswer) {
+      return currentQuestion?.question?.replace(/_{3,}/g, revealedAnswer);
+    }
+    return currentQuestion?.question;
+  })();
+
   // Circular timer ring math
   const RADIUS = 52;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -339,23 +359,14 @@ function QuizArena() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <p className="question-text">{currentQuestion.question}</p>
-            {currentQuestion.type === 'fill-in-blank' && (
-              <p className="blank-clue">
-                {revealedAnswer
-                  ? revealedAnswer.toUpperCase()
-                  : currentQuestion.blankPattern}
-              </p>
-            )}
+            <p className="question-text">{displayQuestionText}</p>
           </motion.div>
         </AnimatePresence>
 
-        <div className={`options-grid ${currentQuestion.type === 'true-false' ? 'two-col' : 'one-col'}`}>
+        <div className={`options-grid ${isTrueFalse ? 'two-col' : 'one-col'}`}>
 
           {/* Multiple Choice */}
-          {currentQuestion.type !== 'true-false' &&
-           currentQuestion.type !== 'identification' &&
-           currentQuestion.type !== 'fill-in-blank' &&
+          {!isTrueFalse && !isIdentification && !isFillBlank &&
             currentQuestion.options?.map((option, index) => {
               const isRevealed = !!revealedAnswer;
               const isCorrectOption = isRevealed && option === revealedAnswer;
@@ -376,7 +387,7 @@ function QuizArena() {
           }
 
           {/* True / False */}
-          {currentQuestion.type === 'true-false' && (
+          {isTrueFalse && (
             <>
               <motion.button
                 className={`option-btn ${selectedAnswer === 'True' ? 'selected' : ''} ${revealedAnswer === 'True' ? 'correct' : ''} ${revealedAnswer && selectedAnswer === 'True' && revealedAnswer !== 'True' ? 'incorrect' : ''}`}
@@ -400,8 +411,7 @@ function QuizArena() {
           )}
 
           {/* Identification / Fill in blank */}
-          {(currentQuestion.type === 'identification' ||
-            currentQuestion.type === 'fill-in-blank') && (
+          {(isIdentification || isFillBlank) && (
             <div className="ident-wrap">
               <input
                 className={`ident-input ${

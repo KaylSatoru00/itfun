@@ -53,18 +53,6 @@ class QuizEngine {
     if (!question) return null;
 
     const { correctAnswer, ...safeQuestion } = question;
-
-    // Para sa fill-in-the-blank, kailangan pa rin ng "clue" habang wala pang
-    // sagot — bilang ng letra ng tamang sagot, ipinapakita bilang underscores
-    // (hal. "_______ ________" para sa "Stepped Reckoner"). Ang totoong text
-    // mismo ang HINDI ipinapadala, kundi ang haba lang nito per word.
-    if (question.type === 'fill-in-blank' && typeof correctAnswer === 'string') {
-      safeQuestion.blankPattern = correctAnswer
-        .split(' ')
-        .map((word) => '_'.repeat(word.length))
-        .join(' ');
-    }
-
     return safeQuestion;
   }
 
