@@ -174,10 +174,14 @@
   box-shadow: 0 0 0 2px #A50034;
 }
 
-/* Reveal state — shown once round-results arrives */
+/* Reveal state — shown once round-results arrives. Yellow/gold ang "correct"
+   dito dahil para lang ito sa True/False at Multiple Choice (.option-btn) —
+   hiwalay na class (.ident-input.correct) ang ginagamit ng Identification
+   at Fill-in-the-Blank, hindi ito apektado. */
 .option-btn.correct {
-  background: #2e7d32;
-  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.35);
+  background: #f2b705;
+  color: #1a1a1a;
+  box-shadow: 0 4px 10px rgba(242, 183, 5, 0.4);
   outline: 3px solid #fff;
   outline-offset: -6px;
 }

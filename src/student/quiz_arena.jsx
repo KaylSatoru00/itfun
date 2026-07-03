@@ -164,6 +164,43 @@ function QuizArena() {
     };
   }, [socket, pin, navigate]);
 
+  // ── Sound effects: correct/wrong ──
+  // Tumutunog base lang sa SARILING sagot ng player (selectedAnswer), hindi
+  // sa pangkalahatang resulta ng buong round — kaya bawat player, iisa lang
+  // sa dalawang tunog (tama o mali) ang maririnig niya, hindi pareho.
+  // Isang beses lang tumutunog kada round, sa oras na dumating ang
+  // revealedAnswer mula sa `round-results` (dito lang available ang totoong
+  // sagot — tugma ito sa security fix na tinanggal na ang correctAnswer sa
+  // `new-question`).
+  useEffect(() => {
+    if (!revealedAnswer || !currentQuestion) return;
+
+    const typeStr = String(currentQuestion.type || '').toLowerCase();
+    const isTypedAnswer = typeStr.includes('ident') || typeStr.includes('fill');
+
+    // Kung walang sagot ang player (timeout, walang na-click/na-type),
+    // itinuturing itong "mali" — walang sagot ay hindi maaaring maging tama.
+    const isUserCorrect = isTypedAnswer
+      ? typeof selectedAnswer === 'string' &&
+        selectedAnswer.trim().toUpperCase() === String(revealedAnswer).trim().toUpperCase()
+      : selectedAnswer === revealedAnswer;
+
+    const sound = new Audio(
+      isUserCorrect
+        ? '/sounds/mixkit-correct-answer-reward-952.wav'
+        : '/sounds/mixkit-funny-fail-low-tone-2876.wav'
+    );
+    sound.play().catch(() => {
+      // Kung na-block man ng browser (bihira dito dahil resulta ito ng
+      // socket event pagkatapos ng user interaction, hindi random
+      // autoplay) — huwag na lang i-crash, tahimik lang i-ignore.
+    });
+    // Sadyang [revealedAnswer] lang ang dependency — gusto lang natin itong
+    // tumakbo nang isang beses bawat pagdating ng bagong revealedAnswer,
+    // hindi sa bawat re-render dahil sa ibang state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealedAnswer]);
+
   const handleAnswer = (answer) => {
     if (isAnswered || !currentQuestion || !socket) return;
     setSelectedAnswer(answer);
