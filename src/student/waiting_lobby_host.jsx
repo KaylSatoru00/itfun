@@ -69,18 +69,17 @@ function WaitingLobby() {
     };
 
     // Kung may existing session na tumutugma (reload man, bagong tab, o
-    // fresh navigation pagkatapos mag-exit), i-attempt munang mag-rejoin sa
-    // dati niyang room bago gumawa ng panibago. localStorage (hindi
-    // sessionStorage) para hindi mawala kahit isara yung tab/browser.
-    // May "freshness" check tugma sa REJOIN_GRACE_MS (2 mins) sa backend —
-    // kung matagal nang expired, huwag nang subukan pa ang rejoin.
+    // fresh navigation pagkatapos mag-exit — kahit matagal na ang
+    // nakalipas), i-attempt munang mag-rejoin sa dati niyang room bago
+    // gumawa ng panibago. localStorage (hindi sessionStorage) para hindi
+    // mawala kahit isara yung tab/browser. Ang backend na ang magde-decide
+    // kung valid pa ba ang rejoin (base sa kung "finished" na ba ang quiz,
+    // hindi sa oras) — kaya wala nang time-based na "isFresh" gate dito.
     const savedPin = localStorage.getItem('itfun_roomPin');
     const savedName = localStorage.getItem('itfun_playerName');
     const savedIsHost = localStorage.getItem('itfun_isHost') === 'true';
-    const savedTime = parseInt(localStorage.getItem('itfun_sessionTime') || '0', 10);
-    const isFresh = Date.now() - savedTime < 2 * 60 * 1000; // 2 mins
 
-    if (savedPin && savedName === playerDisplayName && savedIsHost && isFresh) {
+    if (savedPin && savedName === playerDisplayName && savedIsHost) {
       socket.emit('rejoin-room', { pin: savedPin, playerName: playerDisplayName }, (response) => {
         console.log('🔁 host rejoin-room response:', response);
         if (response?.success) {

@@ -42,17 +42,14 @@ function QuizArena() {
     // pala noon ay circular reference sa serialization (na-fix na sa backend),
     // kaya safe na ngayon na i-attempt ang rejoin-room sa tuwing may match na
     // saved session — reload man, bagong tab, o fresh navigation (hal. binuksan
-    // ulit ng user yung /quiz-arena?pin=... galing sa ibang tab/window).
-    //
-    // May dagdag na "freshness" check gamit ang timestamp, tugma sa
-    // REJOIN_GRACE_MS (2 mins) sa backend — kung matagal nang expired ang
-    // naka-save na session, huwag nang subukan pa ang rejoin.
+    // ulit ng user yung /quiz-arena?pin=... galing sa ibang tab/window), kahit
+    // matagal na ang nakalipas. Ang backend na ang magde-decide kung valid pa
+    // ba ang rejoin (base sa kung "finished" na ba ang quiz) — kaya wala nang
+    // time-based na "isFresh" gate dito sa frontend.
     const savedPin = localStorage.getItem('itfun_roomPin');
     const savedName = localStorage.getItem('itfun_playerName');
-    const savedTime = parseInt(localStorage.getItem('itfun_sessionTime') || '0', 10);
-    const isFresh = Date.now() - savedTime < 2 * 60 * 1000; // 2 mins
 
-    if (savedPin === pin && savedName && isFresh) {
+    if (savedPin === pin && savedName) {
       socket.emit('rejoin-room', { pin, playerName: savedName }, (response) => {
         console.log('🔁 Rejoin response:', response);
         if (!response?.success) {
