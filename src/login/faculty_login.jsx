@@ -9,8 +9,15 @@ import {
   signInWithEmailAndPassword,
   sendEmailVerification,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../user_context';
+
+// Kung "fresh" pa yung last heartbeat ng isang session (ibig sabihin,
+// aktibong ginagamit pa talaga), ituring itong "occupied". Kung wala nang
+// heartbeat sa loob ng threshold na ito (hal. na-close ang browser nang
+// hindi nag-logout), ituring itong "stale"/abandoned na — payagan na ulit
+// mag-login dito, para hindi mapermanenteng locked-out ang account.
+const SESSION_STALE_MS = 90 * 1000; // 90 seconds (~3 missed 30s heartbeats)
 
 function toPascalCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
@@ -142,6 +149,34 @@ function FacultyLogin() {
         return;
       }
       const data = snap.data();
+
+      // ── Single active session enforcement ──
+      // Kung meron nang `activeSessionId` na naka-set at "fresh" pa yung
+      // huling heartbeat (`lastActiveAt`) nito, may aktibong gamit na ito
+      // sa ibang device/tab — i-block ang bagong pag-login na ito. Kung
+      // "stale" na yung heartbeat (mahigit SESSION_STALE_MS na walang
+      // update — malamang na-close ang browser nang hindi nag-logout),
+      // ituring nang abandoned ang dating session at payagan mag-login.
+      const lastActiveMs = data.lastActiveAt?.toMillis ? data.lastActiveAt.toMillis() : 0;
+      const isSessionFresh = Date.now() - lastActiveMs < SESSION_STALE_MS;
+      if (data.activeSessionId && isSessionFresh) {
+        await auth.signOut();
+        setError('Someone else is currently using this account. Please try again later.');
+        setLoading(false);
+        return;
+      }
+
+      // Walang gamit (o stale na) ang account — i-claim natin ito bilang
+      // bagong active session. Naka-store ang sessionId sa sessionStorage
+      // (tab-scoped) para malinis lang ito ng Logout button ng session na
+      // talagang gumawa nito.
+      const sessionId = crypto.randomUUID();
+      await setDoc(doc(db, 'faculty', uid), {
+        activeSessionId: sessionId,
+        lastActiveAt: serverTimestamp(),
+      }, { merge: true });
+      sessionStorage.setItem('itfun_sessionId', sessionId);
+
       setUser({ uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'faculty' });
       navigate('/faculty-modules');
     } catch (err) {

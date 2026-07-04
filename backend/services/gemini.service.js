@@ -1,13 +1,14 @@
 // backend/services/gemini.service.js
 
-// Hindi laging sinusunod ng LLM (Groq) nang eksakto yung type string na
-// hiniling natin sa prompt.service.js (hal. "fill-in-blank"). Minsan
-// nagbabalik ito ng "Fill in the Blank", "fillInBlank", "FILL_IN_BLANK",
-// atbp. — magkaparehong klase ng tanong pero magkaibang casing/format.
-// Kung hindi ito ma-normalize dito sa source, palagi itong magiging
-// case-sensitive na === comparison ang masisira sa buong app (quiz.engine.js
-// hindi makikita yung 'fill-in-blank' kaya hindi gagana yung correctAnswer
-// hiding/blankPattern, at sa quiz_arena.jsx hindi lalabas yung reveal UI).
+// Hindi laging sinusunod ng LLM (ngayon: NaraRouter/mistral-large) nang
+// eksakto yung type string na hiniling natin sa prompt.service.js (hal.
+// "fill-in-blank"). Minsan nagbabalik ito ng "Fill in the Blank",
+// "fillInBlank", "FILL_IN_BLANK", atbp. — magkaparehong klase ng tanong
+// pero magkaibang casing/format. Kung hindi ito ma-normalize dito sa
+// source, palagi itong magiging case-sensitive na === comparison ang
+// masisira sa buong app (quiz.engine.js hindi makikita yung
+// 'fill-in-blank' kaya hindi gagana yung correctAnswer hiding/blankPattern,
+// at sa quiz_arena.jsx hindi lalabas yung reveal UI).
 function normalizeQuestionType(rawType) {
   const s = String(rawType || '').toLowerCase().trim();
 
@@ -29,15 +30,15 @@ function getGeminiService() {
     throw new Error('GEMINI_API_KEY is not set in your .env file.');
   }
 
-  console.log('✅ Groq API key loaded, length:', apiKey.length);
+  console.log('✅ NaraRouter API key loaded, length:', apiKey.length);
 
   return {
     async generateQuestions(prompt) {
       try {
-        console.log('📤 Sending prompt to Groq...');
+        console.log('📤 Sending prompt to NaraRouter...');
 
         const response = await fetch(
-          'https://api.groq.com/openai/v1/chat/completions',
+          'https://router.bynara.id/v1/chat/completions',
           {
             method: 'POST',
             headers: {
@@ -45,7 +46,7 @@ function getGeminiService() {
               'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
+              model: 'mistral-large',
               messages: [
                 { role: 'user', content: prompt }
               ],
@@ -85,8 +86,8 @@ function getGeminiService() {
         return normalizedQuestions;
 
       } catch (error) {
-        console.error('❌ Groq service error:', error.message);
-        throw new Error(`Groq failed: ${error.message}`);
+        console.error('❌ NaraRouter service error:', error.message);
+        throw new Error(`NaraRouter failed: ${error.message}`);
       }
     },
   };

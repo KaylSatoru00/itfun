@@ -6,9 +6,9 @@ import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import {
-  collection, query, where, getDocs, addDoc, doc, getDoc,
+  collection, query, where, getDocs, addDoc, doc, getDoc, setDoc,
   serverTimestamp, onSnapshot,
 } from 'firebase/firestore';
 import img1 from '../assets/panel1.webp';
@@ -157,8 +157,36 @@ function LearningModules() {
 
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { user }  = useUser();
+  const { user, setUser }  = useUser();
   const initials  = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
+
+  // Dati, "Yes, Logout" ay `navigate('/')` lang — hindi talaga tumatawag ng
+  // auth.signOut(), kaya nananatiling "naka-login" ang Firebase session
+  // (at nananatiling naka-"occupied" ang account sa single-session lock).
+  // Dito, talagang linilinis natin ang `activeSessionId` sa Firestore bago
+  // mag-signOut, para pwede na ulit i-login ng ibang device/tab agad
+  // pagkatapos, sa halip na maghintay ng SESSION_STALE_MS bago ito ma-
+  // reclaim.
+  const handleConfirmLogout = async () => {
+    try {
+      if (user?.uid) {
+        await setDoc(doc(db, 'students', user.uid), {
+          activeSessionId: null,
+        }, { merge: true });
+      }
+    } catch (err) {
+      console.error('Failed to clear active session on logout:', err);
+    }
+    sessionStorage.removeItem('itfun_sessionId');
+    try {
+      await auth.signOut();
+    } catch (err) {
+      console.error('Sign out failed:', err);
+    }
+    setUser(null);
+    localStorage.removeItem('user');
+    navigate('/');
+  };
 
   /* ── Body background ── */
   useEffect(() => {
@@ -557,7 +585,7 @@ function LearningModules() {
                 </p>
               </div>
               <div className="modal-footer">
-                <button className="modal-join-btn" onClick={() => navigate('/')}>Yes, Logout</button>
+                <button className="modal-join-btn" onClick={handleConfirmLogout}>Yes, Logout</button>
                 <button className="modal-cancel-btn" onClick={() => setShowLogoutModal(false)}>Cancel</button>
               </div>
             </motion.div>
