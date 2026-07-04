@@ -470,6 +470,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Answer Draft (habang nagtype, bago pa ma-click ang Submit) ──
+  // Hindi pa "final" ang sagot dito, wala ring scoring na nangyayari —
+  // isang snapshot lang ng current typed value ng player, para may
+  // magamit bilang huling sagot niya kung maubusan ng oras bago siya
+  // mag-click ng Submit Answer (tingnan ang `timeLeft <= 0` block sa
+  // `sendQuestion()`).
+  socket.on('answer-draft', (data) => {
+    const { pin, questionIndex, answer } = data;
+    const room = roomManager.getRoom(pin);
+    if (!room || room.status !== 'playing' || !room.quizEngine) return;
+    room.quizEngine.setDraftAnswer(socket.id, questionIndex, answer);
+  });
+
   // ── Next Question ──
   socket.on('next-question', async (data) => {
     const { pin } = data;
@@ -644,10 +657,16 @@ io.on('connection', (socket) => {
           (p) => !room.quizEngine.hasAnswered(p.id)
         );
         unanswered.forEach((p) => {
+          // Kung may na-type na siya kahit hindi na-click ang Submit Answer
+          // button, gamitin 'yon bilang huling sagot niya — huwag agad
+          // ituring na "walang sagot". Dadaan pa rin ito sa parehong
+          // submitAnswer() validation/scoring logic (kasama na ang
+          // singular/plural tolerance).
+          const lastTyped = room.quizEngine.getDraftAnswer(p.id);
           room.quizEngine.submitAnswer({
             playerId: p.id,
             questionIndex: room.quizEngine.currentQuestionIndex,
-            answer: null,
+            answer: lastTyped, // null kung wala talagang na-type
           });
         });
 

@@ -243,6 +243,26 @@ function QuizArena() {
   const isIdentification = questionType.includes('ident');
   const isTrueFalse = questionType.includes('true') && questionType.includes('false');
 
+  // Habang nagtype pa lang ang player sa Identification/Fill-in-Blank
+  // (hindi pa niya na-click ang Submit Answer), ipinapadala natin ang
+  // latest typed value sa server bilang "draft" (debounced, 300ms after
+  // last keystroke) — hindi pa ito counted/scored. Pero kung maubusan ng
+  // oras bago pa siya mag-click, gagamitin ng server ang huling draft na
+  // natanggap niya bilang totoong huling sagot, sa halip na agad ituring
+  // na blangko. Walang epekto kung hindi Identification/Fill-in-Blank, o
+  // kung nasagot na (`isAnswered`).
+  useEffect(() => {
+    if (!socket || !pin) return;
+    if (!(isIdentification || isFillBlank)) return;
+    if (isAnswered) return;
+
+    const timeoutId = setTimeout(() => {
+      socket.emit('answer-draft', { pin, questionIndex, answer: identInput });
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [identInput, isIdentification, isFillBlank, isAnswered, socket, pin, questionIndex]);
+
   // Para sa fill-in-the-blank, naka-embed na yung "_____" placeholder sa
   // loob mismo ng question text (galing sa AI generation) — kaya dito na
   // lang natin ito papalitan ng totoong sagot pagdating ng revealedAnswer,

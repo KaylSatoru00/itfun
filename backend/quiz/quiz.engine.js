@@ -1,3 +1,27 @@
+// ── Helpers: normalize + singular/plural-tolerant comparison ──
+// Ginagamit lang para sa Identification/Fill-in-Blank — hindi apektado ang
+// Multiple Choice/True-False (galing sa button click, dapat exact match).
+function normalizeForCompare(str) {
+  return String(str).trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+function singularize(word) {
+  // "PROCESSES" -> "PROCESS", "BOXES" -> "BOX"
+  if (/ES$/.test(word) && word.length > 4) return word.slice(0, -2);
+  // "COMPUTERS" -> "COMPUTER" — pero hindi masyadong maiksing words at
+  // hindi mga word na nagtatapos talaga sa double-S (hal. "ACCESS", "BUS"
+  // ay hindi dapat mag-strip papuntang "ACCES"/"BU")
+  if (/S$/.test(word) && word.length > 3 && !/SS$/.test(word)) return word.slice(0, -1);
+  return word;
+}
+
+function answersMatch(a, b) {
+  const na = normalizeForCompare(a);
+  const nb = normalizeForCompare(b);
+  if (na === nb) return true;
+  return singularize(na) === singularize(nb);
+}
+
 class QuizEngine {
   constructor(room, scoringService) {
     this.room = room;
@@ -9,6 +33,11 @@ class QuizEngine {
     this.resultsShown = false;
     this.timeLeft = 30;
     this.maxTime = 30;
+    // playerId -> latest typed (pero hindi pa na-click/na-submit) na sagot.
+    // Ginagamit lang para sa Identification/Fill-in-Blank, para may
+    // magamit na huling sagot kung maubusan ng oras bago pa ma-click ang
+    // Submit Answer button.
+    this.draftAnswers = new Map();
   }
 
   setTimeLeft(seconds) {
@@ -88,14 +117,19 @@ class QuizEngine {
     // sa mga forms — hindi kailangang match yung buong "CPU / Central
     // Processing Unit" string. Kung isang term/form lang naman ang naka-
     // store (walang "/"), normal na single-value comparison pa rin ito.
+    // Dinagdagan ng singular/plural tolerance dito (via answersMatch) — hal.
+    // "Computer" at "Computers" ay dapat parehong tanggapin bilang tama.
+    // Tugma pa rin sa acronym/full-form "/" exemption: kada part, chinicheck
+    // gamit ang answersMatch, kaya kahit "CPUs" o "Central Processing Units"
+    // (plural) ay tatanggapin din.
     const isTypedAnswer = question.type === 'identification' || question.type === 'fill-in-blank';
     const isCorrect = isTypedAnswer
       ? typeof answer === 'string' &&
         String(question.correctAnswer)
           .split('/')
-          .map((part) => part.trim().toUpperCase())
+          .map((part) => part.trim())
           .filter(Boolean)
-          .includes(answer.trim().toUpperCase())
+          .some((part) => answersMatch(answer, part))
       : answer === question.correctAnswer;
 
     // Ang timeTaken ay kino-compute dito, base sa server's own timeLeft
@@ -137,6 +171,21 @@ class QuizEngine {
     return this.answeredPlayers.has(playerId);
   }
 
+  // Tinatawag habang nagtype pa lang ang player sa Identification/Fill-in-
+  // Blank, HINDI pa niya na-click ang Submit Answer button. Hindi pa "final"
+  // ito — pero kung maubusan ng oras bago siya mag-click, ito na ang
+  // gagamitin bilang huling sagot niya, sa halip na agad ituring na blangko.
+  setDraftAnswer(playerId, questionIndex, answer) {
+    if (questionIndex !== this.currentQuestionIndex) return;
+    if (this.answeredPlayers.has(playerId)) return;
+    if (typeof answer !== 'string') return;
+    this.draftAnswers.set(playerId, answer);
+  }
+
+  getDraftAnswer(playerId) {
+    return this.draftAnswers.get(playerId) ?? null;
+  }
+
   // Tinatawag kapag nag-rejoin ang isang player gamit ang bagong socket.id
   // (hal. pagkatapos ng refresh). Dapat sumama yung "nakasagot na ba siya sa
   // kasalukuyang tanong" papunta sa bagong id, para hindi siya makapag-sagot
@@ -173,6 +222,7 @@ class QuizEngine {
     this.answeredPlayers = new Set();
     this.roundResults = [];
     this.resultsShown = false;
+    this.draftAnswers = new Map();
   }
 }
 
