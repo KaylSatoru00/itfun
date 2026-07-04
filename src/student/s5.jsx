@@ -138,23 +138,6 @@ function CircleProgress({ percent = 0, active = false }) {
 }
 
 /* ────────────────────────────────────────────
-   Linear Progress Bar
-─────────────────────────────────────────────*/
-function LinearProgressBar({ percent = 0 }) {
-  return (
-    <div style={{ marginTop: 4, height: 5, borderRadius: 4, background: '#f0d0d5', overflow: 'hidden' }}>
-      <div style={{
-        height: '100%',
-        width: `${percent}%`,
-        background: 'linear-gradient(90deg, #A50034, #c8102e)',
-        borderRadius: 4,
-        transition: 'width 0.4s ease',
-      }} />
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────
    Nav items
 ─────────────────────────────────────────────*/
 const navItems = [
@@ -179,8 +162,8 @@ function Chapter5() {
   };
 
   // Accordion / dropdown open state
-  const [sysFuncOpen, setSysFuncOpen] = useState(false);
-  const [sysExOpen,   setSysExOpen]   = useState(false);
+  // "Functions" and "Examples" are sibling accordions — only one open at a time.
+  const [openSysAccordion, setOpenSysAccordion] = useState(null);
   const [tableOpen,   setTableOpen]   = useState(false);
   const [tableCounted, setTableCounted] = useState(false);
 
@@ -267,15 +250,6 @@ function Chapter5() {
 
           {activeSection === 'software' && (
             <>
-              {/* Progress bar */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 2 }}>
-                  <span>Lesson Progress</span>
-                  <span>{progress.software}%</span>
-                </div>
-                <LinearProgressBar percent={progress.software} />
-              </div>
-
               {/* ── Title ── */}
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Types of Software</h2>
@@ -355,8 +329,8 @@ function Chapter5() {
               <div className="chap-accordion" style={{ marginTop: 10 }}>
                 <AccordionItem
                   title="Functions of System Software"
-                  isOpen={sysFuncOpen}
-                  onToggle={() => setSysFuncOpen(o => !o)}
+                  isOpen={openSysAccordion === 'func'}
+                  onToggle={() => setOpenSysAccordion(prev => (prev === 'func' ? null : 'func'))}
                   itemId="s5-accordion-sys-func"
                   onInteract={tracker.trackInteraction}
                 >
@@ -371,8 +345,8 @@ function Chapter5() {
 
                 <AccordionItem
                   title="Examples of System Software"
-                  isOpen={sysExOpen}
-                  onToggle={() => setSysExOpen(o => !o)}
+                  isOpen={openSysAccordion === 'ex'}
+                  onToggle={() => setOpenSysAccordion(prev => (prev === 'ex' ? null : 'ex'))}
                   itemId="s5-accordion-sys-ex"
                   onInteract={tracker.trackInteraction}
                 >

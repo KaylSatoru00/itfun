@@ -154,23 +154,6 @@ function CircleProgress({ percent = 0, active = false }) {
 }
 
 /* ────────────────────────────────────────────
-   Linear Progress Bar
-─────────────────────────────────────────────*/
-function LinearProgressBar({ percent = 0 }) {
-  return (
-    <div style={{ marginTop: 4, height: 5, borderRadius: 4, background: '#f0d0d5', overflow: 'hidden' }}>
-      <div style={{
-        height: '100%',
-        width: `${percent}%`,
-        background: 'linear-gradient(90deg, #A50034, #c8102e)',
-        borderRadius: 4,
-        transition: 'width 0.4s ease',
-      }} />
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────
    Nav items
 ─────────────────────────────────────────────*/
 const navItems = [
@@ -212,25 +195,18 @@ function Chapter6() {
   };
 
   // ── Accordion open/close state — characteristics (7 hardware items) ──
-  const [hwOpenStates, setHwOpenStates] = useState(Array(7).fill(false));
-  
+  // Only one open at a time — opening one closes the previously open one.
+  const [openHwItem, setOpenHwItem] = useState(null);
+
   const toggleHw = useCallback((index) => {
-    setHwOpenStates(prev => {
-      const newStates = [...prev];
-      newStates[index] = !newStates[index];
-      return newStates;
-    });
+    setOpenHwItem(prev => (prev === index ? null : index));
   }, []);
 
   // ── Accordion open/close state — areas (4 digital connection items) ──
-  const [digOpenStates, setDigOpenStates] = useState(Array(4).fill(false));
-  
+  const [openDigItem, setOpenDigItem] = useState(null);
+
   const toggleDig = useCallback((index) => {
-    setDigOpenStates(prev => {
-      const newStates = [...prev];
-      newStates[index] = !newStates[index];
-      return newStates;
-    });
+    setOpenDigItem(prev => (prev === index ? null : index));
   }, []);
 
   useEffect(() => {
@@ -289,13 +265,6 @@ function Chapter6() {
           {/* ══ CHARACTERISTICS ══ */}
           {activeSection === 'characteristics' && (
             <>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 2 }}>
-                  <span>Lesson Progress</span><span>{progress.characteristics}%</span>
-                </div>
-                <LinearProgressBar percent={progress.characteristics} />
-              </div>
-
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Characteristics of a Computer Network</h2>
               </div>
@@ -341,7 +310,7 @@ function Chapter6() {
                   <AccordionItem
                     key={name}
                     title={name}
-                    isOpen={hwOpenStates[i]}
+                    isOpen={openHwItem === i}
                     onToggle={() => toggleHw(i)}
                     itemId={`s6-hw-${i}`}
                     onInteract={characteristicsTracker.trackInteraction}
@@ -363,13 +332,6 @@ function Chapter6() {
           {/* ══ INTERNET AND INTRANET ══ */}
           {activeSection === 'internet' && (
             <>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 2 }}>
-                  <span>Lesson Progress</span><span>{progress.internet}%</span>
-                </div>
-                <LinearProgressBar percent={progress.internet} />
-              </div>
-
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Internet / Intranet</h2>
               </div>
@@ -461,12 +423,6 @@ function Chapter6() {
           {/* ══ AREAS OF NETWORK ══ */}
           {activeSection === 'areas' && (
             <>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 2 }}>
-                  <span>Lesson Progress</span><span>{progress.areas}%</span>
-                </div>
-                <LinearProgressBar percent={progress.areas} />
-              </div>
 
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Areas of a Network</h2>
@@ -519,7 +475,7 @@ function Chapter6() {
                   <AccordionItem
                     key={i}
                     title={item.title}
-                    isOpen={digOpenStates[i]}
+                    isOpen={openDigItem === i}
                     onToggle={() => toggleDig(i)}
                     itemId={`s6-dig-${i}`}
                     onInteract={areasTracker.trackInteraction}

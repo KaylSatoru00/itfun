@@ -195,8 +195,8 @@ function getModuleDefinition(moduleKey) {
     },
     module7: {
       displayName: 'Microsoft Office Applications',
-      lessons: ['intro', 'powerpoint', 'word', 'excel'],
-      totalLessons: 4,
+      lessons: ['intro', 'apps'],
+      totalLessons: 2,
     },
     module8: {
       displayName: 'Application of Computers in Different Fields',

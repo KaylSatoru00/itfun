@@ -20,8 +20,8 @@ import { useModuleSection } from '../hooks/useModuleSection';
    lesson "applications" has 6 FlipCards
 ──────────────────────────────────────────────*/
 const MODULE_ID = 'module8';
-const LESSON_CONFIGS = {
-  applications: { totalItems: 6 },
+const LESSON_TOTALS = {
+  applications: 6, // 6 flipcards: business, banking, education, marketing, military, healthcare
 };
 
 /* ────────────────────────────────────────────
@@ -93,28 +93,6 @@ function CircleProgress({ percent = 0, active = false }) {
   );
 }
 
-/* ────────────────────────────────────────────
-   Lesson Progress Bar
-─────────────────────────────────────────────*/
-function LessonProgressBar({ percent }) {
-  return (
-    <div style={{ marginTop: 6, width: '100%' }}>
-      <div style={{
-        height: 6, borderRadius: 4, background: 'rgba(255,255,255,0.3)',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          height: '100%', borderRadius: 4, background: '#fff',
-          width: `${percent}%`, transition: 'width 0.4s ease',
-        }} />
-      </div>
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', textAlign: 'right', marginTop: 2 }}>
-        {percent}%
-      </div>
-    </div>
-  );
-}
-
 const navItems = [
   { key: 'applications', label: 'Application of Computers in Different Fields' },
 ];
@@ -130,12 +108,13 @@ function Chapter8() {
   );
 
   /* ── Progress tracking hook ── */
-  const { lessonProgress, recordInteraction } = useProgressTracker(
+  const applicationsTracker = useProgressTracker(
     MODULE_ID,
-    LESSON_CONFIGS
+    'applications',
+    LESSON_TOTALS.applications
   );
 
-  const appPct = Math.round(lessonProgress?.applications?.progress ?? 0);
+  const appPct = Math.round(applicationsTracker.progress);
 
   return (
     <motion.div
@@ -170,9 +149,6 @@ function Chapter8() {
                 >
                   <CircleProgress percent={pct} active={activeSection === item.key} />
                   <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
-                  {activeSection === item.key && (
-                    <LessonProgressBar percent={pct} />
-                  )}
                 </button>
               );
             })}
@@ -201,7 +177,7 @@ function Chapter8() {
                   frontLabel="In Business"
                   backIcon="💼"
                   backText="Computers are widely used in businesses to help manage daily operations and important records. Because computers are fast, accurate, and reliable, they have become an essential tool in business organizations."
-                  onFirstFlip={(id) => recordInteraction('applications', id)}
+                  onFirstFlip={(id) => applicationsTracker.trackInteraction(id)}
                 />
               </div>
 
@@ -238,7 +214,7 @@ function Chapter8() {
                   frontLabel="In Banking"
                   backIcon="🏦"
                   backText="Banks depend heavily on computers to manage customer accounts and process financial transactions quickly and accurately. From ATM operations to online banking, computers are at the core of modern banking."
-                  onFirstFlip={(id) => recordInteraction('applications', id)}
+                  onFirstFlip={(id) => applicationsTracker.trackInteraction(id)}
                 />
               </div>
 
@@ -273,7 +249,7 @@ function Chapter8() {
                   frontLabel="In Education"
                   backIcon="🎓"
                   backText="Computers have improved education by making learning more interactive and accessible. They are used for teaching, learning, testing, and managing student records — also known as Computer-Based Education (CBE)."
-                  onFirstFlip={(id) => recordInteraction('applications', id)}
+                  onFirstFlip={(id) => applicationsTracker.trackInteraction(id)}
                 />
               </div>
 
@@ -310,7 +286,7 @@ function Chapter8() {
                   frontLabel="In Marketing"
                   backIcon="📢"
                   backText="In marketing, computers are used to create advertisements, manage campaigns, and enable home shopping through computerized catalogues that let customers browse products and place orders directly."
-                  onFirstFlip={(id) => recordInteraction('applications', id)}
+                  onFirstFlip={(id) => applicationsTracker.trackInteraction(id)}
                 />
               </div>
 
@@ -342,7 +318,7 @@ function Chapter8() {
                   frontLabel="In Military"
                   backIcon="🪖"
                   backText="Computers are largely used in defence. Modern tanks, missiles, and weapons employ computerised control systems for precision and coordination."
-                  onFirstFlip={(id) => recordInteraction('applications', id)}
+                  onFirstFlip={(id) => applicationsTracker.trackInteraction(id)}
                 />
               </div>
 
@@ -373,7 +349,7 @@ function Chapter8() {
                   frontLabel="In Healthcare"
                   backIcon="🏥"
                   backText="Computers have become an important part in hospitals, labs, and dispensaries — used to keep records of patients and medicines, and in scanning and diagnosing different diseases."
-                  onFirstFlip={(id) => recordInteraction('applications', id)}
+                  onFirstFlip={(id) => applicationsTracker.trackInteraction(id)}
                 />
               </div>
 
