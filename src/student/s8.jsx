@@ -116,6 +116,8 @@ function Chapter8() {
 
   const appPct = Math.round(applicationsTracker.progress);
 
+  const allLessonsComplete = appPct >= 100;
+
   return (
     <motion.div
       className="chap-panel"
@@ -137,22 +139,30 @@ function Chapter8() {
       <div className="chap-layout">
 
         {/* ── Left Nav ── */}
-        <div className="chap-card-small">
-          <div className="chap-nav-buttons">
-            {navItems.map(item => {
-              const pct = item.key === 'applications' ? appPct : 0;
-              return (
-                <button
-                  key={item.key}
-                  className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
-                  onClick={() => setActiveSection(item.key)}
-                >
-                  <CircleProgress percent={pct} active={activeSection === item.key} />
-                  <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
-                </button>
-              );
-            })}
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <div className="chap-nav-buttons">
+              {navItems.map(item => {
+                const pct = item.key === 'applications' ? appPct : 0;
+                return (
+                  <button
+                    key={item.key}
+                    className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
+                    onClick={() => setActiveSection(item.key)}
+                  >
+                    <CircleProgress percent={pct} active={activeSection === item.key} />
+                    <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-8')}>
+              START GAME
+            </button>
+          )}
         </div>
 
         {/* ── Main Content ── */}
@@ -384,6 +394,12 @@ function Chapter8() {
 
         </div>
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-8')}>
+          START GAME
+        </button>
+      )}
     </motion.div>
   );
 }

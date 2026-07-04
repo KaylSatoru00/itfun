@@ -81,7 +81,7 @@
 
 /* ── Small Left Card ── */
 .chap-card-small {
-  width: 260px;
+  width: 100%;
   flex-shrink: 0;
   height: fit-content;
   min-height: unset;
@@ -91,6 +91,56 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
   padding: 16px 12px;
   box-sizing: border-box;
+}
+
+/* ── Left column wrapper (nav card + start game button) ── */
+.chap-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.chap-start-game-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #A50034, #c8102e);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(165, 0, 52, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chap-start-game-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(165, 0, 52, 0.4);
+}
+
+.chap-start-game-btn:active {
+  transform: translateY(0);
+}
+
+/* ── Desktop/Mobile button placement swap ── */
+.chap-start-game-btn-mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .chap-start-game-btn-desktop-only {
+    display: none;
+  }
+
+  .chap-start-game-btn-mobile-only {
+    display: block;
+    margin-top: 14px;
+  }
 }
 
 /* ── Main Right Card ── */
@@ -250,6 +300,10 @@
   }
 
   .chap-card-small {
+    width: 100%;
+  }
+
+  .chap-left-col {
     width: 100%;
   }
 

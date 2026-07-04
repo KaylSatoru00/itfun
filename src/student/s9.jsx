@@ -287,6 +287,8 @@ function Chapter9() {
 
   const kbPct = Math.round(keyboardingTracker.progress);
 
+  const allLessonsComplete = kbPct >= 100;
+
   const toggle = (key) => setOpenAccordion(prev => prev === key ? null : key);
 
   return (
@@ -329,9 +331,11 @@ function Chapter9() {
             </div>
           </div>
 
-          <button className="chap-start-game-btn" onClick={() => navigate('/gamified-9')}>
-            START GAME
-          </button>
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-9')}>
+              START GAME
+            </button>
+          )}
         </div>
 
         {/* ── Main Content ── */}
@@ -414,6 +418,12 @@ function Chapter9() {
         </div>
 
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-9')}>
+          START GAME
+        </button>
+      )}
     </motion.div>
   );
 }

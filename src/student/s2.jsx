@@ -124,6 +124,8 @@ function Chapter2() {
     minicomputer: miniT.progress,
   };
 
+  const allLessonsComplete = Object.values(progress).every((p) => p >= 100);
+
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = '#ffffff';
@@ -146,15 +148,20 @@ function Chapter2() {
 
       <div className="chap-layout">
 
-        <div className="chap-card-small">
-          <nav className="chap-nav-buttons">
-            {navItems.map(({ key, label }) => (
-              <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => setActiveSection(key)}>
-                <CircleProgress percent={progress[key]} active={activeSection === key} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <nav className="chap-nav-buttons">
+              {navItems.map(({ key, label }) => (
+                <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => setActiveSection(key)}>
+                  <CircleProgress percent={progress[key]} active={activeSection === key} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-2')}>START GAME</button>
+          )}
         </div>
 
         <div className="chap-card-main">
@@ -265,6 +272,10 @@ function Chapter2() {
           )}
 
         </div>
+
+        {allLessonsComplete && (
+          <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-2')}>START GAME</button>
+        )}
       </div>
     </motion.div>
   );

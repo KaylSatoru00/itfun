@@ -178,6 +178,8 @@ function Chapter7() {
     apps: Math.round(appsTracker.progress),
   };
 
+  const allLessonsComplete = Object.values(progress).every((p) => p >= 100);
+
   // ── Accordion open/close state ──
   // Intro accordion (1 item)
   const [introOpenStates, setIntroOpenStates] = useState([false]);
@@ -261,19 +263,27 @@ function Chapter7() {
       <div className="chap-layout">
 
         {/* ── Left Nav Card ── */}
-        <div className="chap-card-small">
-          <nav className="chap-nav-buttons">
-            {navItems.map(({ key, label }) => (
-              <button
-                key={key}
-                className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                onClick={() => setActiveSection(key)}
-              >
-                <CircleProgress percent={progress[key]} active={activeSection === key} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <nav className="chap-nav-buttons">
+              {navItems.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
+                  onClick={() => setActiveSection(key)}
+                >
+                  <CircleProgress percent={progress[key]} active={activeSection === key} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-7')}>
+              START GAME
+            </button>
+          )}
         </div>
 
         {/* ── Main Right Card ── */}
@@ -509,6 +519,12 @@ function Chapter7() {
 
         </div>
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-7')}>
+          START GAME
+        </button>
+      )}
     </motion.div>
   );
 }

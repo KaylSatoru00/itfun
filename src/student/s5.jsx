@@ -161,6 +161,8 @@ function Chapter5() {
     software: Math.round(tracker.progress),
   };
 
+  const allLessonsComplete = Object.values(progress).every((p) => p >= 100);
+
   // Accordion / dropdown open state
   // "Functions" and "Examples" are sibling accordions — only one open at a time.
   const [openSysAccordion, setOpenSysAccordion] = useState(null);
@@ -230,19 +232,27 @@ function Chapter5() {
       <div className="chap-layout">
 
         {/* ── Left Nav Card ── */}
-        <div className="chap-card-small">
-          <nav className="chap-nav-buttons">
-            {navItems.map(({ key, label }) => (
-              <button
-                key={key}
-                className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                onClick={() => setActiveSection(key)}
-              >
-                <CircleProgress percent={progress[key]} active={activeSection === key} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <nav className="chap-nav-buttons">
+              {navItems.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
+                  onClick={() => setActiveSection(key)}
+                >
+                  <CircleProgress percent={progress[key]} active={activeSection === key} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-5')}>
+              START GAME
+            </button>
+          )}
         </div>
 
         {/* ── Main Right Card ── */}
@@ -509,6 +519,12 @@ function Chapter5() {
 
         </div>
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-5')}>
+          START GAME
+        </button>
+      )}
     </motion.div>
   );
 }

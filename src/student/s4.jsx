@@ -281,6 +281,8 @@ function Chapter4() {
     iodevices: Math.round(ioTracker.progress),
   };
 
+  const allLessonsComplete = Object.values(progress).every((p) => p >= 100);
+
   /* ── Hardware dropdown items ── */
   const hardwareDropdowns = [
     {
@@ -367,19 +369,24 @@ function Chapter4() {
       <div className="chap-layout">
 
         {/* ── Left Nav Card ── */}
-        <div className="chap-card-small">
-          <nav className="chap-nav-buttons">
-            {navItems.map(({ key, label }) => (
-              <button
-                key={key}
-                className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                onClick={() => setActiveSection(key)}
-              >
-                <CircleProgress percent={progress[key]} active={activeSection === key} />
-                <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <nav className="chap-nav-buttons">
+              {navItems.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
+                  onClick={() => setActiveSection(key)}
+                >
+                  <CircleProgress percent={progress[key]} active={activeSection === key} />
+                  <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-4')}>START GAME</button>
+          )}
         </div>
 
         {/* ── Main Right Card ── */}
@@ -1000,6 +1007,10 @@ function Chapter4() {
 
         </div>
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-4')}>START GAME</button>
+      )}
     </motion.div>
   );
 }

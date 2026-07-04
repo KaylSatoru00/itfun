@@ -124,6 +124,22 @@
   transform: translateY(0);
 }
 
+/* ── Desktop/Mobile button placement swap ── */
+.chap-start-game-btn-mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .chap-start-game-btn-desktop-only {
+    display: none;
+  }
+
+  .chap-start-game-btn-mobile-only {
+    display: block;
+    margin-top: 14px;
+  }
+}
+
 .chap-card-main {
   flex: 1;
   height: 100%;

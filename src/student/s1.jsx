@@ -236,6 +236,8 @@ function Chapter1() {
     history: hist.progress,
   };
 
+  const allLessonsComplete = Object.values(progress).every((p) => p >= 100);
+
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = '#ffffff';
@@ -285,7 +287,9 @@ function Chapter1() {
               ))}
             </nav>
           </div>
-          <button className="chap-start-game-btn" onClick={() => navigate('/gamified-1')}>START GAME</button>
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-1')}>START GAME</button>
+          )}
         </div>
 
         {/* Main Content */}
@@ -525,6 +529,10 @@ function Chapter1() {
 
         </div>
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-1')}>START GAME</button>
+      )}
     </motion.div>
   );
 }

@@ -194,6 +194,8 @@ function Chapter6() {
     areas: Math.round(areasTracker.progress),
   };
 
+  const allLessonsComplete = Object.values(progress).every((p) => p >= 100);
+
   // ── Accordion open/close state — characteristics (7 hardware items) ──
   // Only one open at a time — opening one closes the previously open one.
   const [openHwItem, setOpenHwItem] = useState(null);
@@ -256,7 +258,9 @@ function Chapter6() {
               ))}
             </nav>
           </div>
-          <button className="chap-start-game-btn" onClick={() => navigate('/gamified-6')}>START GAME</button>
+          {allLessonsComplete && (
+            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-6')}>START GAME</button>
+          )}
         </div>
 
         {/* ── Main Right Card ── */}
@@ -489,6 +493,10 @@ function Chapter6() {
 
         </div>
       </div>
+
+      {allLessonsComplete && (
+        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-6')}>START GAME</button>
+      )}
     </motion.div>
   );
 }
