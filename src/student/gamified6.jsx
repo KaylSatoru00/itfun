@@ -20,8 +20,10 @@ export default function Gamified6() {
   const [muted, setMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [panelSize, setPanelSize] = useState({ width: GAME_WIDTH, height: GAME_HEIGHT });
   const iframeRef = useRef(null);
   const panelRef = useRef(null);
+  const topRowRef = useRef(null);
 
   const toggleMute = () => {
     setMuted((prev) => {
@@ -122,6 +124,55 @@ export default function Gamified6() {
 
   const useRotatedLayout = isPseudoFullscreen;
 
+  // Dynamically fit the panel to available viewport space while preserving
+  // the 960:600 (16:10) aspect ratio. Previously the height was derived
+  // purely from width (width * 0.625), which shrank everything on tall
+  // portrait phones where width is the scarce dimension, not height.
+  // Chrome height (top row) is measured live via getBoundingClientRect
+  // instead of hardcoded, so this stays accurate even if the top row's
+  // own height/padding changes later.
+  useEffect(() => {
+    if (isFullscreen || useRotatedLayout) return;
+
+    const computeSize = () => {
+      const aspect = GAME_WIDTH / GAME_HEIGHT; // 1.6
+      const BOTTOM_PADDING = 24; // matches outer container's bottom padding
+
+      let chromeHeight = 76; // fallback if ref not ready yet (top padding only)
+      if (topRowRef.current) {
+        const rect = topRowRef.current.getBoundingClientRect();
+        const marginBottom = parseFloat(
+          getComputedStyle(topRowRef.current).marginBottom
+        ) || 0;
+        chromeHeight = rect.bottom + marginBottom; // viewport-relative space used above the panel
+      }
+
+      const availW = window.innerWidth * 0.96;
+      const availH = window.innerHeight - chromeHeight - BOTTOM_PADDING;
+
+      let width = Math.min(GAME_WIDTH, availW);
+      let height = width / aspect;
+
+      if (height > availH) {
+        height = Math.max(0, availH);
+        width = height * aspect;
+      }
+
+      setPanelSize({ width, height });
+    };
+
+    // Run after paint so topRowRef has real layout dimensions
+    const raf = requestAnimationFrame(computeSize);
+
+    window.addEventListener("resize", computeSize);
+    window.addEventListener("orientationchange", computeSize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", computeSize);
+      window.removeEventListener("orientationchange", computeSize);
+    };
+  }, [isFullscreen, useRotatedLayout]);
+
   return (
     <div
       style={{
@@ -176,6 +227,7 @@ export default function Gamified6() {
       {/* Top row: Back button + Mute toggle, sits above the panel in normal flow */}
       {!isPseudoFullscreen && (
         <div
+          ref={topRowRef}
           style={{
             width: "100%",
             maxWidth: GAME_WIDTH,
@@ -255,10 +307,8 @@ export default function Gamified6() {
               }
             : {
                 position: "relative",
-                width: isFullscreen ? "100vw" : "min(960px, 96vw)",
-                height: isFullscreen
-                  ? "100vh"
-                  : "min(600px, calc(min(960px, 96vw) * 0.625), 75vh)",
+                width: isFullscreen ? "100vw" : `${panelSize.width}px`,
+                height: isFullscreen ? "100vh" : `${panelSize.height}px`,
                 borderRadius: isFullscreen ? 0 : 18,
                 overflow: "hidden",
                 border: isFullscreen ? "none" : `2px solid ${COLORS.red}`,

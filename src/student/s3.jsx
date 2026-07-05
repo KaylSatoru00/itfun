@@ -115,13 +115,24 @@ const navItems = [
   { key: 'conversions',  label: 'Number System Conversions (Binary, Decimal)' },
 ];
 
+const BASE_OPTIONS = [
+  { key: 'binary',      label: 'Binary',      base: 2,  example: '11111111', regex: /^[01]+$/ },
+  { key: 'octal',       label: 'Octal',       base: 8,  example: '377',      regex: /^[0-7]+$/ },
+  { key: 'decimal',     label: 'Decimal',     base: 10, example: '255',      regex: /^[0-9]+$/ },
+  { key: 'hexadecimal', label: 'Hexadecimal', base: 16, example: 'FF',       regex: /^[0-9A-Fa-f]+$/ },
+];
+
 function Chapter3() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useModuleSection(
     'numbersystem',
-    ['numbersystem', 'conversions']
+    ['numbersystem', 'conversions', 'converter']
   );
   const [nsOpenIndex, setNsOpenIndex] = useState(null);
+
+  // ── Convert Tool state ──
+  const [convBase, setConvBase] = useState('binary');
+  const [convInput, setConvInput] = useState('');
 
   const nsT   = useProgressTracker('module3', 'lesson1', LESSON_TOTALS.numbersystem);
   const convT = useProgressTracker('module3', 'lesson2', LESSON_TOTALS.conversions);
@@ -137,6 +148,29 @@ function Chapter3() {
     };
   }, []);
 
+  const currentBaseOption = BASE_OPTIONS.find(b => b.key === convBase);
+  const targetBaseOptions = BASE_OPTIONS.filter(b => b.key !== convBase);
+
+  const handleBaseChange = (key) => {
+    setConvBase(key);
+    setConvInput('');
+  };
+
+  let convError = '';
+  const convResults = {};
+  const trimmedInput = convInput.trim();
+
+  if (trimmedInput) {
+    if (!currentBaseOption.regex.test(trimmedInput)) {
+      convError = `Enter a valid ${currentBaseOption.label.toLowerCase()} number.`;
+    } else {
+      const decimalValue = parseInt(trimmedInput, currentBaseOption.base);
+      targetBaseOptions.forEach(t => {
+        convResults[t.key] = decimalValue.toString(t.base).toUpperCase();
+      });
+    }
+  }
+
   return (
     <motion.div className="chap-panel" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
 
@@ -150,15 +184,26 @@ function Chapter3() {
 
       <div className="chap-layout">
 
-        <div className="chap-card-small">
-          <nav className="chap-nav-buttons">
-            {navItems.map(({ key, label }) => (
-              <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => setActiveSection(key)}>
-                <CircleProgress percent={progress[key]} active={activeSection === key} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
+        <div className="chap-left-col">
+          <div className="chap-card-small">
+            <nav className="chap-nav-buttons">
+              {navItems.map(({ key, label }) => (
+                <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => setActiveSection(key)}>
+                  <CircleProgress percent={progress[key]} active={activeSection === key} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="chap-card-tool">
+            <button
+              className={`chap-tool-btn ${activeSection === 'converter' ? 'active' : ''}`}
+              onClick={() => setActiveSection('converter')}
+            >
+              <span>CONVERT TOOL</span>
+            </button>
+          </div>
         </div>
 
         <div className="chap-card-main">
@@ -259,6 +304,56 @@ function Chapter3() {
                 <FlipCardImageBack frontLabel="DECIMAL TO BINARY NUMBER CONVERSION" backImage={d1Img} backAlt="Decimal to Binary Example" itemId="conv_fc_d1" onInteract={convT.trackInteraction} />
               </div>
             </>
+          )}
+
+          {activeSection === 'converter' && (
+            <div className="s3-converter-page">
+              <div className="s3-converter-header">
+                <span className="s3-converter-icon">⇄</span>
+                <h2 className="s3-converter-title">Converter Tool</h2>
+              </div>
+              <p className="s3-converter-subtitle">Choose an input number system, enter a value, and see instant conversions.</p>
+
+              <div className="s3-converter-box">
+                <p className="s3-converter-step-label">Step 1 — Choose Input Number System</p>
+                <div className="s3-converter-base-row">
+                  {BASE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.key}
+                      className={`s3-converter-base-btn ${convBase === opt.key ? 'active' : ''}`}
+                      onClick={() => handleBaseChange(opt.key)}
+                    >
+                      <span className="base-name">{opt.label}</span>
+                      <span className="base-sub">Base {opt.base}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <p className="s3-converter-step-label">Step 2 — Enter {currentBaseOption.label} Number</p>
+                <input
+                  type="text"
+                  className="s3-converter-dark-input"
+                  placeholder={`e.g. ${currentBaseOption.example}`}
+                  value={convInput}
+                  onChange={(e) => setConvInput(e.target.value)}
+                />
+                {convError && <p className="s3-converter-dark-error">{convError}</p>}
+
+                <p className="s3-converter-step-label">Step 3 — Conversion Results</p>
+                <div className="s3-converter-results">
+                  {targetBaseOptions.map(t => (
+                    <div className="s3-converter-result-row" key={t.key}>
+                      <span className="s3-converter-result-label">
+                        {currentBaseOption.label} <span className="s3-converter-result-arrow">→</span> {t.label}
+                      </span>
+                      <span className={`s3-converter-result-value ${!convResults[t.key] ? 'empty' : ''}`}>
+                        {convResults[t.key] || '—'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
         </div>

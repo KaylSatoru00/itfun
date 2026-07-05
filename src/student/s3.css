@@ -79,10 +79,18 @@
   overflow: hidden;
 }
 
-/* ── Small Left Card ── */
-.chap-card-small {
+/* ── Left column (lesson card + tool card, stacked) ── */
+.chap-left-col {
   width: 260px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Small Left Card ── */
+.chap-card-small {
+  width: 100%;
   height: fit-content;
   min-height: unset;
   background: #fff;
@@ -90,6 +98,18 @@
   border-radius: 14px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
   padding: 16px 12px;
+  box-sizing: border-box;
+}
+
+/* ── Tool Card (below lesson card) ── */
+.chap-card-tool {
+  width: 100%;
+  height: fit-content;
+  background: #fff;
+  border: 1px solid #f0d0d5;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  padding: 12px;
   box-sizing: border-box;
 }
 
@@ -249,7 +269,7 @@
     overflow: visible;
   }
 
-  .chap-card-small {
+  .chap-left-col {
     width: 100%;
   }
 
@@ -268,7 +288,8 @@
     padding: 10px;
   }
 
-  .chap-card-small {
+  .chap-card-small,
+  .chap-card-tool {
     padding: 14px 12px;
     border-radius: 8px;
   }
@@ -503,6 +524,234 @@
   border-radius: 2px;
   margin: 32px 0;
 }
+/* ─────────────────────────────────────────────
+   Convert Tool — button + panel
+───────────────────────────────────────────── */
+.chap-tool-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid #000000;
+  background: #F2D7D5;
+  color: #000000;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.chap-tool-btn:hover {
+  background: #fdecea;
+  border-color: #A50034;
+}
+
+.chap-tool-btn.active {
+  background: #A50034;
+  color: #fff;
+  border-color: #A50034;
+}
+
+/* ── Converter Tool page — dark theme, full bleed over chap-card-main ── */
+.s3-converter-page {
+  background: #0d0f16;
+  margin: -24px -20px;
+  padding: 40px 36px 48px;
+  border-radius: 14px;
+  min-height: calc(100% + 48px);
+  font-family: 'Courier New', Courier, monospace;
+  box-sizing: border-box;
+}
+
+.s3-converter-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.s3-converter-icon {
+  font-size: 32px;
+  color: #2dd4bf;
+}
+
+.s3-converter-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.s3-converter-subtitle {
+  font-size: 15px;
+  color: #8b93a6;
+  margin: 0 0 32px 46px;
+  letter-spacing: 0.3px;
+}
+
+.s3-converter-box {
+  background: #161923;
+  border: 1px solid #262b3a;
+  border-radius: 18px;
+  padding: 36px;
+}
+
+.s3-converter-step-label {
+  font-size: 16px;
+  color: #8b93a6;
+  margin: 0 0 18px 0;
+  letter-spacing: 0.3px;
+}
+
+.s3-converter-box .s3-converter-step-label:not(:first-child) {
+  margin-top: 38px;
+}
+
+.s3-converter-base-row {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.s3-converter-base-btn {
+  flex: 1;
+  min-width: 160px;
+  background: #1b1f2a;
+  border: 2px solid #2a2f3d;
+  border-radius: 14px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.s3-converter-base-btn:hover:not(.active) {
+  border-color: #3a4155;
+}
+
+.s3-converter-base-btn .base-name {
+  font-weight: 700;
+  color: #e5e7eb;
+  font-size: 20px;
+}
+
+.s3-converter-base-btn .base-sub {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.s3-converter-base-btn.active {
+  background: #2dd4bf;
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.2);
+}
+
+.s3-converter-base-btn.active .base-name {
+  color: #0d0f16;
+}
+
+.s3-converter-base-btn.active .base-sub {
+  color: #0d0f16;
+  opacity: 0.7;
+}
+
+.s3-converter-dark-input {
+  width: 100%;
+  background: #1b1f2a;
+  border: 2px solid #2a2f3d;
+  border-radius: 14px;
+  padding: 22px 24px;
+  color: #e5e7eb;
+  font-size: 20px;
+  font-family: 'Courier New', Courier, monospace;
+  box-sizing: border-box;
+}
+
+.s3-converter-dark-input::placeholder {
+  color: #5b6272;
+}
+
+.s3-converter-dark-input:focus {
+  outline: none;
+  border-color: #2dd4bf;
+}
+
+.s3-converter-dark-error {
+  font-size: 14px;
+  color: #f87171;
+  margin: 10px 0 0 0;
+}
+
+.s3-converter-results {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.s3-converter-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1b1f2a;
+  border: 2px solid #2a2f3d;
+  border-radius: 14px;
+  padding: 20px 26px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.s3-converter-result-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e5e7eb;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.s3-converter-result-arrow {
+  color: #2dd4bf;
+}
+
+.s3-converter-result-value {
+  color: #2dd4bf;
+  font-weight: 700;
+  font-size: 18px;
+  word-break: break-all;
+}
+
+.s3-converter-result-value.empty {
+  color: #5b6272;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .s3-converter-page {
+    margin: -16px -12px;
+    padding: 20px 16px 28px;
+  }
+
+  .s3-converter-base-row {
+    flex-direction: column;
+  }
+
+  .s3-converter-base-btn {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 12px 16px;
+  }
+}
+
 /* -- Mobile scroll fix -- */
 @media (max-width: 768px) {
   body:has(.chap-panel) {
