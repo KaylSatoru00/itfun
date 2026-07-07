@@ -16,7 +16,7 @@ import { useUser } from '../user_context';
 // heartbeat sa loob ng threshold na ito (hal. na-close ang browser nang
 // hindi nag-logout), ituring itong "stale"/abandoned na — payagan na ulit
 // mag-login dito, para hindi mapermanenteng locked-out ang account.
-const SESSION_STALE_MS = 90 * 1000; // 90 seconds (~3 missed 30s heartbeats)
+const SESSION_STALE_MS = 10 * 1000; // 10 seconds
 
 function toPascalCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
