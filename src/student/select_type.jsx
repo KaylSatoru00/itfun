@@ -1,7 +1,8 @@
 // select_type.jsx - COMPLETE FILE
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { auth } from '../firebase';
 import './select_type.css';
 
 import choiceImg from '../assets/choice.png';
@@ -26,10 +27,31 @@ function SelectType() {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [remainingGenerates, setRemainingGenerates] = useState(null);
+
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+    fetch(`${API_URL}/api/generate-quiz/quota/${uid}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setRemainingGenerates(data.remaining);
+      })
+      .catch((err) => console.error('❌ Quota fetch error:', err));
+  }, []);
 
   const handleGenerate = async () => {
     if (!selected) return;
-    
+
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setError('Please log in again to generate a quiz.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -45,12 +67,14 @@ function SelectType() {
           lessonId: selectedModule.lesson || 'lesson1',
           quizType: selected.id,
           questionCount: 15,
+          uid,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
+        setRemainingGenerates(data.remainingGenerates);
         const questionsParam = encodeURIComponent(JSON.stringify(data.questions));
         navigate('/waiting-lobby', {
           state: {
@@ -60,6 +84,10 @@ function SelectType() {
             mode: 'host',
           }
         });
+      } else if (data.limitReached) {
+        setRemainingGenerates(0);
+        setError(data.error || 'You\'ve reached your 3 daily generates. Come back tomorrow.');
+        setLoading(false);
       } else {
         setError(data.error || 'Failed to generate quiz. Please try again.');
         setLoading(false);
@@ -130,14 +158,22 @@ function SelectType() {
         </motion.p>
       )}
 
+      {remainingGenerates !== null && (
+        <p className="st-quota-indicator">
+          {remainingGenerates > 0
+            ? `${remainingGenerates} generate${remainingGenerates === 1 ? '' : 's'} left today`
+            : 'No generates left today — try again tomorrow'}
+        </p>
+      )}
+
       <div className="st-bottom">
         <button className="st-btn st-btn-back" onClick={() => navigate('/select-module')}>
           <span>«</span> BACK
         </button>
         <button
-          className={`st-btn st-btn-generate ${!selected || loading ? 'st-btn-disabled' : ''}`}
+          className={`st-btn st-btn-generate ${!selected || loading || remainingGenerates === 0 ? 'st-btn-disabled' : ''}`}
           onClick={handleGenerate}
-          disabled={!selected || loading}
+          disabled={!selected || loading || remainingGenerates === 0}
         >
           {loading ? '⏳ Generating...' : 'GENERATE QUIZ'}
           {!loading && <span>»</span>}

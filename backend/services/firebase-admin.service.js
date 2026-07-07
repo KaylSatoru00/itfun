@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // The service account key is stored as a JSON string in an environment
 // variable (e.g. in Railway's Variables tab), since we can't easily
@@ -25,3 +26,4 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
 }
 
 export const adminAuth = getAuth();
+export const adminDb = getFirestore();

@@ -19,7 +19,7 @@ import { QuizEngine } from './quiz/quiz.engine.js';
 import { ScoringService } from './scoring/scoring.service.js';
 import { generateQuiz } from './services/ai.service.js';
 import { getLessonContent } from './services/lesson.service.js';
-import { adminAuth } from './services/firebase-admin.service.js';
+import { adminAuth, adminDb } from './services/firebase-admin.service.js';
 import { sendPasswordResetEmail, sendOtpEmail } from './services/email.service.js';
 
 const app = express();
@@ -253,13 +253,133 @@ app.post('/api/verify-signup-otp', async (req, res) => {
   }
 });
 
+// ── Daily quiz-generation quota (per-user, Firestore-backed) ──
+// Sadyang naka-Firestore ito (hindi lang sa memory) para hindi mawala ang
+// bilang kapag nag-restart ang Railway server — daily quota talaga siya
+// kaya kailangan siyang manatili. Yung mga sumasali lang (join-room socket
+// event) ay HINDI dumadaan dito, kaya hindi sila counted — tama lang, dahil
+// ang route na ito ay tinatawag lang ng HOST kapag mag-ge-generate ng quiz.
+const DAILY_GENERATE_LIMIT = 3;
+
+// "Araw" boundary natin ay Asia/Manila time, hindi UTC — kaya kahit anong
+// oras mag-restart o saan man naka-deploy ang Railway server, palaging
+// 12am Philippine time ang reset, gaya ng inaasahan ng user.
+function getManilaDateString() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+}
+
+// Ginagamit ang Firestore transaction dito para maging atomic ang
+// "check tapos increment" — kung walang transaction, dalawang sabay-sabay
+// na request (hal. double-click sa Generate button) ay pwedeng makalusot
+// nang parehong pumasa sa check bago pa man ma-increment ang isa.
+async function checkAndIncrementQuota(uid) {
+  const today = getManilaDateString();
+  const ref = adminDb.collection('quizGenerationQuota').doc(uid);
+
+  return adminDb.runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    const data = snap.exists ? snap.data() : null;
+
+    // Kung ibang araw na (o wala pang record), parang bagong-bago ulit —
+    // 0 ang panimulang count ngayong araw na 'to.
+    const currentCount = data && data.date === today ? data.count : 0;
+
+    if (currentCount >= DAILY_GENERATE_LIMIT) {
+      return { allowed: false, remaining: 0 };
+    }
+
+    const newCount = currentCount + 1;
+    transaction.set(ref, { date: today, count: newCount });
+    return { allowed: true, remaining: DAILY_GENERATE_LIMIT - newCount };
+  });
+}
+
+// Kapag na-reserve na yung 1 generate (via checkAndIncrementQuota) pero
+// nag-fail pala yung actual AI generation (hal. AI provider timeout/error),
+// ibinabalik natin yung count — hindi patas na mabawasan ang quota ng user
+// dahil lang sa failed attempt na wala naman siyang kasalanan.
+async function refundQuota(uid) {
+  const today = getManilaDateString();
+  const ref = adminDb.collection('quizGenerationQuota').doc(uid);
+
+  await adminDb.runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    if (!snap.exists) return;
+
+    const data = snap.data();
+    if (data.date !== today) return; // ibang araw na, wala nang ibabalik dito
+
+    const newCount = Math.max(0, (data.count || 0) - 1);
+    transaction.update(ref, { count: newCount });
+  });
+}
+
+// Read-only version ng quota check — ginagamit ito para IPAKITA lang sa UI
+// kung ilan nalang natitirang generates ng user (hal. pagdating niya sa
+// select-type page, bago pa siya mag-click ng Generate). Hindi ito
+// nag-i-increment, kaya safe siyang tawagin nang paulit-ulit.
+async function getQuotaStatus(uid) {
+  const today = getManilaDateString();
+  const ref = adminDb.collection('quizGenerationQuota').doc(uid);
+  const snap = await ref.get();
+  const data = snap.exists ? snap.data() : null;
+
+  const currentCount = data && data.date === today ? data.count : 0;
+  return {
+    remaining: Math.max(0, DAILY_GENERATE_LIMIT - currentCount),
+    limit: DAILY_GENERATE_LIMIT,
+  };
+}
+
+app.get('/api/generate-quiz/quota/:uid', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    if (!uid) {
+      return res.status(400).json({ success: false, error: 'Missing uid' });
+    }
+
+    const quota = await getQuotaStatus(uid);
+    res.json({ success: true, ...quota });
+  } catch (error) {
+    console.error('❌ Quota status error:', { message: error.message, stack: error.stack });
+    res.status(500).json({ success: false, error: 'Failed to check quota' });
+  }
+});
+
 app.post('/api/generate-quiz', async (req, res) => {
   console.log('📨 Received quiz generation request');
   console.log('📦 Request body:', req.body);
 
-  try {
-    const { moduleId, lessonId, quizType, questionCount } = req.body;
+  const { moduleId, lessonId, quizType, questionCount, uid } = req.body;
 
+  if (!uid) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing uid — please log in again.',
+    });
+  }
+
+  let quota;
+  try {
+    quota = await checkAndIncrementQuota(uid);
+  } catch (error) {
+    console.error('❌ Quota check error:', { message: error.message, stack: error.stack });
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to check daily generate limit. Please try again.',
+    });
+  }
+
+  if (!quota.allowed) {
+    console.log(`🚫 Daily generate limit reached for uid: ${uid}`);
+    return res.status(429).json({
+      success: false,
+      limitReached: true,
+      error: 'Naabot mo na ang 3 generates mo ngayong araw. Bumalik ka bukas para makapag-generate ulit.',
+    });
+  }
+
+  try {
     console.log(`📚 Generating quiz for: ${moduleId} - ${lessonId}`);
     console.log(`📝 Quiz type: ${quizType}, Questions: ${questionCount || 15}`);
 
@@ -279,12 +399,21 @@ app.post('/api/generate-quiz', async (req, res) => {
 
     console.log(`✅ Successfully generated ${questions.length} questions`);
 
-    res.json({ success: true, questions });
+    res.json({ success: true, questions, remainingGenerates: quota.remaining });
   } catch (error) {
     console.error('❌ Quiz generation error:', {
       message: error.message,
       stack: error.stack,
     });
+
+    // Nag-fail ang generation — ibalik yung 1 count na na-reserve kanina,
+    // para hindi masayang ang isang generate ng user dahil sa server/AI error.
+    try {
+      await refundQuota(uid);
+    } catch (refundError) {
+      console.error('❌ Failed to refund quota after generation error:', refundError.message);
+    }
+
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to generate quiz',
