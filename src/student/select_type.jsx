@@ -86,7 +86,6 @@ function SelectType() {
         });
       } else if (data.limitReached) {
         setRemainingGenerates(0);
-        setError(data.error || 'You\'ve reached your 3 daily generates. Come back tomorrow.');
         setLoading(false);
       } else {
         setError(data.error || 'Failed to generate quiz. Please try again.');
