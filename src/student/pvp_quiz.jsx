@@ -14,6 +14,26 @@ function PvpQuiz() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [checkingJoin, setCheckingJoin] = useState(false);
 
+  // Kung may saved session tayo (host man o joiner) galing sa localStorage,
+  // ibig sabihin may room pa siyang binalikan — kaya bago pa man ipakita
+  // itong landing page (na may "Join Room" modal na dumadaan sa
+  // check-join-eligibility), subukan muna nating i-auto-rejoin siya papunta
+  // sa tamang lobby/quiz page.
+  //
+  // Bakit dito pa ito idinagdag, hindi lang umasa sa localStorage check na
+  // nasa loob na ng waiting_lobby_host.jsx/waiting_lobby_join.jsx? Dahil
+  // pareho lang nagtatrigger yung mga check na 'yon kapag naka-land na ang
+  // user sa page na 'yon mismo. Pero kung nag-close ng buong tab si host o
+  // joiner tapos bumalik sa root (`/pvp-quiz`), hindi sila mapupunta doon
+  // nang otomatiko — mapipilitan silang gamitin yung "Join Room" modal dito,
+  // na dumadaan sa `check-join-eligibility` -> `validateRoomJoin()`, na
+  // basta na lang nagre-reject ng "Game already in progress" kapag
+  // `room.status === 'playing'`, kahit existing player/host na pala sila.
+  // Yung `rejoin-room` handler (tinatawag sa loob ng lobby pages) ang may
+  // tamang eksepsyon para dito — kaya ito ang gusto nating tamaan, hindi
+  // yung "Join Room" modal path.
+  const [checkingSession, setCheckingSession] = useState(true);
+
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = '#ffffff';
@@ -22,6 +42,54 @@ function PvpQuiz() {
       document.body.style.backgroundColor = '';
     };
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const savedPin = localStorage.getItem('itfun_roomPin');
+    const savedName = localStorage.getItem('itfun_playerName');
+    const savedIsHost = localStorage.getItem('itfun_isHost') === 'true';
+
+    if (!savedPin || !savedName) {
+      setCheckingSession(false);
+      return;
+    }
+
+    socket.emit('rejoin-room', { pin: savedPin, playerName: savedName }, (response) => {
+      console.log('🔁 landing-page auto-rejoin response:', response);
+
+      if (response?.success) {
+        // Nasa gitna pa ng laro (may kasalukuyang tanong) o tapos na —
+        // deretso na sa quiz-arena, tama namang tinutumbasan ng
+        // quiz-arena.jsx page ang "finished" state gamit ang leaderboard.
+        if (response.state?.question || response.state?.finished) {
+          navigate(`/quiz-arena?pin=${savedPin}`);
+          return;
+        }
+
+        // Naka-'waiting' pa lang ang room — bumalik sa tamang lobby depende
+        // kung host o regular player siya. Uulitin ng lobby page mismo yung
+        // rejoin-room emit nito (harmless/idempotent — same socket.id na
+        // parin sa parehong tab), pero ito na ang nag-e-ensure na hindi na
+        // sila makakarating sa "Join Room" modal path.
+        if (savedIsHost) {
+          navigate('/waiting-lobby-host');
+        } else {
+          navigate(`/waiting-lobby-join?pin=${savedPin}`);
+        }
+        return;
+      }
+
+      // Wala nang mahanap na room/player (natapos na talaga, o na-clear na
+      // ng ibang session) — i-clear na yung stale localStorage at ituloy
+      // na lang ang normal na landing page.
+      localStorage.removeItem('itfun_roomPin');
+      localStorage.removeItem('itfun_playerName');
+      localStorage.removeItem('itfun_isHost');
+      localStorage.removeItem('itfun_sessionTime');
+      setCheckingSession(false);
+    });
+  }, [socket]);
 
   const handleCreateRoom = () => {
     navigate('/select-module');
@@ -50,6 +118,17 @@ function PvpQuiz() {
       }
     });
   };
+
+  // Habang chinecheck pa natin kung may dating room na dapat balikan,
+  // huwag munang ipakita yung landing page (lalo na yung mga cards) —
+  // maiiwasan yung flash-then-redirect kapag may auto-rejoin palang mangyayari.
+  if (checkingSession) {
+    return (
+      <div className="pvp-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+        <p style={{ color: '#A50034', fontStyle: 'italic' }}>Checking for an existing game...</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
