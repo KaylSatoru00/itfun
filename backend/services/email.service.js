@@ -64,3 +64,48 @@ export async function sendPasswordResetEmail(toEmail, resetLink) {
     throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
   }
 }
+
+/**
+ * Sends a branded signup OTP verification email. Same Brevo API + sender
+ * setup as the password reset email above, so it lands in the inbox
+ * instead of spam. The user types this code into the app (not a link).
+ */
+export async function sendOtpEmail(toEmail, otp) {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #C8102E;">Verify your ITFun account</h2>
+      <p>Hello,</p>
+      <p>Use the code below to verify the email address for your ITFun account (<strong>${toEmail}</strong>).</p>
+      <div style="text-align: center; margin: 24px 0;">
+        <span style="display: inline-block; background: #fff3f3; border: 2px dashed #C8102E; color: #C8102E;
+                     font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 16px 28px; border-radius: 8px;">
+          ${otp}
+        </span>
+      </div>
+      <p style="font-size: 13px; color: #777;">
+        This code will expire in 10 minutes. If you didn't request this, you can safely ignore this email.
+      </p>
+      <p>Thanks,<br />The ITFun Team</p>
+    </div>
+  `;
+
+  const response = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: 'ITFun', email: process.env.EMAIL_USER },
+      to: [{ email: toEmail }],
+      subject: 'Verify your ITFun account',
+      htmlContent: html,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
+  }
+}

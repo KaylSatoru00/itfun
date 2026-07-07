@@ -20,7 +20,7 @@ import { ScoringService } from './scoring/scoring.service.js';
 import { generateQuiz } from './services/ai.service.js';
 import { getLessonContent } from './services/lesson.service.js';
 import { adminAuth } from './services/firebase-admin.service.js';
-import { sendPasswordResetEmail } from './services/email.service.js';
+import { sendPasswordResetEmail, sendOtpEmail } from './services/email.service.js';
 
 const app = express();
 
@@ -84,6 +84,19 @@ const REJOIN_GRACE_MS = 120000;
 const abandonedRoomTimers = new Map();
 const ABANDONED_ROOM_CLEANUP_MS = 30 * 60 * 1000; // 30 mins, failsafe lang
 
+// ── Signup OTP verification store ──
+// In-memory lang (same pattern as disconnectTimers/abandonedRoomTimers
+// above) — email -> { otp, expiresAt, attempts }. Short-lived (10 mins),
+// kaya okay lang na hindi ito persistent kahit mag-restart ang server;
+// worst case, hihingi lang ulit ng bagong code ang user.
+const signupOtps = new Map();
+const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_OTP_ATTEMPTS = 5;
+
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -141,6 +154,101 @@ app.post('/api/forgot-password', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to send reset email. Please try again.',
+    });
+  }
+});
+
+app.post('/api/send-signup-otp', async (req, res) => {
+  console.log('📨 Received send-signup-otp request');
+
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    const otp = generateOtp();
+    signupOtps.set(email, {
+      otp,
+      expiresAt: Date.now() + OTP_EXPIRY_MS,
+      attempts: 0,
+    });
+
+    await sendOtpEmail(email, otp);
+    console.log(`✅ Signup OTP sent to ${email}`);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Send-signup-otp error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send verification code. Please try again.',
+    });
+  }
+});
+
+app.post('/api/verify-signup-otp', async (req, res) => {
+  console.log('📨 Received verify-signup-otp request');
+
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, error: 'Email and code are required' });
+    }
+
+    const entry = signupOtps.get(email);
+
+    if (!entry) {
+      return res.status(400).json({
+        success: false,
+        error: 'No pending verification found for this email. Please request a new code.',
+      });
+    }
+
+    if (Date.now() > entry.expiresAt) {
+      signupOtps.delete(email);
+      return res.status(400).json({
+        success: false,
+        error: 'This code has expired. Please request a new one.',
+      });
+    }
+
+    entry.attempts += 1;
+    if (entry.attempts > MAX_OTP_ATTEMPTS) {
+      signupOtps.delete(email);
+      return res.status(400).json({
+        success: false,
+        error: 'Too many incorrect attempts. Please request a new code.',
+      });
+    }
+
+    if (entry.otp !== otp) {
+      return res.status(400).json({ success: false, error: 'Incorrect code. Please try again.' });
+    }
+
+    // Code is correct — mark the account as verified in actual Firebase
+    // Auth (not just our own tracking), so the existing login check
+    // (userCredential.user.emailVerified) keeps working unchanged.
+    const userRecord = await adminAuth.getUserByEmail(email);
+    await adminAuth.updateUser(userRecord.uid, { emailVerified: true });
+
+    signupOtps.delete(email);
+    console.log(`✅ Signup OTP verified for ${email}`);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Verify-signup-otp error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to verify code. Please try again.',
     });
   }
 });

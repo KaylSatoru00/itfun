@@ -7,7 +7,6 @@ import { auth, db } from '../firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendEmailVerification,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '../user_context';
@@ -119,6 +118,10 @@ function StudentLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // signup OTP verification state
+  const [otpCode, setOtpCode] = useState('');
+  const [otpTouched, setOtpTouched] = useState(false);
+
   // forgot password state
   const [resetEmail, setResetEmail] = useState('');
   const [resetTouched, setResetTouched] = useState(false);
@@ -220,8 +223,10 @@ function StudentLogin() {
         uid, firstName, lastName, email: signupEmail,
         role: 'student', createdAt: new Date().toISOString(),
       });
-      await sendEmailVerification(userCredential.user);
       await auth.signOut();
+      await sendSignupOtp(signupEmail);
+      setOtpCode('');
+      setOtpTouched(false);
       setScreen('verify');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
@@ -233,16 +238,56 @@ function StudentLogin() {
     setLoading(false);
   };
 
-  const handleResendVerification = async () => {
+  // Calls the backend to generate a fresh 6-digit code and email it via
+  // Brevo. Reused by both the initial signup and the "Resend" link.
+  const sendSignupOtp = async (email) => {
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/send-signup-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to send verification code.');
+    }
+  };
+
+  const handleResendOtp = async () => {
     setError('');
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, signupEmail, signupPassword);
-      await sendEmailVerification(userCredential.user);
-      await auth.signOut();
-      alert('Verification email resent! Check your inbox.');
-    } catch {
-      setError('Failed to resend. Please try logging in instead.');
+      await sendSignupOtp(signupEmail);
+      setOtpCode('');
+      alert('A new code was sent! Check your inbox.');
+    } catch (err) {
+      setError('Failed to resend code. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyOtp = async () => {
+    setOtpTouched(true);
+    setError('');
+    if (!otpCode || otpCode.length !== 6) {
+      setError('Please enter the 6-digit code.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/verify-signup-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: signupEmail, otp: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Verification failed.');
+      }
+      setScreen('login');
+      setLoginEmail(signupEmail);
+      setLoginPassword('');
+    } catch (err) {
+      setError(err.message || 'Verification failed. Please try again.');
     }
     setLoading(false);
   };
@@ -306,19 +351,38 @@ function StudentLogin() {
             </motion.div>
             <h1 className="form-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
             <p style={{ fontSize: '14px', color: '#555', fontFamily: 'Arial, sans-serif', textAlign: 'center', margin: '0' }}>
-              A verification link was sent to<br />
+              A 6-digit verification code was sent to<br />
               <strong style={{ color: '#c8102e' }}>{signupEmail}</strong>
             </p>
             <p style={{ fontSize: '13px', color: '#777', fontFamily: 'Arial, sans-serif', textAlign: 'center', margin: '0' }}>
-              Click the link in the email to verify your account, then come back to log in.
+              Enter the code below to verify your account.
             </p>
             {error && <p style={{ color: '#c8102e', fontSize: '13px', fontFamily: 'Arial, sans-serif', margin: '0', textAlign: 'center' }}>{error}</p>}
-            <button className="submit-btn" onClick={() => { setScreen('login'); setLoginEmail(signupEmail); setLoginPassword(''); }}>
-              Go to Login
+
+            <div className="input-group" style={{ width: '100%' }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className="input"
+                placeholder="000000"
+                value={otpCode}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onBlur={() => setOtpTouched(true)}
+                onKeyDown={e => e.key === 'Enter' && handleVerifyOtp()}
+                style={{
+                  textAlign: 'center', fontSize: '24px', letterSpacing: '8px', fontWeight: 'bold',
+                  borderColor: otpTouched && !otpCode ? '#c8102e' : undefined,
+                }}
+              />
+            </div>
+
+            <button className="submit-btn" onClick={handleVerifyOtp} disabled={loading}>
+              {loading ? 'Verifying...' : 'Verify'}
             </button>
             <p style={{ fontSize: '13px', color: '#555', fontFamily: 'Arial, sans-serif', margin: '0' }}>
               Didn't receive it?{' '}
-              <span onClick={handleResendVerification} style={{ color: '#c8102e', cursor: 'pointer', fontWeight: 'bold' }}>
+              <span onClick={handleResendOtp} style={{ color: '#c8102e', cursor: 'pointer', fontWeight: 'bold' }}>
                 {loading ? 'Sending...' : 'Resend'}
               </span>
             </p>
