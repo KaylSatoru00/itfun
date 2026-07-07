@@ -132,6 +132,7 @@ function FacultyModules() {
       console.error('Failed to clear active session on logout:', err);
     }
     sessionStorage.removeItem('itfun_sessionId');
+    localStorage.removeItem('itfun_lastPath');
     try {
       await auth.signOut();
     } catch (err) {

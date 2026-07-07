@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import './index.css'
@@ -52,8 +53,25 @@ import Gamified9 from './student/gamified9.jsx'
 import ResetPassword from './login/reset_password.jsx'
 
 
+// Mga path na hindi dapat i-save bilang "lastPath" — kasi kung sa mga
+// login/role-selection pages tayo pumasok muling babalik, magloloop lang
+// tayo pabalik doon din. Only "real" content pages ang dapat ma-save.
+const EXCLUDED_FROM_LAST_PATH = ['/', '/student-login', '/faculty-login', '/reset-password'];
+
 function AnimatedRoutes() {
   const location = useLocation();
+
+  // Bawat pagbago ng route, i-save yung current path sa localStorage
+  // (maliban sa login-related pages). Ito yung ginagamit ng Login /
+  // StudentLogin / FacultyLogin para malaman kung saan dapat i-redirect
+  // pabalik ang isang user na may existing session pa (halimbawa,
+  // na-close lang nila yung tab habang nasa /student-chapter-5).
+  useEffect(() => {
+    if (!EXCLUDED_FROM_LAST_PATH.includes(location.pathname)) {
+      localStorage.setItem('itfun_lastPath', location.pathname + location.search);
+    }
+  }, [location.pathname, location.search]);
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
