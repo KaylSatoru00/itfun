@@ -127,6 +127,7 @@
   width: 100%;
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
   padding: 0 40px;
   box-sizing: border-box;
   pointer-events: none;
@@ -169,6 +170,31 @@
 .st-btn-disabled:hover {
   background: #A50034;
   transform: none;
+}
+
+/* Wraps the quota indicator + Generate button together, stacked, so the
+   indicator sits directly above the button instead of floating in the
+   center of the page. Fixed max-width + wrapping keeps long indicator
+   text from stretching the layout or shifting the button around. */
+.st-generate-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.st-quota-indicator {
+  position: fixed;
+  bottom: 78px;
+  left: 0;
+  width: 100%;
+  font-size: 13px;
+  color: #7a4a55;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
 }
 
 /* ─── Responsive: Laptop (≥ 1024px) ─── */
@@ -233,6 +259,11 @@
     font-size: 13px;
     padding: 10px 20px;
   }
+
+  .st-quota-indicator {
+    font-size: 12px;
+    bottom: 62px;
+  }
 }
 
 /* ─── Responsive: Mobile (≤ 480px) ─── */
@@ -287,6 +318,11 @@
 
   .st-btn span {
     font-size: 15px;
+  }
+
+  .st-quota-indicator {
+    font-size: 11px;
+    bottom: 56px;
   }
 }
 
