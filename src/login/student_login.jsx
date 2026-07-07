@@ -99,15 +99,6 @@ function StudentLogin() {
   const navigate = useNavigate();
   const { user, setUser } = useUser();
 
-  // Kung may existing valid session na bilang student, huwag nang ipakita
-  // ang login form — diretso na sa dating kinaroroonan (lastPath) o sa
-  // learning modules. Inaayos nito yung pagbalik sa login page kapag
-  // na-close lang yung tab/browser habang naka-login pa talaga.
-  if (user && user.role === 'student') {
-    const lastPath = localStorage.getItem('itfun_lastPath');
-    return <Navigate to={lastPath || '/learning-modules'} replace />;
-  }
-
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
@@ -137,6 +128,18 @@ function StudentLogin() {
   const [resetSent, setResetSent] = useState(false);
 
   const passwordValid = passwordRules.every(r => r.test(signupPassword));
+
+  // Kung may existing valid session na bilang student, huwag nang ipakita
+  // ang login form — diretso na sa dating kinaroroonan (lastPath) o sa
+  // learning modules. Inaayos nito yung pagbalik sa login page kapag
+  // na-close lang yung tab/browser habang naka-login pa talaga.
+  // NOTE: dapat pagkatapos ito ng LAHAT ng hooks (useState/useEffect),
+  // kasi bawal mag-early-return bago matapos lahat ng hooks (Rules of
+  // Hooks) — 'yun ang dahilan ng "Minified React error #300" kanina.
+  if (user && user.role === 'student') {
+    const lastPath = localStorage.getItem('itfun_lastPath');
+    return <Navigate to={lastPath || '/learning-modules'} replace />;
+  }
 
   const handleLogin = async () => {
     setLoginTouched({ email: true, password: true });
