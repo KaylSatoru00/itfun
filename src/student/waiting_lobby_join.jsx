@@ -42,6 +42,7 @@ function WaitingLobbyJoin() {
       socket.emit('join-room', {
         pin,
         playerName: playerDisplayName,
+        uid: user?.uid,
       }, (response) => {
         console.log('👥 join-room response:', response);
         if (response.success) {

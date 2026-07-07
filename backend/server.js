@@ -253,6 +253,27 @@ app.post('/api/verify-signup-otp', async (req, res) => {
   }
 });
 
+// ── Helper: check kung unlocked na ba ang isang module para sa isang user ──
+// Ginagamit ng DALAWA — ng /api/generate-quiz route (host side, bago
+// makapag-generate) at ng join-room socket handler (joining player side) —
+// kaya nasa module scope ito (hindi nested sa loob ng io.on('connection')),
+// para parehong nakaka-access. Server-side talaga ito (hindi lang
+// frontend/UI alert) para hindi ito ma-bypass.
+async function isModuleUnlockedForUser(uid, moduleId) {
+  if (!uid || !moduleId) return false;
+
+  // Module 1 ay laging unlocked para sa lahat, kahit walang progress
+  // document pa (bagong student).
+  if (moduleId === 'module1') return true;
+
+  const snap = await adminDb.collection('studentProgress').doc(uid).get();
+  if (!snap.exists) return false;
+
+  const data = snap.data();
+  const moduleEntry = data.modules?.[moduleId];
+  return moduleEntry?.unlocked === true;
+}
+
 // ── Daily quiz-generation quota (per-user, Firestore-backed) ──
 // Sadyang naka-Firestore ito (hindi lang sa memory) para hindi mawala ang
 // bilang kapag nag-restart ang Railway server — daily quota talaga siya
@@ -359,6 +380,19 @@ app.post('/api/generate-quiz', async (req, res) => {
     });
   }
 
+  // Server-side check: kailangan muna unlocked ang module para sa host
+  // bago siya makapag-generate/host ng quiz dito — hindi pwedeng UI-level
+  // alert lang (parang sa select_module.jsx), dahil pwede itong ma-bypass
+  // ng direktang POST request papunta sa endpoint na 'to.
+  const moduleUnlocked = await isModuleUnlockedForUser(uid, moduleId);
+  if (!moduleUnlocked) {
+    console.log(`🚫 uid ${uid} tried to generate a quiz for locked module: ${moduleId}`);
+    return res.status(403).json({
+      success: false,
+      error: 'You need to unlock this module first before generating a quiz from it.',
+    });
+  }
+
   let quota;
   try {
     quota = await checkAndIncrementQuota(uid);
@@ -460,7 +494,7 @@ io.on('connection', (socket) => {
   // ── Join Room ──
   socket.on('join-room', async (data, callback) => {
     try {
-      const { pin, playerName } = data;
+      const { pin, playerName, uid } = data;
 
       const room = roomManager.getRoom(pin);
       if (!room) {
@@ -475,6 +509,21 @@ io.on('connection', (socket) => {
 
       if (room.players.length >= 10) {
         callback({ success: false, error: 'Room is full' });
+        return;
+      }
+
+      if (!uid) {
+        callback({ success: false, error: 'Missing uid — please log in again.' });
+        return;
+      }
+
+      const unlocked = await isModuleUnlockedForUser(uid, room.moduleId);
+      if (!unlocked) {
+        console.log(`🚫 ${playerName} (${uid}) tried to join room ${pin} but ${room.moduleId} is not yet unlocked`);
+        callback({
+          success: false,
+          error: 'You need to unlock this module first before joining this quiz.',
+        });
         return;
       }
 
