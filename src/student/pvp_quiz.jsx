@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
+import { useSocket } from '../socket_context';
 import './pvp_quiz.css';
 
 function PvpQuiz() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const socket = useSocket();
   const [joinPin, setJoinPin] = useState('');
   const [joinError, setJoinError] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [checkingJoin, setCheckingJoin] = useState(false);
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
@@ -29,7 +32,23 @@ function PvpQuiz() {
       setJoinError('Please enter a valid 6-digit PIN');
       return;
     }
-    navigate(`/waiting-lobby-join?pin=${joinPin}`);
+
+    if (!socket) {
+      setJoinError('Not connected to server. Please try again.');
+      return;
+    }
+
+    setJoinError('');
+    setCheckingJoin(true);
+
+    socket.emit('check-join-eligibility', { pin: joinPin, uid: user?.uid }, (response) => {
+      setCheckingJoin(false);
+      if (response.success) {
+        navigate(`/waiting-lobby-join?pin=${joinPin}`);
+      } else {
+        setJoinError(response.error || 'Unable to join this room.');
+      }
+    });
   };
 
   return (
@@ -103,9 +122,9 @@ function PvpQuiz() {
               <button
                 className="modal-join-btn"
                 onClick={handleJoinRoom}
-                disabled={joinPin.length !== 6}
+                disabled={joinPin.length !== 6 || checkingJoin}
               >
-                Join
+                {checkingJoin ? 'Checking...' : 'Join'}
               </button>
               <button className="modal-cancel-btn" onClick={() => setShowJoinModal(false)}>Cancel</button>
             </div>

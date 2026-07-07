@@ -274,6 +274,36 @@ async function isModuleUnlockedForUser(uid, moduleId) {
   return moduleEntry?.unlocked === true;
 }
 
+// ── Shared validation para sa parehong check-join-eligibility (pre-check)
+// at join-room (totoong pag-join) — iisang pinagmumulan ng truth para
+// hindi mag-diverge yung dalawang checks sa paglipas ng panahon.
+async function validateRoomJoin(pin, uid) {
+  const room = roomManager.getRoom(pin);
+  if (!room) return { ok: false, error: 'Room not found' };
+
+  if (room.status === 'playing') {
+    return { ok: false, error: 'Game already in progress' };
+  }
+
+  if (room.players.length >= 10) {
+    return { ok: false, error: 'Room is full' };
+  }
+
+  if (!uid) {
+    return { ok: false, error: 'Missing uid — please log in again.' };
+  }
+
+  const unlocked = await isModuleUnlockedForUser(uid, room.moduleId);
+  if (!unlocked) {
+    return {
+      ok: false,
+      error: 'You need to unlock this module first before joining this quiz.',
+    };
+  }
+
+  return { ok: true, room };
+}
+
 // ── Daily quiz-generation quota (per-user, Firestore-backed) ──
 // Sadyang naka-Firestore ito (hindi lang sa memory) para hindi mawala ang
 // bilang kapag nag-restart ang Railway server — daily quota talaga siya
@@ -491,41 +521,37 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ── Check Join Eligibility (pre-check, hindi pa nagjo-join) ──
+  // Tinatawag ito ng pvp_quiz.jsx BAGO pa mag-navigate papunta sa
+  // waiting-lobby-join page — para kung mag-fail (locked module, room
+  // full/not-found, atbp.), doon-doon lang mananatili ang error message sa
+  // Join modal mismo, walang flash na navigate-then-bounce-back.
+  socket.on('check-join-eligibility', async (data, callback) => {
+    try {
+      const { pin, uid } = data;
+      const result = await validateRoomJoin(pin, uid);
+      callback(result.ok ? { success: true } : { success: false, error: result.error });
+    } catch (error) {
+      console.error('Check join eligibility error:', error);
+      callback({ success: false, error: error.message });
+    }
+  });
+
   // ── Join Room ──
   socket.on('join-room', async (data, callback) => {
     try {
       const { pin, playerName, uid } = data;
 
-      const room = roomManager.getRoom(pin);
-      if (!room) {
-        callback({ success: false, error: 'Room not found' });
+      const result = await validateRoomJoin(pin, uid);
+      if (!result.ok) {
+        if (result.error === 'You need to unlock this module first before joining this quiz.') {
+          console.log(`🚫 ${playerName} (${uid}) tried to join room ${pin} but the module is not yet unlocked`);
+        }
+        callback({ success: false, error: result.error });
         return;
       }
 
-      if (room.status === 'playing') {
-        callback({ success: false, error: 'Game already in progress' });
-        return;
-      }
-
-      if (room.players.length >= 10) {
-        callback({ success: false, error: 'Room is full' });
-        return;
-      }
-
-      if (!uid) {
-        callback({ success: false, error: 'Missing uid — please log in again.' });
-        return;
-      }
-
-      const unlocked = await isModuleUnlockedForUser(uid, room.moduleId);
-      if (!unlocked) {
-        console.log(`🚫 ${playerName} (${uid}) tried to join room ${pin} but ${room.moduleId} is not yet unlocked`);
-        callback({
-          success: false,
-          error: 'You need to unlock this module first before joining this quiz.',
-        });
-        return;
-      }
+      const room = result.room;
 
       const player = roomManager.addPlayer(pin, {
         id: socket.id,
