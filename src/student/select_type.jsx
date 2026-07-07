@@ -158,26 +158,27 @@ function SelectType() {
         </motion.p>
       )}
 
-      {remainingGenerates !== null && (
-        <p className="st-quota-indicator">
-          {remainingGenerates > 0
-            ? `${remainingGenerates} generate${remainingGenerates === 1 ? '' : 's'} left today`
-            : 'No generates left today — try again tomorrow'}
-        </p>
-      )}
-
       <div className="st-bottom">
         <button className="st-btn st-btn-back" onClick={() => navigate('/select-module')}>
           <span>«</span> BACK
         </button>
-        <button
-          className={`st-btn st-btn-generate ${!selected || loading || remainingGenerates === 0 ? 'st-btn-disabled' : ''}`}
-          onClick={handleGenerate}
-          disabled={!selected || loading || remainingGenerates === 0}
-        >
-          {loading ? '⏳ Generating...' : 'GENERATE QUIZ'}
-          {!loading && <span>»</span>}
-        </button>
+        <div className="st-generate-wrap">
+          {remainingGenerates !== null && (
+            <p className="st-quota-indicator">
+              {remainingGenerates > 0
+                ? `${remainingGenerates} generate${remainingGenerates === 1 ? '' : 's'} left today`
+                : 'No generates left today — try again tomorrow'}
+            </p>
+          )}
+          <button
+            className={`st-btn st-btn-generate ${!selected || loading || remainingGenerates === 0 ? 'st-btn-disabled' : ''}`}
+            onClick={handleGenerate}
+            disabled={!selected || loading || remainingGenerates === 0}
+          >
+            {loading ? '⏳ Generating...' : 'GENERATE QUIZ'}
+            {!loading && <span>»</span>}
+          </button>
+        </div>
       </div>
     </motion.div>
   );
