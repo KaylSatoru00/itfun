@@ -4,6 +4,8 @@ import { AnimatePresence } from 'framer-motion'
 import './index.css'
 import { UserProvider } from './user_context'
 import { SocketProvider } from './socket_context'
+import ProtectedRoute from './components/ProtectedRoute'
+import RedirectIfAuthed from './components/RedirectIfAuthed'
 
 
 // Login
@@ -57,41 +59,51 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Login />} />
-        <Route path="/student-login" element={<StudentLogin />} />
-        <Route path="/faculty-login" element={<FacultyLogin />} />
-        <Route path="/faculty-modules" element={<FacultyModules />} />
-        <Route path="/faculty-class" element={<FacultyClass />} />
-        <Route path="/learning-modules" element={<LearningModules />} />
-        <Route path="/pvp-quiz" element={<PvpQuiz />} />
-        <Route path="/select-module" element={<SelectModule />} />
-        <Route path="/select-type" element={<SelectType />} />
-        <Route path="/waiting-lobby" element={<WaitingLobby />} />
-        <Route path="/waiting-lobby-join" element={<WaitingLobbyJoin />} />
-        <Route path="/quiz-arena" element={<QuizArena />} />
-        <Route path="/student-chapter-1" element={<Chapter1 />} />
-        <Route path="/student-chapter-2" element={<Chapter2 />} />
-        <Route path="/student-chapter-3" element={<Chapter3 />} />
-        <Route path="/student-chapter-4" element={<Chapter4 />} />
-        <Route path="/student-chapter-5" element={<Chapter5 />} />
-        <Route path="/student-chapter-6" element={<Chapter6 />} />
-        <Route path="/student-chapter-7" element={<Chapter7 />} />
-        <Route path="/student-chapter-8" element={<Chapter8 />} />
-        <Route path="/student-chapter-9" element={<Chapter9 />} />
-        <Route path="/faculty-chapter-1" element={<FacultyChapter1 />} />
-        <Route path="/faculty-chapter-2" element={<FacultyChapter2 />} />
-        <Route path="/faculty-chapter-3" element={<FacultyChapter3 />} />
-        <Route path="/faculty-chapter-4" element={<FacultyChapter4 />} />
-        <Route path="/faculty-chapter-5" element={<FacultyChapter5 />} />
-        <Route path="/faculty-chapter-6" element={<FacultyChapter6 />} />
-        <Route path="/faculty-chapter-7" element={<FacultyChapter7 />} />
-        <Route path="/faculty-chapter-8" element={<FacultyChapter8 />} />
-        <Route path="/faculty-chapter-9" element={<FacultyChapter9 />} />
-        <Route path="/gamified-1" element={<Gamified1 />} />
-        <Route path="/gamified-6" element={<Gamified6 />} />
-        <Route path="/gamified-8" element={<Gamified8 />} />
-        <Route path="/gamified-9" element={<Gamified9 />} />
+        {/* ── Public / Login routes ──
+            Naka-wrap sa RedirectIfAuthed: kung naka-login na pala si user
+            (may valid Firebase session, kahit i-close niya buong browser at
+            buksan ulit), diretso na siya sa dashboard niya sa halip na
+            makita ulit ang login form. Ito yung direktang fix sa
+            "nag-signin, umalis, bumalik, login ulit ang lumitaw" na bug. */}
+        <Route path="/" element={<RedirectIfAuthed><Login /></RedirectIfAuthed>} />
+        <Route path="/student-login" element={<RedirectIfAuthed><StudentLogin /></RedirectIfAuthed>} />
+        <Route path="/faculty-login" element={<RedirectIfAuthed><FacultyLogin /></RedirectIfAuthed>} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* ── Faculty routes ── */}
+        <Route path="/faculty-modules" element={<ProtectedRoute role="faculty"><FacultyModules /></ProtectedRoute>} />
+        <Route path="/faculty-class" element={<ProtectedRoute role="faculty"><FacultyClass /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-1" element={<ProtectedRoute role="faculty"><FacultyChapter1 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-2" element={<ProtectedRoute role="faculty"><FacultyChapter2 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-3" element={<ProtectedRoute role="faculty"><FacultyChapter3 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-4" element={<ProtectedRoute role="faculty"><FacultyChapter4 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-5" element={<ProtectedRoute role="faculty"><FacultyChapter5 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-6" element={<ProtectedRoute role="faculty"><FacultyChapter6 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-7" element={<ProtectedRoute role="faculty"><FacultyChapter7 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-8" element={<ProtectedRoute role="faculty"><FacultyChapter8 /></ProtectedRoute>} />
+        <Route path="/faculty-chapter-9" element={<ProtectedRoute role="faculty"><FacultyChapter9 /></ProtectedRoute>} />
+
+        {/* ── Student routes ── */}
+        <Route path="/learning-modules" element={<ProtectedRoute role="student"><LearningModules /></ProtectedRoute>} />
+        <Route path="/pvp-quiz" element={<ProtectedRoute role="student"><PvpQuiz /></ProtectedRoute>} />
+        <Route path="/select-module" element={<ProtectedRoute role="student"><SelectModule /></ProtectedRoute>} />
+        <Route path="/select-type" element={<ProtectedRoute role="student"><SelectType /></ProtectedRoute>} />
+        <Route path="/waiting-lobby" element={<ProtectedRoute role="student"><WaitingLobby /></ProtectedRoute>} />
+        <Route path="/waiting-lobby-join" element={<ProtectedRoute role="student"><WaitingLobbyJoin /></ProtectedRoute>} />
+        <Route path="/quiz-arena" element={<ProtectedRoute role="student"><QuizArena /></ProtectedRoute>} />
+        <Route path="/student-chapter-1" element={<ProtectedRoute role="student"><Chapter1 /></ProtectedRoute>} />
+        <Route path="/student-chapter-2" element={<ProtectedRoute role="student"><Chapter2 /></ProtectedRoute>} />
+        <Route path="/student-chapter-3" element={<ProtectedRoute role="student"><Chapter3 /></ProtectedRoute>} />
+        <Route path="/student-chapter-4" element={<ProtectedRoute role="student"><Chapter4 /></ProtectedRoute>} />
+        <Route path="/student-chapter-5" element={<ProtectedRoute role="student"><Chapter5 /></ProtectedRoute>} />
+        <Route path="/student-chapter-6" element={<ProtectedRoute role="student"><Chapter6 /></ProtectedRoute>} />
+        <Route path="/student-chapter-7" element={<ProtectedRoute role="student"><Chapter7 /></ProtectedRoute>} />
+        <Route path="/student-chapter-8" element={<ProtectedRoute role="student"><Chapter8 /></ProtectedRoute>} />
+        <Route path="/student-chapter-9" element={<ProtectedRoute role="student"><Chapter9 /></ProtectedRoute>} />
+        <Route path="/gamified-1" element={<ProtectedRoute role="student"><Gamified1 /></ProtectedRoute>} />
+        <Route path="/gamified-6" element={<ProtectedRoute role="student"><Gamified6 /></ProtectedRoute>} />
+        <Route path="/gamified-8" element={<ProtectedRoute role="student"><Gamified8 /></ProtectedRoute>} />
+        <Route path="/gamified-9" element={<ProtectedRoute role="student"><Gamified9 /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   )
