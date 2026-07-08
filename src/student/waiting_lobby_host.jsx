@@ -33,15 +33,6 @@ function WaitingLobby() {
   const quizType = state.quizType?.id || '';
   const questions = state.questions || [];
 
-  // May totoong "create intent" lang tayo (galing sa select-module →
-  // select-type flow) kung may dalang module/questions sa location.state.
-  // Kung wala (hal. galing sa RedirectIfAuthed pagbukas ulit ng browser,
-  // kung saan walang state na dala), at mabigo ang rejoin dahil natapos
-  // na/expired na pala ang dating session — huwag nang basta gumawa ng
-  // bagong room gamit ang walang-laman na data. Ibalik na lang sa
-  // /pvp-quiz para doon ulit siya pumili ng module/type nang tama.
-  const hasCreateIntent = !!state.module || questions.length > 0;
-
   useEffect(() => {
     if (!socket || roomCreated.current) return;
     roomCreated.current = true;
@@ -102,31 +93,16 @@ function WaitingLobby() {
             navigate(`/quiz-arena?pin=${savedPin}`);
           }
         } else {
-          // Wala nang mahanap na room/player — malamang natapos na o
-          // expired na. Clear muna ang stale session data.
+          // Wala nang mahanap na room/player — gumawa na lang ng bago
           localStorage.removeItem('itfun_roomPin');
           localStorage.removeItem('itfun_playerName');
           localStorage.removeItem('itfun_isHost');
           localStorage.removeItem('itfun_sessionTime');
-
-          if (hasCreateIntent) {
-            // May dalang module/quizType/questions — totoong fresh na
-            // pag-gawa ng room ito, hindi accidental resume.
-            doCreateRoom();
-          } else {
-            // Walang create intent — malamang na-redirect lang dito dahil
-            // may naiwang stale pin (galing sa RedirectIfAuthed). Huwag
-            // nang mag-auto-create ng room gamit ang walang laman na data.
-            navigate('/pvp-quiz');
-          }
+          doCreateRoom();
         }
       });
-    } else if (hasCreateIntent) {
-      doCreateRoom();
     } else {
-      // Walang saved session at walang create intent — walang dapat gawin
-      // dito, ibalik na lang sa pvp menu.
-      navigate('/pvp-quiz');
+      doCreateRoom();
     }
 
     socket.on('room-update', (data) => {
