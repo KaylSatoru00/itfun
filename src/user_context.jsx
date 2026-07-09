@@ -404,6 +404,23 @@ export function UserProvider({ children }) {
     if (!firebaseUser?.uid) return;
 
     const markOfflineOnClose = () => {
+      // ── TEMPORARY DIAGNOSTIC BEACON ──
+      // Ito ay UNCONDITIONAL — tumatakbo REGARDLESS kung ano man ang
+      // laman ng mga guard sa baba. Layunin lang nito ay malaman kung
+      // (a) talagang na-invoke ba ang function na ito mismo (i.e.
+      // gumana ba ang pagehide/beforeunload listeners), at (b) ano ang
+      // estado ng bawat guard sa oras na 'to — nakalagay direkta sa URL
+      // query string, para makita natin sa Network tab nang hindi na
+      // umaasa sa console.log/preserve-log (na mahirap i-verify sa
+      // pagitan ng navigation). TANGGALIN NA ITO kapag nalaman na natin
+      // ang root cause.
+      navigator.sendBeacon(
+        `${import.meta.env.VITE_BACKEND_URL}/api/health?debug=beacon-fired` +
+        `&isLoggingOut=${isLoggingOutRef.current}` +
+        `&hasToken=${!!idTokenRef.current}` +
+        `&isConfirmed=${isSessionConfirmedRef.current}`
+      );
+
       // Kung naglo-logout na (may explicit offline write na ang
       // handleConfirmLogout mismo), huwag nang doblehin dito.
       if (isLoggingOutRef.current) return;
