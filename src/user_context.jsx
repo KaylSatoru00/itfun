@@ -1,8 +1,9 @@
 // user_context.jsx
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { ref, onValue, onDisconnect, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
+import { auth, db, rtdb } from './firebase';
 
 const UserContext = createContext(null);
 
@@ -20,16 +21,80 @@ export function UserProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // ── Auth-confirmed user (source of truth para sa RTDB/Firestore writes) ──
+  // Iba ito sa `user` sa itaas — yung `user` ay pwedeng galing pa lang sa
+  // localStorage restore (optimistic UI, para hindi mag-flash ng "logged out"
+  // state habang naglo-load). Ang `firebaseUser` dito ay direktang mula sa
+  // `onAuthStateChanged`, kaya sigurado tayong may TUNAY at KASALUKUYANG
+  // authenticated session bago tayo magsulat kahit saan (RTDB status node,
+  // Firestore heartbeat, etc.) — kailangan ito ng RTDB rules natin na
+  // umaasa sa `auth != null` / `auth.uid === $uid`.
+  const [firebaseUser, setFirebaseUser] = useState(null);
+
+  // ── Logout intent flag ──
+  // Kapag nag-signOut(), pwedeng mag-reconnect muna ang RTDB socket (kasi
+  // nagbabago ang auth token) BAGO pa man dumating ang onAuthStateChanged
+  // callback na magse-set ng firebaseUser sa null. Pag nangyari yun,
+  // maaaring ma-retrigger yung presence effect sa ibaba (.info/connected:
+  // false → true ulit) at ma-overwrite pabalik sa "online" yung explicit
+  // "offline" write na ginawa na ng logout handler. Ang ref na ito ang
+  // gagamitin nating "sabi ko na, huwag ka nang sumulat ng online" na
+  // sinusuri ng presence effect bago ito mag-set.
+  const isLoggingOutRef = useRef(false);
+  const beginLogout = () => {
+    isLoggingOutRef.current = true;
+  };
+
+  // ── Session confirmation flag ──
+  // Hindi na dapat awtomatikong sumulat ng "online" ang presence effect sa
+  // ibaba sa sandaling lang may firebaseUser — kasi tumatakbo ito bago pa
+  // man makumpleto ang session-lock check sa student_login.jsx/faculty
+  // login, at posibleng mauna itong sumulat ng "online" bago pa mabasa ng
+  // check, causing a false self-block (na-block ang sarili niyang session
+  // dahil sa write na ginawa niya rin mismo). Hihintayin muna natin ang
+  // explicit na confirmSession() call mula sa login page — matapos
+  // ma-pass ang session-lock check — bago mag-mark ng "online".
+  const isSessionConfirmedRef = useRef(false);
+  const confirmSession = () => {
+    isSessionConfirmedRef.current = true;
+    // KRITIKAL: gamitin ang `auth.currentUser?.uid` dito, HINDI ang
+    // `firebaseUser?.uid` (React state). Kapag tinawag ang confirmSession()
+    // mula sa student_login.jsx/faculty login, ang closure na dala ng
+    // function na yun ay pwedeng "stale" — nakuha ito bago pa man
+    // matagumpay ang login (bago pa may firebaseUser sa React state), kaya
+    // `null` pa ang makikita nitong firebaseUser kahit successful na ang
+    // auth sa Firebase mismo. Ang `auth.currentUser` ay direktang mula sa
+    // Firebase Auth SDK — laging up-to-date anumang oras ito basahin,
+    // kaya hindi ito apektado ng stale React closures.
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    const statusRef = ref(rtdb, `status/${uid}`);
+    onDisconnect(statusRef)
+      .set({ state: 'offline', lastChanged: rtdbServerTimestamp() })
+      .then(() => {
+        set(statusRef, { state: 'online', lastChanged: rtdbServerTimestamp() });
+      });
+  };
+
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
+  const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+    setFirebaseUser(fbUser);
+
+    if (fbUser) {
+      // Bagong auth state — i-reset ang logout flag kung meron man itong
+      // natirang `true` mula sa nakaraang session. I-reset din ang
+      // session-confirmed flag: dapat mag-confirmSession() muna ulit ang
+      // login page bago tayo sumulat ng "online" para sa bagong session
+      // na 'to.
+      isLoggingOutRef.current = false;
+      isSessionConfirmedRef.current = false;
       // check faculty first, then students
-      let snap = await getDoc(doc(db, 'faculty', firebaseUser.uid));
+      let snap = await getDoc(doc(db, 'faculty', fbUser.uid));
       if (!snap.exists()) {
-        snap = await getDoc(doc(db, 'students', firebaseUser.uid));
+        snap = await getDoc(doc(db, 'students', fbUser.uid));
       }
       if (snap.exists()) {
-        const userData = { uid: firebaseUser.uid, ...snap.data() };
+        const userData = { uid: fbUser.uid, ...snap.data() };
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
       }
@@ -49,7 +114,9 @@ export function UserProvider({ children }) {
   // ulit ng bagong login attempt) ang isang session — hal. kung na-close
   // lang ng dating user ang browser nang hindi nag-Logout.
   useEffect(() => {
-    if (!user?.uid) return;
+    // Hintayin munang ma-confirm ng Firebase Auth mismo (hindi lang localStorage
+    // restore) na may session bago tayo magsulat sa Firestore.
+    if (!firebaseUser?.uid || !user?.uid) return;
 
     const collectionName = user.role === 'faculty' ? 'faculty' : 'students';
     const sendHeartbeat = () => {
@@ -64,10 +131,75 @@ export function UserProvider({ children }) {
     const intervalId = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
-  }, [user?.uid, user?.role]);
+  }, [firebaseUser?.uid, user?.uid, user?.role]);
+
+  // ── Realtime presence (RTDB) ──
+  // Hindi katulad ng Firestore heartbeat sa itaas (na umaasa sa client-side
+  // JS na tumatakbo bawat 30s), ang presence system na ito ay
+  // SERVER-AUTHORITATIVE: sinasabihan natin ang Firebase RTDB server mismo
+  // kung ano ang gagawin niya "kapag naputol ang connection na ito" — kaya
+  // gumagana ito kahit biglaang mawala ang internet/kuryente ng device
+  // (brownout, crash, force-close), walang oras na kailangan ang client
+  // para makapag-cleanup nang mag-isa.
+  useEffect(() => {
+    // KRITIKAL: gamitin ang `firebaseUser?.uid` (galing mismo sa
+    // onAuthStateChanged) bilang gate — hindi ang `user?.uid` na pwedeng
+    // galing pa lang sa localStorage restore. Kung ang huli ang gagamitin,
+    // pwedeng mag-attempt tayong sumulat sa RTDB bago pa man ma-confirm ng
+    // Firebase Auth mismo na may session (`auth.currentUser` ay `null` pa),
+    // at ma-reject ng RTDB rules natin (PERMISSION_DENIED) dahil doon.
+    if (!firebaseUser?.uid) return;
+
+    const statusRef = ref(rtdb, `status/${firebaseUser.uid}`);
+    const connectedRef = ref(rtdb, '.info/connected');
+
+    const unsubscribe = onValue(connectedRef, (snap) => {
+      // `false` ang halaga nito habang papa-establish pa lang ang koneksyon
+      // (o kapag talagang naputol) — walang gagawin dito, wala pa tayong
+      // aktibong connection na pwedeng lagyan ng onDisconnect().
+      if (snap.val() === false) return;
+
+      // Kung kasalukuyang naglo-logout na (isLoggingOutRef.current === true),
+      // huwag nang mag-set ulit ng "online" kahit mag-reconnect ang socket
+      // dahil sa signOut() — dito nagkakaroon ng race condition na
+      // na-o-overwrite pabalik yung explicit "offline" write ng logout
+      // handler.
+      if (isLoggingOutRef.current) return;
+
+      // Hintayin muna ang explicit na confirmSession() mula sa login page
+      // (matapos pumasa sa session-lock check) bago mag-auto-write ng
+      // "online" dito. Kung hindi pa na-confirm, wala tayong gagawin —
+      // ang confirmSession() mismo ang direktang susulat kapag tama na
+      // ang oras.
+      if (!isSessionConfirmedRef.current) return;
+
+      // May aktibong koneksyon na ngayon papunta sa RTDB server. Ito ang
+      // instruction na "iiwan" natin sa server: kapag naputol ang
+      // partikular na connection na ito (anumang dahilan), i-set ang
+      // status ko sa "offline". Ang server mismo ang magre-run nito, kaya
+      // hindi na umaasa sa aming JavaScript.
+      onDisconnect(statusRef)
+        .set({
+          state: 'offline',
+          lastChanged: rtdbServerTimestamp(),
+        })
+        .then(() => {
+          // Ngayon lang, matapos ma-set ang onDisconnect() sa server,
+          // i-mamarkahan natin bilang "online" — sinisigurado nitong laging
+          // may onDisconnect() instruction na naka-attach bago pa man
+          // makita ng ibang device na "online" tayo.
+          set(statusRef, {
+            state: 'online',
+            lastChanged: rtdbServerTimestamp(),
+          });
+        });
+    });
+
+    return () => unsubscribe();
+  }, [firebaseUser?.uid]);
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession }}>
       {children}
     </UserContext.Provider>
   );

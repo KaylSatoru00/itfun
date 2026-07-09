@@ -6,7 +6,8 @@ import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
-import { auth, db } from '../firebase';
+import { auth, db, rtdb } from '../firebase';
+import { ref, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 import {
   collection, query, where, getDocs, addDoc, doc, getDoc, setDoc,
   serverTimestamp, onSnapshot,
@@ -157,7 +158,7 @@ function LearningModules() {
 
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { user, setUser }  = useUser();
+  const { user, setUser, beginLogout }  = useUser();
   const initials  = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
 
   // Dati, "Yes, Logout" ay `navigate('/')` lang — hindi talaga tumatawag ng
@@ -168,6 +169,10 @@ function LearningModules() {
   // pagkatapos, sa halip na maghintay ng SESSION_STALE_MS bago ito ma-
   // reclaim.
   const handleConfirmLogout = async () => {
+    // I-arm muna ang logout flag bago anuman — para hindi maapektuhan ng
+    // reconnect race condition (ref: user_context.jsx presence effect) ang
+    // explicit "offline" write sa baba.
+    beginLogout();
     try {
       if (user?.uid) {
         await setDoc(doc(db, 'students', user.uid), {
@@ -177,6 +182,25 @@ function LearningModules() {
     } catch (err) {
       console.error('Failed to clear active session on logout:', err);
     }
+
+    // Explicit na i-set ang RTDB status sa "offline" DITO, HABANG naka-login
+    // pa rin (bago ang auth.signOut() sa baba). Kailangang mangyari ito
+    // habang buhay pa ang session, kasi pagkatapos ng signOut(), magiging
+    // `null` na ang auth.currentUser at ma-fa-fail na ang RTDB rule na
+    // `auth.uid === $uid`. Hindi natin lang aasahan ang onDisconnect() dito
+    // kasi may ilang segundong lag pa iyon bago maregister ng server na
+    // naputol na ang koneksyon — mas mabilis at sigurado itong manual set.
+    if (user?.uid) {
+      try {
+        await set(ref(rtdb, `status/${user.uid}`), {
+          state: 'offline',
+          lastChanged: rtdbServerTimestamp(),
+        });
+      } catch (err) {
+        console.error('Failed to set offline status on logout:', err);
+      }
+    }
+
     sessionStorage.removeItem('itfun_sessionId');
     try {
       await auth.signOut();

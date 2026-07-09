@@ -3,20 +3,14 @@ import './student_login.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { auth, db } from '../firebase';
+import { auth, db, rtdb } from '../firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
 import { useUser } from '../user_context';
-
-// Kung "fresh" pa yung last heartbeat ng isang session (ibig sabihin,
-// aktibong ginagamit pa talaga), ituring itong "occupied". Kung wala nang
-// heartbeat sa loob ng threshold na ito (hal. na-close ang browser nang
-// hindi nag-logout), ituring itong "stale"/abandoned na — payagan na ulit
-// mag-login dito, para hindi mapermanenteng locked-out ang account.
-const SESSION_STALE_MS = 90 * 1000; // 90 seconds (~3 missed 30s heartbeats)
 
 function toPascalCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
@@ -97,7 +91,7 @@ function PasswordInput({ value, onChange, placeholder, className, onKeyDown }) {
 function StudentLogin() {
   const [screen, setScreen] = useState('login');
   const navigate = useNavigate();
-  const { setUser } = useUser();
+  const { setUser, confirmSession } = useUser();
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -155,32 +149,40 @@ function StudentLogin() {
       }
       const data = snap.data();
 
-      // ── Single active session enforcement ──
-      // Kung meron nang `activeSessionId` na naka-set at "fresh" pa yung
-      // huling heartbeat (`lastActiveAt`) nito, may aktibong gamit na ito
-      // sa ibang device/tab — i-block ang bagong pag-login na ito. Kung
-      // "stale" na yung heartbeat (mahigit SESSION_STALE_MS na walang
-      // update — malamang na-close ang browser nang hindi nag-logout),
-      // ituring nang abandoned ang dating session at payagan mag-login.
-      const lastActiveMs = data.lastActiveAt?.toMillis ? data.lastActiveAt.toMillis() : 0;
-      const isSessionFresh = Date.now() - lastActiveMs < SESSION_STALE_MS;
-      if (data.activeSessionId && isSessionFresh) {
+      // ── Single active session enforcement (RTDB presence-based) ──
+      // Sa halip na Firestore lastActiveAt (yung old heartbeat/staleness
+      // heuristic), titingnan na natin diretso yung status/{uid} node sa
+      // Realtime Database — updated in real-time ng onDisconnect() sa
+      // user_context.jsx. Kung "online" pa ang huling naitalang state,
+      // may aktibong gamit na ito sa ibang device/tab — i-block ang bagong
+      // pag-login. Walang staleness guessing kasi tumpak na mismo ang
+      // onDisconnect() sa pag-set ng "offline" kapag talagang nawala na
+      // yung koneksyon (browser close, network drop, atbp).
+      const statusSnap = await get(ref(rtdb, `status/${uid}`));
+      const rtdbStatus = statusSnap.exists() ? statusSnap.val() : null;
+      if (rtdbStatus?.state === 'online') {
         await auth.signOut();
         setError('Someone else is currently using this account. Please try again later.');
         setLoading(false);
         return;
       }
 
-      // Walang gamit (o stale na) ang account — i-claim natin ito bilang
-      // bagong active session. Naka-store ang sessionId sa sessionStorage
+      // Walang gamit ang account ngayon — i-claim natin ito bilang bagong
+      // active session. Naka-store ang sessionId sa sessionStorage
       // (tab-scoped) para malinis lang ito ng Logout button ng session na
       // talagang gumawa nito.
       const sessionId = crypto.randomUUID();
       await setDoc(doc(db, 'students', uid), {
         activeSessionId: sessionId,
-        lastActiveAt: serverTimestamp(),
       }, { merge: true });
       sessionStorage.setItem('itfun_sessionId', sessionId);
+
+      // Ngayon lang, matapos ma-pass ang session-lock check at ma-claim na
+      // ang session, papayagan na nating sumulat ng "online" ang presence
+      // effect sa user_context.jsx. Kung dito ito tatawagin nang mas maaga
+      // (o kung hindi natin ito hihintayin), posibleng ma-block ang sarili
+      // nating login dahil sa write na tayo mismo ang gumawa.
+      confirmSession();
 
       setUser({ uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'student' });
       navigate('/learning-modules');

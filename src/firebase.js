@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBnnl1ZKESvQUOjwk1CG_g_nG33reGtTUU",
@@ -9,9 +10,11 @@ const firebaseConfig = {
   projectId: "itfun-d75c1",
   storageBucket: "itfun-d75c1.firebasestorage.app",
   messagingSenderId: "547714079819",
-  appId: "1:547714079819:web:3dcd5af9ed4f3b35bbc1ce"
+  appId: "1:547714079819:web:3dcd5af9ed4f3b35bbc1ce",
+  databaseURL: "https://itfun-d75c1-default-rtdb.firebaseio.com"
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const rtdb = getDatabase(app);
