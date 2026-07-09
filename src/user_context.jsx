@@ -256,6 +256,82 @@ export function UserProvider({ children }) {
     return () => unsubscribe();
   }, [firebaseUser?.uid]);
 
+  // ── ID token cache (para sa sendBeacon sa ibaba) ──
+  // Hindi tayo pwedeng mag-await ng getIdToken() sa loob mismo ng
+  // pagehide handler (baka hindi na ito umabot matapos ipatay ng browser
+  // ang JS execution) — kaya dito na natin ito kinukuha nang maaga at
+  // isino-store sa ref, laging handa sa sandaling kailanganin.
+  const idTokenRef = useRef(null);
+  useEffect(() => {
+    if (!firebaseUser) {
+      idTokenRef.current = null;
+      return;
+    }
+    let cancelled = false;
+    const refreshToken = () => {
+      firebaseUser.getIdToken().then((token) => {
+        if (!cancelled) idTokenRef.current = token;
+      }).catch((err) => console.error('Failed to cache ID token for beacon:', err));
+    };
+    refreshToken();
+    // ID tokens ay expired na pagkalipas ng 1 oras — i-refresh bawat 30
+    // minuto para laging bago ang naka-cache.
+    const intervalId = setInterval(refreshToken, 30 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [firebaseUser]);
+
+  // ── Maaasahang "offline" write sa tab/window close (via sendBeacon) ──
+  // Ang onDisconnect() sa itaas ay SERVER-side na detection — tumpak at
+  // gumagana kahit biglaang mawala ang koneksyon, pero hindi ito palaging
+  // instant: ang Firebase RTDB server mismo ang nagpapasya kung kailan
+  // "talagang naputol na" ang WebSocket, at maaari itong umabot ng ilang
+  // segundo hanggang mas matagal pa bago ma-trigger. Sinubukan muna natin
+  // ang direktang WebSocket `set()` sa `pagehide`, pero hindi ito
+  // maaasahan — pinuputol na ng browser ang JS execution sa sandaling
+  // isinasara ang tab, kaya madalas hindi pa naaabutang makumpleto ang
+  // WebSocket round-trip.
+  //
+  // Ang `navigator.sendBeacon()` ay eksaktong ginawa para dito — isang
+  // regular na HTTP request (hindi WebSocket) na GINAGARANTIYAHAN MISMO ng
+  // browser na maipapadala kahit isinasara na ang tab. Dumadaan ito sa
+  // backend (Railway) na siya namang gumagamit ng Firebase Admin SDK para
+  // direktang mag-set ng "offline" — kaya hindi na umaasa sa client-side
+  // WebSocket connection na baka maaga nang mamatay.
+  useEffect(() => {
+    if (!firebaseUser?.uid) return;
+
+    const markOfflineOnClose = () => {
+      // Kung naglo-logout na (may explicit offline write na ang
+      // handleConfirmLogout mismo), huwag nang doblehin dito.
+      if (isLoggingOutRef.current) return;
+      if (!idTokenRef.current) return;
+
+      const payload = JSON.stringify({
+        uid: firebaseUser.uid,
+        idToken: idTokenRef.current,
+      });
+      navigator.sendBeacon(
+        `${import.meta.env.VITE_BACKEND_URL}/api/set-offline`,
+        payload
+      );
+    };
+
+    // `pagehide` ay mas maaasahan kaysa `beforeunload` sa mga modernong
+    // browser (gumagana rin ito kapag pumasok ang page sa bfcache), pero
+    // idinagdag pa rin natin ang `beforeunload` bilang extra coverage sa
+    // mga browser/scenario na hindi consistent ang pag-fire ng `pagehide`.
+    window.addEventListener('pagehide', markOfflineOnClose);
+    window.addEventListener('beforeunload', markOfflineOnClose);
+
+    return () => {
+      window.removeEventListener('pagehide', markOfflineOnClose);
+      window.removeEventListener('beforeunload', markOfflineOnClose);
+    };
+  }, [firebaseUser?.uid]);
+
   return (
     <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession }}>
       {children}

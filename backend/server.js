@@ -19,7 +19,8 @@ import { QuizEngine } from './quiz/quiz.engine.js';
 import { ScoringService } from './scoring/scoring.service.js';
 import { generateQuiz } from './services/ai.service.js';
 import { getLessonContent } from './services/lesson.service.js';
-import { adminAuth, adminDb } from './services/firebase-admin.service.js';
+import { adminAuth, adminDb, adminRtdb } from './services/firebase-admin.service.js';
+import { ServerValue } from 'firebase-admin/database';
 import { sendPasswordResetEmail, sendOtpEmail } from './services/email.service.js';
 
 const app = express();
@@ -99,6 +100,53 @@ function generateOtp() {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ── Reliable "offline" marking on tab/window close (via sendBeacon) ──
+// Ang normal na RTDB write mula sa client (WebSocket-based) ay hindi
+// garantisadong makakumpleto sa sandaling isinasara na ang tab — pinuputol
+// na ng browser ang JS execution bago pa man matapos ang round-trip.
+// Ang `navigator.sendBeacon()` sa client ay ginagarantiyahan MISMO ng
+// browser na maipapadala kahit isinasara na ang tab (regular HTTP request
+// ito, hindi WebSocket) — kaya dito natin ito tinatanggap, at ginagamit
+// ang Admin SDK (server-side, walang dependency sa client WebSocket) para
+// direktang mag-set ng "offline" sa RTDB.
+//
+// `sendBeacon()` ay hindi nagpapadala ng custom Authorization header, kaya
+// isinasama natin ang Firebase ID token sa mismong JSON body, at dito
+// natin ito vine-verify (`verifyIdToken`) para masiguradong ang may-ari
+// lang mismo ng account ang makaka-set ng sarili niyang status — hindi
+// basta kahit sinong uid ang pwedeng ipasa.
+app.post('/api/set-offline', express.text({ type: '*/*' }), async (req, res) => {
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const { uid, idToken } = body;
+
+    if (!uid || !idToken) {
+      return res.status(400).json({ success: false, error: 'uid and idToken are required' });
+    }
+
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    if (decoded.uid !== uid) {
+      return res.status(403).json({ success: false, error: 'Token does not match uid' });
+    }
+
+    await adminRtdb.ref(`status/${uid}`).set({
+      state: 'offline',
+      lastChanged: ServerValue.TIMESTAMP,
+    });
+
+    console.log(`🔌 ${uid} marked offline via sendBeacon (tab/window close)`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ set-offline error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    // sendBeacon doesn't read the response anyway, pero mag-log tayo para
+    // sa debugging.
+    res.status(500).json({ success: false, error: 'Failed to set offline status.' });
+  }
 });
 
 app.post('/api/forgot-password', async (req, res) => {
