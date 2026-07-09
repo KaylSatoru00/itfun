@@ -175,7 +175,7 @@ function StudentLogin() {
       confirmSession();
 
       setUser({ uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'student' });
-      navigate('/learning-modules');
+      navigate('/learning-modules', { replace: true });
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         setError('No account found with this email.');

@@ -4,7 +4,8 @@ import { AnimatePresence } from 'framer-motion'
 import './index.css'
 import { UserProvider } from './user_context'
 import { SocketProvider } from './socket_context'
-
+import ProtectedRoute from './ProtectedRoute.jsx'
+import RedirectIfAuthed from './RedirectIfAuthed.jsx'
 
 // Login
 import Login from './login/login.jsx'
@@ -58,11 +59,11 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Login />} />
-        <Route path="/student-login" element={<StudentLogin />} />
+        <Route path="/student-login" element={ <RedirectIfAuthed><StudentLogin /></RedirectIfAuthed>} />
         <Route path="/faculty-login" element={<FacultyLogin />} />
-        <Route path="/faculty-modules" element={<FacultyModules />} />
+        <Route path="/faculty-modules" element={<ProtectedRoute redirectTo="/faculty-login"><FacultyModules /></ProtectedRoute>} />
         <Route path="/faculty-class" element={<FacultyClass />} />
-        <Route path="/learning-modules" element={<LearningModules />} />
+        <Route path="/learning-modules" element={<ProtectedRoute><LearningModules /></ProtectedRoute>} />
         <Route path="/pvp-quiz" element={<PvpQuiz />} />
         <Route path="/select-module" element={<SelectModule />} />
         <Route path="/select-type" element={<SelectType />} />

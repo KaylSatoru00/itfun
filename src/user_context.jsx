@@ -45,6 +45,56 @@ export function UserProvider({ children }) {
     isLoggingOutRef.current = true;
   };
 
+  // ── Full logout sequence (reusable) ──
+  // Iisang source of truth ito para sa buong "totoong logout" (Firestore
+  // activeSessionId clear + RTDB offline write + sessionStorage/localStorage
+  // clear + auth.signOut()) — ginagamit ito ng student_modules.jsx
+  // (handleConfirmLogout) at ng login.jsx (para sa "force re-login" kapag
+  // pumili ulit ng role galing sa root page habang may existing session pa).
+  // Hindi ito nag-navigate() — responsibilidad ng caller kung saan
+  // magta-tuloy pagkatapos (hal. '/' o '/student-login').
+  const logout = async () => {
+    // I-arm muna ang logout flag bago anuman — para hindi maapektuhan ng
+    // reconnect race condition (ref: presence effect sa ibaba) ang
+    // explicit "offline" write sa baba.
+    beginLogout();
+
+    const uid = user?.uid;
+    const collectionName = user?.role === 'faculty' ? 'faculty' : 'students';
+
+    if (uid) {
+      try {
+        await setDoc(doc(db, collectionName, uid), {
+          activeSessionId: null,
+        }, { merge: true });
+      } catch (err) {
+        console.error('Failed to clear active session on logout:', err);
+      }
+
+      // Explicit na i-set ang RTDB status sa "offline" DITO, HABANG naka-login
+      // pa rin (bago ang auth.signOut() sa baba) — kailangan itong manual
+      // (hindi lang aasahan ang onDisconnect(), may ilang segundong lag pa
+      // iyon bago maregister ng server na naputol na ang koneksyon).
+      try {
+        await set(ref(rtdb, `status/${uid}`), {
+          state: 'offline',
+          lastChanged: rtdbServerTimestamp(),
+        });
+      } catch (err) {
+        console.error('Failed to set offline status on logout:', err);
+      }
+    }
+
+    sessionStorage.removeItem('itfun_sessionId');
+    try {
+      await auth.signOut();
+    } catch (err) {
+      console.error('Sign out failed:', err);
+    }
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
   // ── Session confirmation flag ──
   // Hindi na dapat awtomatikong sumulat ng "online" ang presence effect sa
   // ibaba sa sandaling lang may firebaseUser — kasi tumatakbo ito bago pa
@@ -498,7 +548,7 @@ export function UserProvider({ children }) {
   }, [firebaseUser?.uid]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession, beginLogin, endLogin }}>
+    <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession, beginLogin, endLogin, logout }}>
       {children}
     </UserContext.Provider>
   );

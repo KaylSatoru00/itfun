@@ -90,7 +90,7 @@ function PasswordInput({ value, onChange, placeholder, className, onKeyDown }) {
 function FacultyLogin() {
   const [screen, setScreen] = useState('login');
   const navigate = useNavigate();
-  const { setUser, confirmSession } = useUser();
+  const { setUser, confirmSession, beginLogin, endLogin } = useUser();
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -128,6 +128,10 @@ function FacultyLogin() {
       return;
     }
     setLoading(true);
+    // I-arm muna ang flag na 'to bago simulan ang fresh login flow — para
+    // hindi makipag-race ang onAuthStateChanged restore path sa
+    // user_context.jsx (parehong pattern sa student_login.jsx).
+    beginLogin();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
       const uid = userCredential.user.uid;
@@ -173,8 +177,18 @@ function FacultyLogin() {
       // sumulat ng "online" ang presence effect sa user_context.jsx.
       confirmSession();
 
-      setUser({ uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'faculty' });
-      navigate('/faculty-modules');
+      const userData = { uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'faculty' };
+      setUser(userData);
+      // KRITIKAL: i-set din agad ang localStorage dito (hindi lang umasa sa
+      // async onAuthStateChanged restore path sa user_context.jsx) — kasi
+      // naka-skip yun habang naka-loginInProgressRef, at hindi na ito
+      // maa-abutan ulit hangga't walang bagong auth state transition. Kung
+      // wala nito, mag-refresh lang agad pagkatapos mag-login, makikita ng
+      // ProtectedRoute (walang loading gate) na `null` pa ang localStorage
+      // restore sa unang render — agad ka nitong ibabalik sa /faculty-login
+      // kahit legit at aktibo naman ang session.
+      localStorage.setItem('user', JSON.stringify(userData));
+      navigate('/faculty-modules', { replace: true });
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         setError('No account found with this email.');
@@ -187,6 +201,11 @@ function FacultyLogin() {
       } else {
         setError('Login failed. Please try again.');
       }
+    } finally {
+      // Kahit anong exit path (success, early return, o error) —
+      // i-disarm natin ulit ang flag, para makapagpatuloy nang normal
+      // ang restore path sa susunod na auth state change.
+      endLogin();
     }
     setLoading(false);
   };
