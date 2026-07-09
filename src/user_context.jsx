@@ -1,7 +1,7 @@
 // user_context.jsx
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDocFromServer, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 import { auth, db, rtdb } from './firebase';
 
@@ -76,9 +76,28 @@ export function UserProvider({ children }) {
       });
   };
 
+  // ── Data-ready flag ──
+  // Hindi sapat na umasa lang sa `firebaseUser?.uid && user?.uid` para
+  // malaman kung "handa na" ang session — ang `user` dito ay pwedeng
+  // galing pa lang sa localStorage restore (agad na `true` sa unang mount,
+  // kahit hindi pa natin na-cco-confirm sa Firestore mismo ngayong
+  // session na ito). Kung papayagan nating tumakbo ang heartbeat effect
+  // (sa ibaba) base lang dito, pwede itong makipag-race sa sarili nating
+  // `getDoc()` sa itaas — ang `setDoc(..., {lastActiveAt: serverTimestamp()},
+  // {merge:true})` ay may "pending/local" placeholder value (`null`) bago
+  // pa ma-confirm ng server, kaya minsan nakikita ng kasabay na `getDoc()`
+  // ang partial/pending na bersyon lang ng document (`{lastActiveAt:
+  // null}` lang, kulang sa ibang fields) — ito yung dahilan kung bakit
+  // paminsan-minsan nagiging "undefined undefined" ang pangalan
+  // pagkatapos mag-refresh. Ang `dataReady` na ito ay `true` lang
+  // matapos talagang matapos (buo, hindi pending) ang ating sariling
+  // `getDoc()` sa itaas.
+  const [dataReady, setDataReady] = useState(false);
+
   useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
     setFirebaseUser(fbUser);
+    setDataReady(false);
 
     if (fbUser) {
       // Bagong auth state — i-reset ang logout flag kung meron man itong
@@ -88,10 +107,17 @@ export function UserProvider({ children }) {
       // na 'to.
       isLoggingOutRef.current = false;
       isSessionConfirmedRef.current = false;
-      // check faculty first, then students
-      let snap = await getDoc(doc(db, 'faculty', fbUser.uid));
+      // KRITIKAL: gamitin ang `getDocFromServer()` dito, HINDI ang plain
+      // `getDoc()` — sinisigurado nitong direkta tayong bumabasa mula sa
+      // server (hindi sa local/offline cache), kaya hindi na tayo
+      // apektado kahit anong "pending" na local mutation state mula sa
+      // heartbeat effect (o mula sa nakaraang page load na hindi pa
+      // na-sync, kung sobrang bilis ng spam-refresh). Mas mabagal ito nang
+      // konti (totoong network round-trip palagi), pero garantisadong
+      // buo at tumpak ang makukuhang data.
+      let snap = await getDocFromServer(doc(db, 'faculty', fbUser.uid));
       if (!snap.exists()) {
-        snap = await getDoc(doc(db, 'students', fbUser.uid));
+        snap = await getDocFromServer(doc(db, 'students', fbUser.uid));
       }
       if (snap.exists()) {
         const userData = { uid: fbUser.uid, ...snap.data() };
@@ -119,6 +145,12 @@ export function UserProvider({ children }) {
           confirmSession();
         }
       }
+
+      // Tapos na tayong mag-attempt mag-getDoc() (buo man o hindi
+      // nag-exist ang doc) — ligtas na ngayon para tumakbo ang heartbeat
+      // effect sa ibaba nang walang katakot-takot na makipag-race pa sa
+      // atin.
+      setDataReady(true);
     } else {
       setUser(null);
       localStorage.removeItem('user');
@@ -136,8 +168,13 @@ export function UserProvider({ children }) {
   // lang ng dating user ang browser nang hindi nag-Logout.
   useEffect(() => {
     // Hintayin munang ma-confirm ng Firebase Auth mismo (hindi lang localStorage
-    // restore) na may session bago tayo magsulat sa Firestore.
-    if (!firebaseUser?.uid || !user?.uid) return;
+    // restore) na may session bago tayo magsulat sa Firestore. Hintayin din
+    // ang `dataReady` — kahit True na ang `firebaseUser?.uid` at `user?.uid`
+    // (mula sa stale localStorage restore), huwag munang payagang tumakbo
+    // ang heartbeat hangga't hindi pa tapos ang sarili nating getDoc() sa
+    // itaas — para maiwasan ang race condition na dahilan ng "undefined
+    // undefined" bug (ref: dataReady comment sa itaas).
+    if (!firebaseUser?.uid || !user?.uid || !dataReady) return;
 
     const collectionName = user.role === 'faculty' ? 'faculty' : 'students';
     const sendHeartbeat = () => {
@@ -152,7 +189,7 @@ export function UserProvider({ children }) {
     const intervalId = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(intervalId);
-  }, [firebaseUser?.uid, user?.uid, user?.role]);
+  }, [firebaseUser?.uid, user?.uid, user?.role, dataReady]);
 
   // ── Realtime presence (RTDB) ──
   // Hindi katulad ng Firestore heartbeat sa itaas (na umaasa sa client-side
