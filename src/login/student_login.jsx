@@ -12,6 +12,18 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, get } from 'firebase/database';
 import { useUser } from '../user_context';
 
+// ── Staleness ceiling (safety net) ──
+// Ang onDisconnect()/sendBeacon sa user_context.jsx ang pangunahing paraan
+// para malaman kung "offline" na dapat ang isang session, pero hindi ito
+// 100% guaranteed sa LAHAT ng sitwasyon (hal. force-quit ng buong browser
+// process, biglaang brownout/pagkawala ng internet bago pa ma-fire ang
+// alinman sa dalawa). Kung mangyari 'yon, pwedeng "ma-stuck" sa "online"
+// magpakailanman ang status ng account — kaya nagtatakda tayo ng absolute
+// ceiling: kahit "online" pa ang naitalang state, kung ang huling
+// `lastChanged` nito ay mas matanda na sa halagang ito, ituring pa rin
+// nating "pwede nang i-claim" — hindi na permanenteng naka-lock.
+const SESSION_ONLINE_CEILING_MS = 90 * 1000; // 90 seconds
+
 function toPascalCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -160,7 +172,9 @@ function StudentLogin() {
       // yung koneksyon (browser close, network drop, atbp).
       const statusSnap = await get(ref(rtdb, `status/${uid}`));
       const rtdbStatus = statusSnap.exists() ? statusSnap.val() : null;
-      if (rtdbStatus?.state === 'online') {
+      const lastChangedMs = rtdbStatus?.lastChanged || 0;
+      const isCeilingExceeded = Date.now() - lastChangedMs > SESSION_ONLINE_CEILING_MS;
+      if (rtdbStatus?.state === 'online' && !isCeilingExceeded) {
         await auth.signOut();
         setError('Someone else is currently using this account. Please try again later.');
         setLoading(false);
