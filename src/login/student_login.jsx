@@ -103,7 +103,7 @@ function PasswordInput({ value, onChange, placeholder, className, onKeyDown }) {
 function StudentLogin() {
   const [screen, setScreen] = useState('login');
   const navigate = useNavigate();
-  const { setUser, confirmSession } = useUser();
+  const { setUser, confirmSession, beginLogin, endLogin } = useUser();
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -143,6 +143,10 @@ function StudentLogin() {
       return;
     }
     setLoading(true);
+    // I-arm muna ang flag na 'to bago simulan ang fresh login flow — para
+    // hindi makipag-race ang onAuthStateChanged restore path sa
+    // user_context.jsx (tignan yung paliwanag doon).
+    beginLogin();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
       const uid = userCredential.user.uid;
@@ -212,6 +216,11 @@ function StudentLogin() {
       } else {
         setError('Login failed. Please try again.');
       }
+    } finally {
+      // Kahit anong exit path (success, early return, o error) —
+      // i-disarm natin ulit ang flag, para makapagpatuloy nang normal
+      // ang restore path sa susunod na auth state change.
+      endLogin();
     }
     setLoading(false);
   };

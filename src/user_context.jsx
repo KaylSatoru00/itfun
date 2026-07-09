@@ -94,9 +94,39 @@ export function UserProvider({ children }) {
   // `getDoc()` sa itaas.
   const [dataReady, setDataReady] = useState(false);
 
+  // ── Login-in-progress flag ──
+  // Kapag nag-e-execute ang handleLogin() ng student_login.jsx/faculty
+  // login (fresh sign-in), kasabay/kasunod nito ay ma-tri-trigger DIN ang
+  // onAuthStateChanged sa ibaba — na may sarili niyang (redundant) Firestore
+  // read + session-match check. Kung mangyari itong dalawa nang SABAY,
+  // may tsansang mauna ang restore path na basahin ang Firestore BAGO pa
+  // makumpleto ang `setDoc(activeSessionId)` mismo ng handleLogin() —
+  // makikita niya yung LUMANG activeSessionId, ituturing itong "hindi
+  // tugma", at maling ma-`setUser(null)` kaagad-agad pagkatapos mismong
+  // mag-login (false logout). Ang flag na ito ang nagsasabi sa restore
+  // path na "huwag ka munang gagawa ng kahit ano — may aktibong fresh
+  // login flow na tumatakbo sa tab na ito, siya na ang bahala sa sarili
+  // niyang setUser()/confirmSession() calls."
+  const loginInProgressRef = useRef(false);
+  const beginLogin = () => {
+    loginInProgressRef.current = true;
+  };
+  const endLogin = () => {
+    loginInProgressRef.current = false;
+  };
+
   useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
     setFirebaseUser(fbUser);
+
+    // Habang may aktibong fresh login flow (beginLogin() ~ endLogin()) sa
+    // tab na ito, huwag munang pakialaman ang `user`/`dataReady` state dito
+    // — ang login page mismo ang direktang bahala. Ligtas na tumakbo ulit
+    // ang normal na restore logic sa ibaba sa SUSUNOD na auth state change
+    // (o sa susunod na refresh), kung saan tapos na at consistent na ang
+    // Firestore write.
+    if (loginInProgressRef.current) return;
+
     setDataReady(false);
 
     if (fbUser) {
@@ -418,7 +448,7 @@ export function UserProvider({ children }) {
   }, [firebaseUser?.uid]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession }}>
+    <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession, beginLogin, endLogin }}>
       {children}
     </UserContext.Provider>
   );
