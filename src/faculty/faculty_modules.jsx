@@ -6,8 +6,9 @@ import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../user_context';
-import { auth, db } from '../firebase';
+import { auth, db, rtdb } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { ref, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 import img1 from '../assets/panel1.webp';
 import img2 from '../assets/panel2.jpg';
 import img3 from '../assets/panel3.webp';
@@ -111,8 +112,13 @@ function FacultyModules() {
   const searchRef                             = useRef(null);
 
   const navigate = useNavigate();
-  const { user, setUser } = useUser();
-  const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
+  const { user, setUser, beginLogout } = useUser();
+  // Guard: kapag may `user` na pero wala pang firstName/lastName (maikling
+  // sandali habang naglo-load pa ang buong data mula sa Firestore, lalo na
+  // kapag spam-refresh) — huwag i-access ang [0] ng undefined, para hindi
+  // bumagsak sa blangkong page.
+  const hasFullName = Boolean(user?.firstName && user?.lastName);
+  const initials = hasFullName ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
 
   // Dati, "Yes, Logout" ay `navigate('/')` lang — hindi talaga tumatawag ng
   // auth.signOut(), kaya nananatiling "naka-login" ang Firebase session
@@ -122,6 +128,24 @@ function FacultyModules() {
   // pagkatapos, sa halip na maghintay ng SESSION_STALE_MS bago ito ma-
   // reclaim.
   const handleConfirmLogout = async () => {
+    // Sabihin muna sa presence effect (user_context.jsx) na huwag nang
+    // mag-auto-write ng "online" kahit mag-reconnect ang RTDB socket habang
+    // nagsi-signOut() (nagbabago ang auth token) — kung hindi ito hihintayin,
+    // posibleng ma-overwrite pabalik sa "online" yung explicit "offline"
+    // write sa ibaba bago pa man makumpleto ang buong logout.
+    beginLogout();
+
+    try {
+      if (user?.uid) {
+        await set(ref(rtdb, `status/${user.uid}`), {
+          state: 'offline',
+          lastChanged: rtdbServerTimestamp(),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to set offline status on logout:', err);
+    }
+
     try {
       if (user?.uid) {
         await setDoc(doc(db, 'faculty', user.uid), {
@@ -252,9 +276,9 @@ function FacultyModules() {
           <div
             className="avatar-circle"
             onClick={() => setShowLogoutModal(true)}
-            title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
+            title={hasFullName ? `${user.firstName} ${user.lastName}` : 'Account'}
           >
-            {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
+            {hasFullName ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
           </div>
         </div>
       </div>
