@@ -110,6 +110,25 @@ export function UserProvider({ children }) {
   const loginInProgressRef = useRef(false);
   const beginLogin = () => {
     loginInProgressRef.current = true;
+    // KRITIKAL FIX: i-reset dito ang isSessionConfirmedRef sa false sa
+    // simula pa lang ng ANUMANG bagong login attempt (successful man o
+    // hindi). Dahil ang onAuthStateChanged restore path ay naka-SKIP
+    // habang naka-loginInProgressRef (tignan comment sa itaas), HINDI
+    // dito na-rereset ang flag na ito sa pagitan ng mga magkakasunod na
+    // login attempts sa PAREHONG tab (client-side navigation lang,
+    // walang full reload). Kaya kung dati nang "confirmed" (true) ang
+    // ref na 'to mula sa isang naunang session sa tab na ito, mananatili
+    // itong `true` — at dahil ang signInWithEmailAndPassword() sa
+    // handleLogin() ay AGAD nang totoong nag-sign-in (bago pa man ma-
+    // check kung "blocked" ba ang session), agad na-tri-trigger ang
+    // "Realtime presence" effect (na naka-gate lang sa firebaseUser?.uid,
+    // HINDI sa confirmation state) — kaya nagsusulat ito ng "online" sa
+    // RTDB kahit BLOCKED/FAILED ang login attempt na 'yon. Sa
+    // pag-reset dito bago pa man tumawag ng signInWithEmailAndPassword(),
+    // sigurado tayong "unconfirmed" muna ang bawat bagong attempt hangga't
+    // hindi pa ito talagang pumasa sa session-lock check at tumawag ng
+    // confirmSession() mismo.
+    isSessionConfirmedRef.current = false;
   };
   const endLogin = () => {
     loginInProgressRef.current = false;
