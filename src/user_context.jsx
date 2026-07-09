@@ -275,11 +275,34 @@ export function UserProvider({ children }) {
     const statusRef = ref(rtdb, `status/${firebaseUser.uid}`);
     const connectedRef = ref(rtdb, '.info/connected');
 
+    // ── Presence heartbeat (RTDB `lastChanged` refresh) ──
+    // Ang `onDisconnect()` sa ibaba ay isang beses lang na-a-arm bawat
+    // successful connect — pero ang `set({state:'online', lastChanged})`
+    // ay ISANG BESES lang din nasusulat, sa unang pagkonekta. Kung walang
+    // periodic refresh nito, "lumang" (stale) na ang `lastChanged` pagkalipas
+    // ng SESSION_ONLINE_CEILING_MS (90s) sa student_login.jsx/faculty login —
+    // kahit totoong aktibo pa ang session — kaya papayagan (mali) ng
+    // ceiling check na "i-claim" ito ng bagong login sa ibang device.
+    // I-refresh natin ang `lastChanged` bawat HEARTBEAT_INTERVAL_MS (30s,
+    // parehong constant gaya ng Firestore heartbeat sa itaas — 3x margin
+    // bago maabot ang 90s ceiling) habang totoong nakakonekta pa.
+    let heartbeatIntervalId = null;
+    const stopHeartbeat = () => {
+      if (heartbeatIntervalId) {
+        clearInterval(heartbeatIntervalId);
+        heartbeatIntervalId = null;
+      }
+    };
+
     const unsubscribe = onValue(connectedRef, (snap) => {
       // `false` ang halaga nito habang papa-establish pa lang ang koneksyon
-      // (o kapag talagang naputol) — walang gagawin dito, wala pa tayong
-      // aktibong connection na pwedeng lagyan ng onDisconnect().
-      if (snap.val() === false) return;
+      // (o kapag talagang naputol) — wala tayong aktibong connection na
+      // pwedeng lagyan ng onDisconnect(), kaya itigil din natin ang
+      // heartbeat (walang connection na pwedeng i-refresh).
+      if (snap.val() === false) {
+        stopHeartbeat();
+        return;
+      }
 
       // Kung kasalukuyang naglo-logout na (isLoggingOutRef.current === true),
       // huwag nang mag-set ulit ng "online" kahit mag-reconnect ang socket
@@ -314,10 +337,28 @@ export function UserProvider({ children }) {
             state: 'online',
             lastChanged: rtdbServerTimestamp(),
           });
+
+          // I-restart ang heartbeat: i-clear muna kung may natirang interval
+          // mula sa naunang reconnect (para walang duplicate na tumatakbo),
+          // tapos simulan ulit. Hindi na kailangang i-re-arm ang
+          // onDisconnect() dito — nananatili itong attached sa parehong
+          // socket connection hangga't hindi ito naputol.
+          stopHeartbeat();
+          heartbeatIntervalId = setInterval(() => {
+            set(statusRef, {
+              state: 'online',
+              lastChanged: rtdbServerTimestamp(),
+            }).catch((err) => {
+              console.error('RTDB presence heartbeat failed:', err);
+            });
+          }, HEARTBEAT_INTERVAL_MS);
         });
     });
 
-    return () => unsubscribe();
+    return () => {
+      stopHeartbeat();
+      unsubscribe();
+    };
   }, [firebaseUser?.uid]);
 
   // ── Real-time "kicked out" detector (same-browser multi-tab) ──
