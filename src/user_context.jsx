@@ -313,10 +313,18 @@ export function UserProvider({ children }) {
         uid: firebaseUser.uid,
         idToken: idTokenRef.current,
       });
-      navigator.sendBeacon(
+      const sent = navigator.sendBeacon(
         `${import.meta.env.VITE_BACKEND_URL}/api/set-offline`,
         payload
       );
+      // TEMPORARY DEBUG LOG — tanggalin na natin 'to kapag nakumpirma na
+      // gumagana. Kung `false` ang ibalik nito, ibig sabihin tinanggihan
+      // agad ng browser yung request mismo (hal. mali/undefined ang
+      // VITE_BACKEND_URL, o masyadong malaki ang payload) — hindi man
+      // lang ito umabot sa network. I-check ito gamit ang "Preserve log"
+      // sa DevTools Network/Console tab bago mag-refresh o magsara ng tab,
+      // dahil mawawala kaagad ang console pagkatapos ng navigate/close.
+      console.log('[sendBeacon set-offline]', sent ? 'queued ok' : 'FAILED to queue', idTokenRef.current ? '(token present)' : '(NO TOKEN CACHED)');
     };
 
     // `pagehide` ay mas maaasahan kaysa `beforeunload` sa mga modernong

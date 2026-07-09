@@ -257,8 +257,22 @@ function LearningModules() {
     setProgressLoading(true);
 
     const progressRef = doc(db, 'studentProgress', user.uid);
-    const unsub = onSnapshot(progressRef, (snap) => {
+    // KRITIKAL: `includeMetadataChanges: true` para makita natin kung
+    // galing sa LOCAL CACHE (`snap.metadata.fromCache`) o kumpirmado na
+    // mula sa SERVER ang bawat snapshot. Kailangan ito dahil pagkatapos
+    // mag-refresh, madalas unang dumadaan ang onSnapshot sa isang cached
+    // na snapshot bago pa man makumpleto ang totoong network round-trip —
+    // kung wala pang laman ang cache na iyon, makikita ni `!snap.exists()`
+    // na parang "walang progress doc" agad, kahit meron namang totoong
+    // data sa server. Ito yung dahilan ng "grayscale/naka-lock lahat" na
+    // flash pagkatapos mag-refresh.
+    const unsub = onSnapshot(progressRef, { includeMetadataChanges: true }, (snap) => {
       if (!snap.exists()) {
+        // Kung galing pa lang ito sa cache, huwag muna nating ituring na
+        // "confirmed wala talagang progress" — hintayin muna ang
+        // server-confirmed na snapshot (fromCache: false).
+        if (snap.metadata.fromCache) return;
+
         setModuleStates(
           Object.fromEntries(MODULES.map((m, i) => [
             m.id,
