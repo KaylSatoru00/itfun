@@ -519,7 +519,7 @@ function LearningModules() {
           <div
             className="avatar-circle"
             onClick={() => setShowLogoutModal(true)}
-            title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
+            title={(user && user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : 'Account'}
             style={{ cursor: 'pointer', flexShrink: 0 }}
           >
             {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
