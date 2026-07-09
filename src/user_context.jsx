@@ -1,7 +1,7 @@
 // user_context.jsx
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDocFromServer, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDocFromServer, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
 import { auth, db, rtdb } from './firebase';
 
@@ -121,28 +121,43 @@ export function UserProvider({ children }) {
       }
       if (snap.exists()) {
         const userData = { uid: fbUser.uid, ...snap.data() };
-        setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
 
-        // ── Auto-reconfirm session pagkatapos mag-refresh ──
-        // Dumadaan lang ang confirmSession() sa handleLogin() ng login
-        // pages — pero pag nag-refresh ang isang naka-login nang tab,
-        // dumadaan ito rito (onAuthStateChanged restore), hindi sa
-        // handleLogin(). Kung walang gagawin dito, mananatiling "offline"
-        // ang RTDB status pagkatapos mag-refresh (dahil na-disconnect
-        // muna ang socket sa mismong reload), kahit legit at aktibo pa
-        // ring session ito.
-        //
-        // Bago natin i-auto-confirm, tignan muna natin kung tugma ang
-        // `sessionId` na naka-store sa (tab-scoped) sessionStorage laban
-        // sa `activeSessionId` na naka-record sa Firestore ngayon — ito
-        // ang nagpapatunay na ITO nga ang legit na "may-hawak" ng
-        // kasalukuyang aktibong session (hindi basta ibang tab/device na
-        // sumusubok mag-refresh papasok sa isang session na hindi naman
-        // talaga sa kanya).
+        // ── Session-match gate ──
+        // Bago natin ipakita ang tab na ito bilang "naka-login", tignan
+        // muna natin kung ITO nga ang opisyal/kumpirmadong may-hawak ng
+        // kasalukuyang aktibong session (`activeSessionId` sa Firestore).
+        // Ang `sessionStorage` ay TAB-SCOPED (hindi ito nagshe-share sa
+        // ibang tabs, kahit parehong browser at parehong shared Firebase
+        // Auth session sila) — kaya kung wala pang laman ang
+        // sessionStorage ng tab na ito (hal. bagong tab lang na binuksan,
+        // hindi dumaan sa login page), o hindi na ito tugma (na-superseded
+        // na ng ibang tab/device), ibig sabihin HINDI ito ang legit na
+        // may-hawak ng session — kahit buhay pa ang shared Firebase Auth
+        // session sa likod nito.
         const storedSessionId = sessionStorage.getItem('itfun_sessionId');
-        if (storedSessionId && storedSessionId === userData.activeSessionId) {
+        const isConfirmedActiveSession = storedSessionId && storedSessionId === userData.activeSessionId;
+
+        if (isConfirmedActiveSession) {
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          // ── Auto-reconfirm session pagkatapos mag-refresh ──
+          // Dumadaan lang ang confirmSession() sa handleLogin() ng login
+          // pages — pero pag nag-refresh ang isang naka-login nang tab,
+          // dumadaan ito rito (onAuthStateChanged restore), hindi sa
+          // handleLogin(). Kung walang gagawin dito, mananatiling "offline"
+          // ang RTDB status pagkatapos mag-refresh (dahil na-disconnect
+          // muna ang socket sa mismong reload), kahit legit at aktibo pa
+          // ring session ito.
           confirmSession();
+        } else {
+          // HINDI ito ang legit na may-hawak ng session — huwag ipakita
+          // bilang naka-login, kahit "may" firebaseUser (shared session)
+          // tayo dito. HINDI natin tatawagin ang auth.signOut() dito
+          // (mananatiling buhay ang shared session para sa totoong legit
+          // na tab); sapat na ang hindi pagpakita ng `user` dito.
+          setUser(null);
+          localStorage.removeItem('user');
         }
       }
 
@@ -256,6 +271,61 @@ export function UserProvider({ children }) {
     return () => unsubscribe();
   }, [firebaseUser?.uid]);
 
+  // ── Real-time "kicked out" detector (same-browser multi-tab) ──
+  // Ang lock check sa student_login.jsx/faculty_login.jsx ay CHECK-ON-LOGIN
+  // lang — tinitignan lang niya kung may aktibong session sa MISMONG ORAS
+  // ng pag-login. Wala pang mekanismo dati na "live" na nagre-react sa
+  // panig ng LUMANG tab sa sandaling may BAGONG tab/device na mag-claim ng
+  // session — kaya kung dalawang tab sa PAREHONG browser (na SHARED ang
+  // Firebase Auth session sa pagitan nila), pareho silang nananatiling
+  // "naka-login" sa UI kahit isa lang dapat ang totoong may-hawak.
+  //
+  // Dito, nakikinig tayo nang real-time sa `activeSessionId` field ng
+  // Firestore doc ng account na ito. Kada beses na may bagong pag-login
+  // (kahit sa ibang tab ng PAREHONG browser, o sa ibang device), nagbabago
+  // ang value nito. Kung ang `activeSessionId` na ngayon ay HINDI na tugma
+  // sa sessionId ng TAB NA ITO (naka-store sa sessionStorage, tab-scoped
+  // kaya hindi ito nagshe-share sa ibang tabs), ibig sabihin na-"superseded"
+  // na ang tab na ito — kailangan na nating tuluyan itong i-logout, kahit
+  // hindi ito ni-refresh o ginalaw ng user.
+  //
+  // KRITIKAL: HINDI natin tinatawag ang `auth.signOut()` dito. Dahil SHARED
+  // ang Firebase Auth session sa BUONG BROWSER (lahat ng tabs), kung
+  // tatawagin natin ang signOut() dito, ma-lo-logout DIN nito yung
+  // BAGONG/legit na tab (kung parehong browser sila) — mapapatalsik pati
+  // yung dapat manatiling naka-login. Sapat na na i-clear natin ang LOCAL
+  // React state ng tab na ito lang (`setUser(null)`, tanggalin sa
+  // localStorage) at itulak papunta sa login page — ang totoong Firebase
+  // Auth session mismo ay mananatiling buhay sa background para sa ibang
+  // (legit) tab.
+  useEffect(() => {
+    if (!user?.uid || !user?.role) return;
+
+    const collectionName = user.role === 'faculty' ? 'faculty' : 'students';
+    const unsub = onSnapshot(doc(db, collectionName, user.uid), (snap) => {
+      if (!snap.exists()) return;
+
+      const myTabSessionId = sessionStorage.getItem('itfun_sessionId');
+      // Kung wala pang naka-store na sessionId sa tab na ito (hal. hindi pa
+      // ito ang nag-claim ng session sa una), huwag muna tayong gagawa ng
+      // kahit ano dito — mali-mislead lang tayo. Ang tanging dapat mag-react
+      // dito ay yung tab na TALAGANG naka-claim na dati ng sarili niyang
+      // session (may sessionId na sa sessionStorage niya).
+      if (!myTabSessionId) return;
+
+      const currentActiveSessionId = snap.data().activeSessionId;
+      if (currentActiveSessionId && currentActiveSessionId !== myTabSessionId) {
+        sessionStorage.removeItem('itfun_sessionId');
+        setUser(null);
+        localStorage.removeItem('user');
+        alert('You have been logged out because this account was used in another window or device.');
+        window.location.href = '/';
+      }
+    });
+
+    return () => unsub();
+  }, [user?.uid, user?.role]);
+
   // ── ID token cache (para sa sendBeacon sa ibaba) ──
   // Hindi tayo pwedeng mag-await ng getIdToken() sa loob mismo ng
   // pagehide handler (baka hindi na ito umabot matapos ipatay ng browser
@@ -308,6 +378,13 @@ export function UserProvider({ children }) {
       // handleConfirmLogout mismo), huwag nang doblehin dito.
       if (isLoggingOutRef.current) return;
       if (!idTokenRef.current) return;
+      // KRITIKAL: kung HINDI ito ang kumpirmadong/legit na may-hawak ng
+      // session (hal. isang "bogus" bagong tab na hindi naman kumpirmado
+      // ng session-match gate sa restore path), huwag na tayong magpadala
+      // ng "offline" beacon dito — baka ma-overwrite natin nang mali yung
+      // totoong "online" status ng LEGIT na tab, kahit ito lang mismo yung
+      // nagsasara.
+      if (!isSessionConfirmedRef.current) return;
 
       const payload = JSON.stringify({
         uid: firebaseUser.uid,
