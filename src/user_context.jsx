@@ -420,6 +420,20 @@ export function UserProvider({ children }) {
         uid: firebaseUser.uid,
         idToken: idTokenRef.current,
       });
+      // TAMA na pala ito bilang plain string: kapag walang custom
+      // Content-Type na itinakda (hal. sa pamamagitan ng Blob), default
+      // itong "text/plain;charset=UTF-8" — isa 'to sa CORS-safelisted na
+      // content types, kaya hindi ito nangangailangan ng preflight (OPTIONS)
+      // request. Mahalaga ito dahil ang frontend (Vercel) at backend
+      // (Railway) natin ay CROSS-ORIGIN, at ang `navigator.sendBeacon()`
+      // ay HINDI kayang mag-preflight — kung "application/json" ang
+      // Content-Type (hal. sa pamamagitan ng Blob na may ganitong type),
+      // hindi ito CORS-safe at maaaring hindi umabot nang tama ang
+      // request. Ang backend (`/api/set-offline` sa server.js) ay
+      // sadyang dinisenyo para tanggapin ito bilang raw text
+      // (`express.text({ type: '*/*' })`) at mismo itong nag-JSON.parse()
+      // sa body — kaya tama na ang plain string dito, hindi na kailangan
+      // pang i-Blob/i-type explicitly.
       const sent = navigator.sendBeacon(
         `${import.meta.env.VITE_BACKEND_URL}/api/set-offline`,
         payload
