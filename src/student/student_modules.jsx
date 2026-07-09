@@ -159,7 +159,15 @@ function LearningModules() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, setUser, beginLogout }  = useUser();
-  const initials  = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
+  // KRITIKAL: hindi sapat ang `user ? ... : '?'` lang dito — habang
+  // nagre-restore pa ang buong user data (hal. matapos mag-spam-refresh),
+  // posibleng may `user` object na pero wala pang `firstName`/`lastName`
+  // laman, causing "Cannot read properties of undefined (reading '0')"
+  // kapag na-access ang `[0]` ng undefined value. I-check muna nating
+  // meron talaga bago i-access.
+  const initials = (user && user.firstName && user.lastName)
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : '?';
 
   // Dati, "Yes, Logout" ay `navigate('/')` lang — hindi talaga tumatawag ng
   // auth.signOut(), kaya nananatiling "naka-login" ang Firebase session

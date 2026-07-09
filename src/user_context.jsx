@@ -97,6 +97,27 @@ export function UserProvider({ children }) {
         const userData = { uid: fbUser.uid, ...snap.data() };
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
+
+        // ── Auto-reconfirm session pagkatapos mag-refresh ──
+        // Dumadaan lang ang confirmSession() sa handleLogin() ng login
+        // pages — pero pag nag-refresh ang isang naka-login nang tab,
+        // dumadaan ito rito (onAuthStateChanged restore), hindi sa
+        // handleLogin(). Kung walang gagawin dito, mananatiling "offline"
+        // ang RTDB status pagkatapos mag-refresh (dahil na-disconnect
+        // muna ang socket sa mismong reload), kahit legit at aktibo pa
+        // ring session ito.
+        //
+        // Bago natin i-auto-confirm, tignan muna natin kung tugma ang
+        // `sessionId` na naka-store sa (tab-scoped) sessionStorage laban
+        // sa `activeSessionId` na naka-record sa Firestore ngayon — ito
+        // ang nagpapatunay na ITO nga ang legit na "may-hawak" ng
+        // kasalukuyang aktibong session (hindi basta ibang tab/device na
+        // sumusubok mag-refresh papasok sa isang session na hindi naman
+        // talaga sa kanya).
+        const storedSessionId = sessionStorage.getItem('itfun_sessionId');
+        if (storedSessionId && storedSessionId === userData.activeSessionId) {
+          confirmSession();
+        }
       }
     } else {
       setUser(null);
