@@ -59,6 +59,52 @@ function QuizArena() {
   // players, hindi na yung kanya-kanyang device clock nila.
   const clockOffsetRef = useRef(0);
 
+  // Reusable na "sync + play" function — dapat ITO LAGI ang gamitin sa
+  // anumang pagtawag ng bgMusicRef.play(), kahit saan pa manggaling
+  // (mount-time attempt, countdown-end attempt, o fallback click/touchstart
+  // listener), dahil dito lang nangyayari yung pag-compute ng tamang loop
+  // position gamit ang server-corrected time.
+  //
+  // Bakit importante 'to: sa mobile browsers (lalo na iOS Safari, strict
+  // Chrome mobile), madalas ma-block ng autoplay policy yung play() call na
+  // nasa loob ng setInterval countdown, kasi hindi ito itinuturing na
+  // "direktang" konektado sa isang totoong click/tap. Dati, yung fallback
+  // listener na nag-uunlock nito ay plain play() lang ang tinatawag — kaya
+  // nagsisimula ang bgm sa maling posisyon (o sa 0) sa cellphone, samantalang
+  // tuloy-tuloy na yung sa computer (na hindi na-block). Sa pag-gamit ng
+  // parehong function sa lahat ng play attempts, kahit kailan talaga
+  // ma-unlock sa cellphone, tama pa rin ang posisyon niya sa loop.
+  const playSyncedBgm = () => {
+    const music = bgMusicRef.current;
+    if (!music) return;
+
+    const syncPosition = () => {
+      const duration = music.duration;
+      if (duration && isFinite(duration) && duration > 0) {
+        const serverNow = Date.now() + clockOffsetRef.current;
+        music.currentTime = (serverNow / 1000) % duration;
+      }
+      // Kung wala pang available na duration (hal. mabagal ang metadata
+      // load), i-skip na lang ang sync at mag-play mula sa kasalukuyang
+      // posisyon — mas mabuti pa ring may tumugtog kaysa mag-error at
+      // walang bgm.
+    };
+
+    syncPosition();
+    music.play().catch(() => {
+      // Naka-block ng autoplay policy. Huling safety net: hintayin ang
+      // susunod na click/tap para i-unlock — pero sa oras na 'yon, i-sync
+      // muna ULIT ang posisyon (server time na naman ang basehan) bago
+      // mag-play, para hindi lumihis sa ibang players.
+      const resumeOnInteraction = () => {
+        syncPosition();
+        music.play().catch(() => {});
+      };
+      window.addEventListener('click', resumeOnInteraction, { once: true });
+      window.addEventListener('touchstart', resumeOnInteraction, { once: true });
+    });
+  };
+
   // Isang beses lang gagawa ng AudioContext, re-use sa dalawang sound
   // effect (correct/wrong) — kailangan ito para ma-"boost" pa natin ang
   // lakas ng tunog lampas sa normal na max (1.0) ng <audio volume>, dahil
@@ -196,21 +242,12 @@ function QuizArena() {
           clearInterval(countdownIntervalRef.current);
           countdownIntervalRef.current = null;
           setCountdown(null);
-          if (bgMusicRef.current) {
-            const music = bgMusicRef.current;
-            // I-sync ang loop position gamit ang server-corrected na oras
-            // (Date.now() + offset = "server time"), sa halip na sariling
-            // device clock lang. Kung hindi pa available yung duration
-            // (hal. mabagal ang metadata load), i-skip na lang ito at
-            // mag-play na lang mula sa kasalukuyang posisyon — mas mabuti
-            // pa ring may tumugtog kaysa mag-error at walang bgm.
-            const duration = music.duration;
-            if (duration && isFinite(duration) && duration > 0) {
-              const serverNow = Date.now() + clockOffsetRef.current;
-              music.currentTime = (serverNow / 1000) % duration;
-            }
-            music.play().catch(() => {});
-          }
+          // Gamitin ang reusable playSyncedBgm — kino-compute nito ang
+          // tamang loop position gamit ang server-corrected time bago
+          // mag-play, at kung ma-block ng mobile autoplay policy, may sarili
+          // itong click/touchstart fallback na muling nag-sync bago mag-play
+          // (tingnan yung definition ng function sa itaas).
+          playSyncedBgm();
         } else {
           setCountdown(n);
         }
@@ -313,19 +350,15 @@ function QuizArena() {
     music.volume = 0.15;
     bgMusicRef.current = music;
 
-    music.play().catch(() => {
-      // Posibleng ma-block ng browser autoplay policy kung walang direct
-      // user gesture na naunang naganap bago pumasok sa page na ito (hal.
-      // direktang pag-type ng URL, o auto-rejoin pagkatapos ng refresh).
-      // Bilang huling safety net lang ito (tahimik, walang UI) — ang
-      // pangunahing paraan na ngayon para mapatugtog ang bgm ay sa
-      // pagtapos ng 3-2-1 countdown (tingnan yung 'quiz-started' handler).
-      const resumeOnInteraction = () => {
-        music.play().catch(() => {});
-      };
-      window.addEventListener('click', resumeOnInteraction, { once: true });
-      window.addEventListener('touchstart', resumeOnInteraction, { once: true });
-    });
+    // Gamitin ang reusable playSyncedBgm dito rin (sa halip na hiwalay na
+    // plain play()/fallback), para iisang pinagmumulan lang ng sync logic
+    // ang meron tayo kahit saan pa mangaling ang play attempt. Sa mount
+    // time, malamang 0 pa lang ang clockOffsetRef (hindi pa dumarating ang
+    // 'quiz-started' sa ganitong point), kaya effectively same lang ito sa
+    // dating behavior dito — pero kung sakaling ma-block ito ng autoplay
+    // policy at ma-unlock lang sa fallback click pagkatapos na ng
+    // 'quiz-started', tama pa rin ang gagamiting offset sa sync.
+    playSyncedBgm();
 
     // Cleanup: sa unmount ng QuizArena (Exit button, room-closed,
     // anumang navigation palayo) — ito ang huling linya ng depensa para
