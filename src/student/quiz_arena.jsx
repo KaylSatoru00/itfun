@@ -63,21 +63,31 @@ function QuizArena() {
   // May fallback sa plain <audio> kung sakaling hindi supported ng browser
   // ang Web Audio API, o kung na-block ang MediaElementSource dahil sa
   // CORS/autoplay restrictions.
-  const playBoostedSfx = (url, gain = 1.8) => {
+  //
+  // Async na ito ngayon, at sadyang in-await ang ctx.resume() bago mag-
+  // connect/play — dati, hindi ito naka-await, kaya kung na-"suspend" ng
+  // browser yung AudioContext (nangyayari ito kusa kapag matagal walang
+  // tumutunog, part ng power-saving policy), pumapasok agad ang .play()
+  // habang hindi pa talaga tapos ang pag-resume ng context, resulta:
+  // tahimik lang — walang error, pero walang naririnig na tunog. Ito yung
+  // dahilan ng random/paminsan-minsang "walang sound" na naeexperience.
+  const playBoostedSfx = async (url, gain = 1.8) => {
     try {
       if (!sfxAudioCtxRef.current) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         sfxAudioCtxRef.current = new AudioContextClass();
       }
       const ctx = sfxAudioCtxRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
 
       const audioEl = new Audio(url);
       const source = ctx.createMediaElementSource(audioEl);
       const gainNode = ctx.createGain();
       gainNode.gain.value = gain;
       source.connect(gainNode).connect(ctx.destination);
-      audioEl.play().catch(() => {});
+      await audioEl.play();
     } catch (err) {
       const fallback = new Audio(url);
       fallback.play().catch(() => {});
