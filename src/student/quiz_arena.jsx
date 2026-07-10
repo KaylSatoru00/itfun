@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../socket_context';
+import { useUser } from '../user_context';
 import './quiz_arena.css';
 
 function QuizArena() {
   const navigate = useNavigate();
   const location = useLocation();
   const socket = useSocket();
+  const { user } = useUser();
 
   const params = new URLSearchParams(location.search);
   const pin = params.get('pin');
@@ -39,6 +41,11 @@ function QuizArena() {
       return;
     }
     if (!socket) return;
+    // Hintayin munang ma-load ang authenticated user bago mag-attempt ng
+    // rejoin-room — kailangan na ng server ang uid ngayon (hindi na sapat
+    // ang playerName lang), kaya kung wala pa itong available, i-rerun na
+    // lang ang effect na ito once na naka-set na si user (nasa deps array).
+    if (!user?.uid) return;
 
     console.log('🔌 QuizArena socket connected:', socket.id);
 
@@ -55,7 +62,7 @@ function QuizArena() {
     const savedName = localStorage.getItem('itfun_playerName');
 
     if (savedPin === pin && savedName) {
-      socket.emit('rejoin-room', { pin, playerName: savedName }, (response) => {
+      socket.emit('rejoin-room', { pin, playerName: savedName, uid: user.uid }, (response) => {
         console.log('🔁 Rejoin response:', response);
         if (!response?.success) {
           // Room no longer exists o hindi na-verify — balik sa lobby
@@ -162,7 +169,7 @@ function QuizArena() {
       socket.off('quiz-finished');
       socket.off('room-closed');
     };
-  }, [socket, pin, navigate]);
+  }, [socket, pin, navigate, user]);
 
   // ── Sound effects: correct/wrong ──
   // Tumutunog base lang sa SARILING sagot ng player (selectedAnswer), hindi
