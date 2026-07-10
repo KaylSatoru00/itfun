@@ -29,6 +29,23 @@ export function UserProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // ── Auth-loading flag (para sa ProtectedRoute / RedirectIfAuthed) ──
+  // `true` habang hindi pa natin alam ang FINAL na sagot kung may
+  // legit/kumpirmadong session ba o wala. Simula itong `true` sa unang
+  // mount, at `false` lang ito matapos MAKUMPLETO (hindi lang ma-simulan)
+  // ang unang pagdaan sa buong restore-gate logic sa ibaba — kasama na
+  // ang `getDocFromServer()` + session-match check, hindi lang ang unang
+  // pag-fire ng `onAuthStateChanged`. Kung mauna itong maging `false` bago
+  // matapos ang session-match check, may window pa ring makikita ang
+  // consumer (`ProtectedRoute`) kung saan `authLoading === false` na pero
+  // `user` ay `null` pa rin — ibig sabihin babalik lang tayo sa parehong
+  // premature-redirect na problema, kaso ngayon walang "loading" excuse
+  // pa. Ito rin ang dahilan kaya ito HIWALAY sa `dataReady` sa itaas —
+  // ibang layunin ang `dataReady` (gate para sa heartbeat writes lang),
+  // at kondisyonal lang itong naging `true` (fbUser branch lang). Dapat
+  // laging maka-resolve ang `authLoading`, kahit walang fbUser.
+  const [authLoading, setAuthLoading] = useState(true);
+
   // ── Auth-confirmed user (source of truth para sa RTDB/Firestore writes) ──
   // Iba ito sa `user` sa itaas — yung `user` ay pwedeng galing pa lang sa
   // localStorage restore (optimistic UI, para hindi mag-flash ng "logged out"
@@ -213,7 +230,20 @@ export function UserProvider({ children }) {
     // ang normal na restore logic sa ibaba sa SUSUNOD na auth state change
     // (o sa susunod na refresh), kung saan tapos na at consistent na ang
     // Firestore write.
-    if (loginInProgressRef.current) return;
+    if (loginInProgressRef.current) {
+      // Hindi natin ito ipinagpaliban sa dulo ng buong function (tulad ng
+      // ibang branch) dahil sa fresh-login flow na ito, ang login page
+      // mismo (student_login.jsx/faculty_login.jsx) ang direktang bahala
+      // sa sarili niyang setUser()/confirmSession() — hindi na aabutan ng
+      // ibang onAuthStateChanged fire bago mag-navigate palayo mula sa
+      // login page. Kung hindi natin ire-resolve dito ang authLoading,
+      // mananatili itong `true` magpakailanman pagkatapos ng fresh login
+      // (walang ibang pagkakataon pang mag-fire ulit ang callback na ito),
+      // kaya permanenteng ma-stuck sa loading state ang ProtectedRoute sa
+      // sandaling ma-navigate patungo sa unang protected page.
+      setAuthLoading(false);
+      return;
+    }
 
     setDataReady(false);
 
@@ -284,9 +314,11 @@ export function UserProvider({ children }) {
       // effect sa ibaba nang walang katakot-takot na makipag-race pa sa
       // atin.
       setDataReady(true);
+      setAuthLoading(false);
     } else {
       setUser(null);
       sessionStorage.removeItem('user');
+      setAuthLoading(false);
     }
     });
   });
@@ -591,7 +623,7 @@ export function UserProvider({ children }) {
   }, [firebaseUser?.uid]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, beginLogout, confirmSession, beginLogin, endLogin, logout }}>
+    <UserContext.Provider value={{ user, setUser, authLoading, beginLogout, confirmSession, beginLogin, endLogin, logout }}>
       {children}
     </UserContext.Provider>
   );

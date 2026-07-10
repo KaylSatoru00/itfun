@@ -6,7 +6,7 @@ import { useUser } from './user_context';
 // i-redirect palayo papunta sa learning-modules — walang paraan para
 // makarating ang authenticated user pabalik sa form mismo.
 export default function RedirectIfAuthed({ children }) {
-  const { user } = useUser();
+  const { user, authLoading } = useUser();
 
   // ── bfcache handling ──
   // Kapag pinindot ang Back papunta sa isang page na naka-imbak sa bfcache
@@ -28,6 +28,16 @@ export default function RedirectIfAuthed({ children }) {
     window.addEventListener('pageshow', handlePageShow);
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, [user?.uid]);
+
+  // Kaparehong dahilan ng ProtectedRoute: habang `authLoading`, hindi pa
+  // FINAL ang `user` na makikita natin dito — huwag munang magpasya kung
+  // ipapakita ang login form o i-redirect palayo, dahil kung magpasya
+  // tayo nang maaga (base sa `user === null` na optimistic/in-flight pa
+  // lang), makikita ng isang naka-login nang tab ang login form
+  // (reverse flash) bago siya matulak palabas pabalik sa learning-modules.
+  if (authLoading) {
+    return null;
+  }
 
   if (user?.uid) {
     return <Navigate to="/learning-modules" replace />;
