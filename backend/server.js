@@ -329,6 +329,17 @@ async function validateRoomJoin(pin, uid) {
   const room = roomManager.getRoom(pin);
   if (!room) return { ok: false, error: 'Room not found' };
 
+  // ── KRITIKAL: i-check muna kung existing player na pala 'to (parehong
+  // uid) bago i-apply ang mga check sa ibaba — 'yung mga check na 'yon
+  // (playing/full) ay para lang sa TUNAY na bagong tao na sasali. Kung
+  // legit na kasapi na siya ng room (hal. galing sa "Join Room" modal gamit
+  // ang PIN sa halip na sa auto-rejoin flow), rejoin ang tamang landas para
+  // sa kanya — hindi dapat siya harangan ng "Game already in progress".
+  const existingPlayer = uid ? roomManager.findPlayerByUid(pin, uid) : null;
+  if (existingPlayer) {
+    return { ok: true, room, isRejoin: true };
+  }
+
   if (room.status === 'playing') {
     return { ok: false, error: 'Game already in progress' };
   }
@@ -349,7 +360,152 @@ async function validateRoomJoin(pin, uid) {
     };
   }
 
-  return { ok: true, room };
+  return { ok: true, room, isRejoin: false };
+}
+
+// ── Shared rejoin logic — ginagamit ng DALAWA — ng totoong `rejoin-room`
+// socket event (auto-rejoin sa quiz_arena.jsx / waiting_lobby_*.jsx) AT ng
+// `join-room` handler kapag na-detect na existing player pala (parehong
+// uid) ang tumatawag gamit ang "Join Room" modal/PIN sa halip na sa
+// auto-rejoin flow — iisang pinagmumulan ng truth para hindi mag-diverge
+// ang dalawang paraan ng pagbalik sa room.
+async function performRejoin(socket, data, callback) {
+  try {
+    const { pin, playerName, uid } = data;
+
+    const room = roomManager.getRoom(pin);
+    if (!room) {
+      callback({ success: false, error: 'Room not found' });
+      return;
+    }
+
+    // ── KRITIKAL: identity ang batayan dito, hindi playerName ──
+    // Dating basta `findPlayerByName(pin, playerName)` lang — ibig
+    // sabihin kahit sinong socket, basta may tumugmang display-name
+    // string, ay nakakapasok sa slot na 'yon (kahit ibang account/
+    // ibang tao talaga). Kaya dito, `uid` (mula sa authenticated
+    // Firebase account) ang TANGING pagbabatayan — hindi na
+    // sapat ang tumugmang pangalan lang.
+    if (!uid) {
+      callback({ success: false, error: 'Missing uid — please log in again.' });
+      return;
+    }
+
+    const existingPlayer = roomManager.findPlayerByUid(pin, uid);
+    if (!existingPlayer) {
+      // Sadyang generic ang error message — hindi natin gustong ibunyag
+      // kung "may player nga pala dito pero ibang uid" (info leak) vs
+      // "walang player talaga" — pareho lang dapat itong itsura sa
+      // kabilang panig.
+      callback({ success: false, error: 'Player not found in room' });
+      return;
+    }
+
+    // Kung may naka-schedule pang pagtanggal galing sa disconnect handler
+    // (waiting-room grace period), kanselahin na — nag-rejoin naman pala
+    // siya sa oras. Naka-uid din ang key na 'to ngayon (dating playerName)
+    // para consistent sa bagong identity model.
+    const timerKey = `${pin}:${uid}`;
+    const pendingTimer = disconnectTimers.get(timerKey);
+    if (pendingTimer) {
+      clearTimeout(pendingTimer);
+      disconnectTimers.delete(timerKey);
+    }
+
+    // Kung naka-schedule ang room para sa abandoned-room cleanup (dahil
+    // dati'y wala nang connected na player), kanselahin na rin — buhay na
+    // ulit ang room.
+    const pendingAbandonTimer = abandonedRoomTimers.get(pin);
+    if (pendingAbandonTimer) {
+      clearTimeout(pendingAbandonTimer);
+      abandonedRoomTimers.delete(pin);
+    }
+
+    const wasHost = existingPlayer.id === room.hostId;
+    const oldSocketId = existingPlayer.id;
+    // Gamitin ang SERVER-SIDE na naka-record na pangalan ng player
+    // (`existingPlayer.name`), hindi na yung `playerName` galing sa
+    // client payload — para hindi ito magamit bilang "display name
+    // spoofing" channel sa mga tumitingin (leaderboard, room-update,
+    // atbp.) sa panahon ng rejoin.
+    const verifiedPlayerName = existingPlayer.name;
+    roomManager.reassignPlayerSocket(pin, uid, socket.id);
+    // Lumitaw ulit siya sa leaderboard ng ibang players.
+    roomManager.markPlayerConnected(pin, uid);
+
+    // Kung may ongoing quiz, dalhin din yung "nakasagot na ba siya" status
+    // papunta sa bagong socket.id — kung hindi, makakasagot siya ulit sa
+    // parehong tanong pagkatapos ng refresh.
+    if (room.quizEngine) {
+      room.quizEngine.reassignPlayerId(oldSocketId, socket.id);
+    }
+
+    socket.join(pin);
+    socket.data.roomPin = pin;
+    socket.data.playerId = socket.id;
+    socket.data.playerName = verifiedPlayerName;
+    socket.data.uid = uid;
+    socket.data.isHost = wasHost;
+
+    let state;
+    if (room.status === 'playing' && room.quizEngine) {
+      state = room.quizEngine.getState(socket.id);
+    } else if (room.status === 'finished') {
+      state = {
+        finished: true,
+        players: room.players
+          .slice()
+          .sort((a, b) => b.score - a.score)
+          .map((p, i) => ({ ...p, rank: i + 1 })),
+      };
+    } else {
+      // Room pa lang naka-'waiting' — hindi pa nagsisimula yung quiz
+      state = {
+        finished: false,
+        resultsShown: false,
+        question: null,
+        questionIndex: 0,
+        totalQuestions: room.questions.length,
+        timeLeft: 30,
+        maxTime: 30,
+        players: room.players,
+      };
+    }
+
+    console.log(`🔁 ${verifiedPlayerName} (uid ${uid}) rejoined room ${pin} as ${socket.id}`);
+
+    // Huwag ipasa yung buong `room` object — may room.quizEngine na
+    // circular reference pabalik sa room mismo (quizEngine.room === room),
+    // kaya kapag sinubukan ng socket.io i-serialize 'yon, mag-i-infinite
+    // loop ito sa hasBinary() check at mag-crash ng "Maximum call stack
+    // size exceeded". Gumawa na lang ng safe/flat na summary.
+    const roomSummary = {
+      pin: room.pin,
+      hostId: room.hostId,
+      hostName: room.hostName,
+      moduleId: room.moduleId,
+      lessonId: room.lessonId,
+      quizType: room.quizType,
+      status: room.status,
+      players: room.players,
+    };
+
+    callback({ success: true, state, isHost: wasHost, room: roomSummary });
+
+    io.to(pin).emit('player-reconnected', {
+      playerId: socket.id,
+      playerName: verifiedPlayerName,
+    });
+
+    io.to(pin).emit('room-update', {
+      players: roomManager.getVisiblePlayers(pin),
+      hostName: room.hostName,
+      isHost: wasHost,
+    });
+  } catch (error) {
+    console.error('Rejoin room error:', error);
+    callback({ success: false, error: error.message });
+  }
 }
 
 // ── Daily quiz-generation quota (per-user, Firestore-backed) ──
@@ -611,6 +767,18 @@ io.on('connection', (socket) => {
         return;
       }
 
+      // Kung nalaman ng validateRoomJoin na existing player na pala 'to
+      // (may kasalukuyang record na sa room na tumutugma ang uid) —
+      // hal. legit na player na bumalik gamit ang "Join Room" modal/PIN
+      // sa halip na sa auto-rejoin flow — huwag na siyang ituring na
+      // BAGONG pagsali. I-reroute papunta sa parehong reassignment logic
+      // ng rejoin-room, para hindi gumawa ng duplicate na player slot at
+      // para hindi rin siya harangan ng "Game already in progress" kahit
+      // ongoing na ang quiz.
+      if (result.isRejoin) {
+        return performRejoin(socket, { pin, playerName, uid }, callback);
+      }
+
       const room = result.room;
 
       const player = roomManager.addPlayer(pin, {
@@ -647,142 +815,7 @@ io.on('connection', (socket) => {
 
   // ── Rejoin Room (e.g. after page refresh) ──
   socket.on('rejoin-room', async (data, callback) => {
-    try {
-      const { pin, playerName, uid } = data;
-
-      const room = roomManager.getRoom(pin);
-      if (!room) {
-        callback({ success: false, error: 'Room not found' });
-        return;
-      }
-
-      // ── KRITIKAL: identity ang batayan dito, hindi playerName ──
-      // Dating basta `findPlayerByName(pin, playerName)` lang — ibig
-      // sabihin kahit sinong socket, basta may tumugmang display-name
-      // string, ay nakakapasok sa slot na 'yon (kahit ibang account/
-      // ibang tao talaga). Kaya dito, `uid` (mula sa authenticated
-      // Firebase account) ang TANGING pagbabatayan — hindi na
-      // sapat ang tumugmang pangalan lang.
-      if (!uid) {
-        callback({ success: false, error: 'Missing uid — please log in again.' });
-        return;
-      }
-
-      const existingPlayer = roomManager.findPlayerByUid(pin, uid);
-      if (!existingPlayer) {
-        // Sadyang generic ang error message — hindi natin gustong ibunyag
-        // kung "may player nga pala dito pero ibang uid" (info leak) vs
-        // "walang player talaga" — pareho lang dapat itong itsura sa
-        // kabilang panig.
-        callback({ success: false, error: 'Player not found in room' });
-        return;
-      }
-
-      // Kung may naka-schedule pang pagtanggal galing sa disconnect handler
-      // (waiting-room grace period), kanselahin na — nag-rejoin naman pala
-      // siya sa oras. Naka-uid din ang key na 'to ngayon (dating playerName)
-      // para consistent sa bagong identity model.
-      const timerKey = `${pin}:${uid}`;
-      const pendingTimer = disconnectTimers.get(timerKey);
-      if (pendingTimer) {
-        clearTimeout(pendingTimer);
-        disconnectTimers.delete(timerKey);
-      }
-
-      // Kung naka-schedule ang room para sa abandoned-room cleanup (dahil
-      // dati'y wala nang connected na player), kanselahin na rin — buhay na
-      // ulit ang room.
-      const pendingAbandonTimer = abandonedRoomTimers.get(pin);
-      if (pendingAbandonTimer) {
-        clearTimeout(pendingAbandonTimer);
-        abandonedRoomTimers.delete(pin);
-      }
-
-      const wasHost = existingPlayer.id === room.hostId;
-      const oldSocketId = existingPlayer.id;
-      // Gamitin ang SERVER-SIDE na naka-record na pangalan ng player
-      // (`existingPlayer.name`), hindi na yung `playerName` galing sa
-      // client payload — para hindi ito magamit bilang "display name
-      // spoofing" channel sa mga tumitingin (leaderboard, room-update,
-      // atbp.) sa panahon ng rejoin.
-      const verifiedPlayerName = existingPlayer.name;
-      roomManager.reassignPlayerSocket(pin, uid, socket.id);
-      // Lumitaw ulit siya sa leaderboard ng ibang players.
-      roomManager.markPlayerConnected(pin, uid);
-
-      // Kung may ongoing quiz, dalhin din yung "nakasagot na ba siya" status
-      // papunta sa bagong socket.id — kung hindi, makakasagot siya ulit sa
-      // parehong tanong pagkatapos ng refresh.
-      if (room.quizEngine) {
-        room.quizEngine.reassignPlayerId(oldSocketId, socket.id);
-      }
-
-      socket.join(pin);
-      socket.data.roomPin = pin;
-      socket.data.playerId = socket.id;
-      socket.data.playerName = verifiedPlayerName;
-      socket.data.uid = uid;
-      socket.data.isHost = wasHost;
-
-      let state;
-      if (room.status === 'playing' && room.quizEngine) {
-        state = room.quizEngine.getState(socket.id);
-      } else if (room.status === 'finished') {
-        state = {
-          finished: true,
-          players: room.players
-            .slice()
-            .sort((a, b) => b.score - a.score)
-            .map((p, i) => ({ ...p, rank: i + 1 })),
-        };
-      } else {
-        // Room pa lang naka-'waiting' — hindi pa nagsisimula yung quiz
-        state = {
-          finished: false,
-          resultsShown: false,
-          question: null,
-          questionIndex: 0,
-          totalQuestions: room.questions.length,
-          timeLeft: 30,
-          maxTime: 30,
-          players: room.players,
-        };
-      }
-
-      console.log(`🔁 ${verifiedPlayerName} (uid ${uid}) rejoined room ${pin} as ${socket.id}`);
-
-      // Huwag ipasa yung buong `room` object — may room.quizEngine na
-      // circular reference pabalik sa room mismo (quizEngine.room === room),
-      // kaya kapag sinubukan ng socket.io i-serialize 'yon, mag-i-infinite
-      // loop ito sa hasBinary() check at mag-crash ng "Maximum call stack
-      // size exceeded". Gumawa na lang ng safe/flat na summary.
-      const roomSummary = {
-        pin: room.pin,
-        hostId: room.hostId,
-        hostName: room.hostName,
-        moduleId: room.moduleId,
-        lessonId: room.lessonId,
-        quizType: room.quizType,
-        status: room.status,
-        players: room.players,
-      };
-
-      callback({ success: true, state, isHost: wasHost, room: roomSummary });
-
-      io.to(pin).emit('player-reconnected', {
-        playerId: socket.id,
-        playerName: verifiedPlayerName,
-      });
-
-      io.to(pin).emit('room-update', {
-        players: roomManager.getVisiblePlayers(pin),
-        hostName: room.hostName,
-        isHost: wasHost,
-      });
-    } catch (error) {
-      console.error('Rejoin room error:', error);
-      callback({ success: false, error: error.message });
-    }
+    await performRejoin(socket, data, callback);
   });
 
   // ── Start Quiz ──
