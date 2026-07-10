@@ -35,6 +35,13 @@ function QuizArena() {
   // (highlight sa options, reveal sa input/blank).
   const [revealedAnswer, setRevealedAnswer] = useState(null);
 
+  // ── Background music (Quiz Arena ambiance) ──
+  // Ref, hindi state — para hindi ito ma-recreate sa bawat re-render (kahit
+  // ilang beses mag-re-render ang component dahil sa ibang state changes
+  // tulad ng timer tick, currentQuestion, atbp.). Iisang Audio object lang
+  // ito, buong buhay ng session.
+  const bgMusicRef = useRef(null);
+
   useEffect(() => {
     if (!pin) {
       navigate('/pvp-quiz');
@@ -170,6 +177,60 @@ function QuizArena() {
       socket.off('room-closed');
     };
   }, [socket, pin, navigate, user]);
+
+  // ── Background music: start + loop + cleanup ──
+  // Isang beses lang tumatakbo ito (empty deps) — sa sandaling ma-mount
+  // ang QuizArena, kaagad na gagawa ng IISANG Audio instance (naka-store
+  // sa ref, hindi state) at agad na patutugtugin ito, naka-loop, sa 50%
+  // volume. Dahil sa empty dependency array, hindi ito mababago o
+  // madu-duplicate kahit ilang beses pang mag-re-render ang component
+  // dahil sa ibang state (timer, currentQuestion, atbp.) — iisa lang ang
+  // instance sa buong buhay ng component, mula mount hanggang unmount.
+  useEffect(() => {
+    const music = new Audio('/sounds/quiz-arena-bgm.mp3');
+    music.loop = true;
+    music.volume = 0.5;
+    bgMusicRef.current = music;
+
+    music.play().catch(() => {
+      // Posibleng ma-block ng browser autoplay policy kung walang direct
+      // user gesture na naunang naganap bago pumasok sa page na ito (hal.
+      // direktang pag-type ng URL, o auto-rejoin pagkatapos ng refresh).
+      // Sa halip na basta sumuko, subukan na lang ulit i-play sa unang
+      // click/tap ng user saan man sa page — isang beses lang ito
+      // susubukan ({ once: true }), tapos aalisin na ang listener.
+      const resumeOnInteraction = () => {
+        music.play().catch(() => {});
+      };
+      window.addEventListener('click', resumeOnInteraction, { once: true });
+    });
+
+    // Cleanup: sa unmount ng QuizArena (Exit button, room-closed,
+    // anumang navigation palayo) — ito ang huling linya ng depensa para
+    // hindi na patuloy na tumugtog ang music kahit umalis na ang player
+    // sa page.
+    return () => {
+      music.pause();
+      music.currentTime = 0;
+      bgMusicRef.current = null;
+    };
+  }, []);
+
+  // ── Background music: itigil agad pagkatapos ng quiz ──
+  // Hiwalay na effect ito sa itaas dahil dapat itong tumakbo AGAD sa
+  // mismong sandaling maging `true` ang `gameFinished` — hindi pwedeng
+  // hintayin pa ang unmount, dahil nananatili pa ang player sa Final
+  // Results screen (may Exit button pa) matapos matapos ang quiz. Kung
+  // aasa lang tayo sa cleanup ng effect sa itaas, patuloy pa ring
+  // tutunog ang music habang nakatingin ang player sa results — mali
+  // 'yon base sa expected behavior (dapat tumigil "immediately" sa
+  // sandaling matapos ang session, hindi lang sa sandaling umalis siya).
+  useEffect(() => {
+    if (gameFinished && bgMusicRef.current) {
+      bgMusicRef.current.pause();
+      bgMusicRef.current.currentTime = 0;
+    }
+  }, [gameFinished]);
 
   // ── Sound effects: correct/wrong ──
   // Tumutunog base lang sa SARILING sagot ng player (selectedAnswer), hindi
