@@ -35,6 +35,15 @@ function QuizArena() {
   // (highlight sa options, reveal sa input/blank).
   const [revealedAnswer, setRevealedAnswer] = useState(null);
 
+  // 3-2-1 countdown na ipinapakita pagka-start ng quiz (pagdating ng
+  // 'quiz-started'), bago pa lumabas yung unang tanong. Ang autoplay ng
+  // bgm ay sinasabay natin sa pagtapos ng countdown na ito (pagdating sa
+  // "1"), dahil ito na yung pinaka-malamang na oras na may user activation
+  // na sa tab (mula sa pag-click ng host/player sa "Start"/"Ready" bago
+  // pumasok dito), kaysa umasa na lang sa random click sa unang sagot.
+  const [countdown, setCountdown] = useState(null);
+  const countdownIntervalRef = useRef(null);
+
   // ── Background music (Quiz Arena ambiance) ──
   // Ref, hindi state — para hindi ito ma-recreate sa bawat re-render (kahit
   // ilang beses mag-re-render ang component dahil sa ibang state changes
@@ -111,10 +120,37 @@ function QuizArena() {
       console.log('🎮 Quiz started:', data);
       setTotalQuestions(data.totalQuestions);
       setPlayers(data.players);
+
+      // Simulan yung 3-2-1 countdown. Pagdating sa 0 (tapos na ang "1"),
+      // saka pa lang natin susubukang i-play ang bgm — sadyang hiwalay ito
+      // sa mount-time play() attempt sa itaas, dahil mas malamang na sa
+      // sandaling ito ay confirmed na yung timing na aabot na ang unang
+      // tanong, kaya sabay-sabay silang mararamdaman ng player.
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      let n = 3;
+      setCountdown(n);
+      countdownIntervalRef.current = setInterval(() => {
+        n -= 1;
+        if (n <= 0) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+          setCountdown(null);
+          if (bgMusicRef.current) {
+            bgMusicRef.current.play().catch(() => {});
+          }
+        } else {
+          setCountdown(n);
+        }
+      }, 1000);
     });
 
     socket.on('new-question', (data) => {
       console.log('📨 New question received:', data.questionIndex);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      setCountdown(null);
       setCurrentQuestion(data.question);
       setQuestionIndex(data.questionIndex);
       setTotalQuestions(data.totalQuestions);
@@ -175,6 +211,10 @@ function QuizArena() {
       socket.off('round-results');
       socket.off('quiz-finished');
       socket.off('room-closed');
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
     };
   }, [socket, pin, navigate, user]);
 
@@ -196,13 +236,14 @@ function QuizArena() {
       // Posibleng ma-block ng browser autoplay policy kung walang direct
       // user gesture na naunang naganap bago pumasok sa page na ito (hal.
       // direktang pag-type ng URL, o auto-rejoin pagkatapos ng refresh).
-      // Sa halip na basta sumuko, subukan na lang ulit i-play sa unang
-      // click/tap ng user saan man sa page — isang beses lang ito
-      // susubukan ({ once: true }), tapos aalisin na ang listener.
+      // Bilang huling safety net lang ito (tahimik, walang UI) — ang
+      // pangunahing paraan na ngayon para mapatugtog ang bgm ay sa
+      // pagtapos ng 3-2-1 countdown (tingnan yung 'quiz-started' handler).
       const resumeOnInteraction = () => {
         music.play().catch(() => {});
       };
       window.addEventListener('click', resumeOnInteraction, { once: true });
+      window.addEventListener('touchstart', resumeOnInteraction, { once: true });
     });
 
     // Cleanup: sa unmount ng QuizArena (Exit button, room-closed,
@@ -454,7 +495,24 @@ function QuizArena() {
     return (
       <div className="arena-panel">
         <div className="arena-loading">
-          <p>Waiting for the quiz to start...</p>
+          <AnimatePresence mode="wait">
+            {countdown ? (
+              <motion.p
+                key={countdown}
+                className="countdown-number"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.4 }}
+                transition={{ duration: 0.3 }}
+              >
+                {countdown}
+              </motion.p>
+            ) : (
+              <motion.p key="waiting" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                Waiting for the quiz to start...
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     );
