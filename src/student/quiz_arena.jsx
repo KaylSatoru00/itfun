@@ -51,6 +51,39 @@ function QuizArena() {
   // ito, buong buhay ng session.
   const bgMusicRef = useRef(null);
 
+  // Isang beses lang gagawa ng AudioContext, re-use sa dalawang sound
+  // effect (correct/wrong) — kailangan ito para ma-"boost" pa natin ang
+  // lakas ng tunog lampas sa normal na max (1.0) ng <audio volume>, dahil
+  // hanggang 1.0 lang ang kaya ng plain volume property kahit anong laki
+  // pa ilagay natin dito.
+  const sfxAudioCtxRef = useRef(null);
+
+  // Pinapatugtog ang isang sound effect na naka-boost ang lakas gamit ang
+  // Web Audio API (GainNode > 1.0 = mas malakas pa sa "normal max").
+  // May fallback sa plain <audio> kung sakaling hindi supported ng browser
+  // ang Web Audio API, o kung na-block ang MediaElementSource dahil sa
+  // CORS/autoplay restrictions.
+  const playBoostedSfx = (url, gain = 1.8) => {
+    try {
+      if (!sfxAudioCtxRef.current) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        sfxAudioCtxRef.current = new AudioContextClass();
+      }
+      const ctx = sfxAudioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const audioEl = new Audio(url);
+      const source = ctx.createMediaElementSource(audioEl);
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = gain;
+      source.connect(gainNode).connect(ctx.destination);
+      audioEl.play().catch(() => {});
+    } catch (err) {
+      const fallback = new Audio(url);
+      fallback.play().catch(() => {});
+    }
+  };
+
   useEffect(() => {
     if (!pin) {
       navigate('/pvp-quiz');
@@ -229,7 +262,11 @@ function QuizArena() {
   useEffect(() => {
     const music = new Audio('/sounds/quiz-arena-bgm.mp3');
     music.loop = true;
-    music.volume = 0.5;
+    // Nilagyan ko na lang ito ng mas mababang volume (dati 0.5) dahil
+    // sobrang lakas pa rin siya kahit kasabay na ng ibang sounds ng laro —
+    // 0.15 na lang para background ambiance lang ang dating, hindi
+    // nangingibabaw sa sound effects.
+    music.volume = 0.15;
     bgMusicRef.current = music;
 
     music.play().catch(() => {
@@ -294,16 +331,12 @@ function QuizArena() {
         selectedAnswer.trim().toUpperCase() === String(revealedAnswer).trim().toUpperCase()
       : selectedAnswer === revealedAnswer;
 
-    const sound = new Audio(
+    playBoostedSfx(
       isUserCorrect
         ? '/sounds/mixkit-correct-answer-reward-952.wav'
-        : '/sounds/fahhh_KcgAXfs.wav'
+        : '/sounds/fahhh_KcgAXfs.wav',
+      1.8
     );
-    sound.play().catch(() => {
-      // Kung na-block man ng browser (bihira dito dahil resulta ito ng
-      // socket event pagkatapos ng user interaction, hindi random
-      // autoplay) — huwag na lang i-crash, tahimik lang i-ignore.
-    });
     // Sadyang [revealedAnswer] lang ang dependency — gusto lang natin itong
     // tumakbo nang isang beses bawat pagdating ng bagong revealedAnswer,
     // hindi sa bawat re-render dahil sa ibang state changes.
@@ -388,6 +421,28 @@ function QuizArena() {
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   const dashOffset = CIRCUMFERENCE * (1 - timerPercent / 100);
 
+  // Mute/unmute lang ng BACKGROUND MUSIC — hindi kasama dito ang correct/
+  // wrong sound effects, sadya, dahil sabi ni Kei background audio lang
+  // ang gusto niyang ma-mute/unmute.
+  const [bgMuted, setBgMuted] = useState(false);
+  const toggleBgMute = () => {
+    if (!bgMusicRef.current) return;
+    bgMusicRef.current.muted = !bgMusicRef.current.muted;
+    setBgMuted(bgMusicRef.current.muted);
+  };
+
+  const MuteButton = () => (
+    <button
+      type="button"
+      className="bgm-mute-btn"
+      onClick={toggleBgMute}
+      aria-label={bgMuted ? 'Unmute background music' : 'Mute background music'}
+      title={bgMuted ? 'Unmute background music' : 'Mute background music'}
+    >
+      {bgMuted ? '🔇' : '🔊'}
+    </button>
+  );
+
   const TimerRing = () => (
     <div className={`timer-ring-wrap ${isUrgent ? 'danger' : ''}`}>
       <svg className="timer-ring-svg" viewBox="0 0 120 120">
@@ -462,6 +517,7 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
+        <MuteButton />
         <div className="results-page">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
 
@@ -494,6 +550,7 @@ function QuizArena() {
   if (!currentQuestion) {
     return (
       <div className="arena-panel">
+        <MuteButton />
         <div className="arena-loading">
           <AnimatePresence mode="wait">
             {countdown ? (
@@ -526,6 +583,7 @@ function QuizArena() {
       animate={{ opacity: 1 }}
     >
       <TimerRing />
+      <MuteButton />
 
       <div className="arena-body">
 

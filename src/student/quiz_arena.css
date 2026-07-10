@@ -25,12 +25,12 @@
 }
 
 /* ──────────────────────────────────────
-   CIRCULAR TIMER (fixed, upper right)
+   CIRCULAR TIMER (fixed, upper left)
 ────────────────────────────────────── */
 .timer-ring-wrap {
   position: fixed;
   top: clamp(14px, 3vw, 28px);
-  right: clamp(14px, 3vw, 28px);
+  left: clamp(14px, 3vw, 28px);
   width: clamp(72px, 9vw, 108px);
   height: clamp(72px, 9vw, 108px);
   z-index: 50;
@@ -80,6 +80,36 @@
 @keyframes timerPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
+}
+
+/* ──────────────────────────────────────
+   BACKGROUND MUSIC MUTE BUTTON (fixed, upper right)
+   Kasalungat na sisidlan ng timer — parehong red (#A50034) na tema,
+   parehong clamp() sizing para magkatugma ang scale sa lahat ng screen.
+────────────────────────────────────── */
+.bgm-mute-btn {
+  position: fixed;
+  top: clamp(14px, 3vw, 28px);
+  right: clamp(14px, 3vw, 28px);
+  width: clamp(40px, 5vw, 52px);
+  height: clamp(40px, 5vw, 52px);
+  border-radius: 50%;
+  border: none;
+  background: #A50034;
+  color: #fff;
+  font-size: clamp(16px, 2vw, 22px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  box-shadow: 0 4px 10px rgba(165, 0, 52, 0.3);
+  transition: background 0.18s, transform 0.12s;
+}
+
+.bgm-mute-btn:hover {
+  background: #c8102e;
+  transform: translateY(-1px);
 }
 
 /* ──────────────────────────────────────
