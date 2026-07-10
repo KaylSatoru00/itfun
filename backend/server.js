@@ -845,9 +845,14 @@ io.on('connection', (socket) => {
 
       callback({ success: true });
 
+      // `serverTime` dito ay ang TANGING reference na gagamitin ng lahat ng
+      // clients para i-sync ang bgm loop position (tingnan quiz_arena.jsx).
+      // Iisang server clock lang ito, kaya kahit magkaiba ang oras ng mga
+      // device ng players, iisa pa ring "ground truth" ang gagamitin nila.
       io.to(pin).emit('quiz-started', {
         totalQuestions: room.questions.length,
         players: roomManager.getVisiblePlayers(pin),
+        serverTime: Date.now(),
       });
 
       setTimeout(() => {

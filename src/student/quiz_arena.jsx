@@ -51,6 +51,14 @@ function QuizArena() {
   // ito, buong buhay ng session.
   const bgMusicRef = useRef(null);
 
+  // Server-client clock offset (server-authoritative sync). Kino-compute
+  // ito isang beses sa pagdating ng 'quiz-started' (may kasamang
+  // `serverTime` mula sa server clock). Ang offset na 'to ang ginagamit
+  // pagtapos ng countdown para makuha yung tamang bgm loop position — iisang
+  // "ground truth" (server clock) na lang ang reference ng lahat ng
+  // players, hindi na yung kanya-kanyang device clock nila.
+  const clockOffsetRef = useRef(0);
+
   // Isang beses lang gagawa ng AudioContext, re-use sa dalawang sound
   // effect (correct/wrong) — kailangan ito para ma-"boost" pa natin ang
   // lakas ng tunog lampas sa normal na max (1.0) ng <audio volume>, dahil
@@ -164,6 +172,16 @@ function QuizArena() {
       setTotalQuestions(data.totalQuestions);
       setPlayers(data.players);
 
+      // Server-authoritative clock offset: kung magkano ang pagkakaiba ng
+      // server clock (data.serverTime) sa sarili nating device clock sa
+      // sandaling 'to. Ginagamit natin 'to mamaya para i-convert ang
+      // sariling Date.now() papuntang "server time" — kaya kahit magkaiba
+      // ang settings/timezone/drift ng bawat device, iisang ground-truth
+      // clock na lang (server) ang pinagbabasehan ng lahat ng players.
+      if (typeof data.serverTime === 'number') {
+        clockOffsetRef.current = data.serverTime - Date.now();
+      }
+
       // Simulan yung 3-2-1 countdown. Pagdating sa 0 (tapos na ang "1"),
       // saka pa lang natin susubukang i-play ang bgm — sadyang hiwalay ito
       // sa mount-time play() attempt sa itaas, dahil mas malamang na sa
@@ -179,7 +197,19 @@ function QuizArena() {
           countdownIntervalRef.current = null;
           setCountdown(null);
           if (bgMusicRef.current) {
-            bgMusicRef.current.play().catch(() => {});
+            const music = bgMusicRef.current;
+            // I-sync ang loop position gamit ang server-corrected na oras
+            // (Date.now() + offset = "server time"), sa halip na sariling
+            // device clock lang. Kung hindi pa available yung duration
+            // (hal. mabagal ang metadata load), i-skip na lang ito at
+            // mag-play na lang mula sa kasalukuyang posisyon — mas mabuti
+            // pa ring may tumugtog kaysa mag-error at walang bgm.
+            const duration = music.duration;
+            if (duration && isFinite(duration) && duration > 0) {
+              const serverNow = Date.now() + clockOffsetRef.current;
+              music.currentTime = (serverNow / 1000) % duration;
+            }
+            music.play().catch(() => {});
           }
         } else {
           setCountdown(n);
@@ -272,6 +302,10 @@ function QuizArena() {
   useEffect(() => {
     const music = new Audio('/sounds/quiz-arena-bgm.mp3');
     music.loop = true;
+    // Siguraduhing maaga nang naka-load yung metadata (duration) — kailangan
+    // ito bago matapos yung 3-segundong countdown, dahil doon natin
+    // ginagamit yung duration para ma-compute yung synced loop position.
+    music.preload = 'auto';
     // Nilagyan ko na lang ito ng mas mababang volume (dati 0.5) dahil
     // sobrang lakas pa rin siya kahit kasabay na ng ibang sounds ng laro —
     // 0.15 na lang para background ambiance lang ang dating, hindi
