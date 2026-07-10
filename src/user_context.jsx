@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDocFromServer, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { ref, onValue, onDisconnect, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
-import { auth, db, rtdb } from './firebase';
+import { auth, db, rtdb, authReady } from './firebase';
 
 const UserContext = createContext(null);
 
@@ -16,8 +16,16 @@ const HEARTBEAT_INTERVAL_MS = 30 * 1000;
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(() => {
-    // restore from localStorage on first load
-    const saved = localStorage.getItem('user');
+    // ── Optimistic restore (tab-scoped) ──
+    // Kailangang `sessionStorage` ito, HINDI `localStorage` — dahil ang
+    // buong session model natin (`itfun_sessionId`) ay TAB-SCOPED na.
+    // Kung `localStorage` (SHARED sa buong browser/lahat ng tabs) ang
+    // gagamitin dito, ma-o-overwrite ng bagong login sa Tab 2 ang
+    // optimistic `user` cache na nakikita ni Tab 1 — kaya sa refresh,
+    // biglang lumalabas muna ang MALING account (kung sino man ang huling
+    // nag-login sa ANUMANG tab) bago pa ito ma-correct pabalik matapos
+    // matapos ang totoong restore-gate validation sa ibaba.
+    const saved = sessionStorage.getItem('user');
     return saved ? JSON.parse(saved) : null;
   });
 
@@ -92,7 +100,7 @@ export function UserProvider({ children }) {
       console.error('Sign out failed:', err);
     }
     setUser(null);
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
   };
 
   // ── Session confirmation flag ──
@@ -185,7 +193,18 @@ export function UserProvider({ children }) {
   };
 
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+  // ── Race-condition guard ──
+  // Hinihintay muna natin dito ang `authReady` (mula sa firebase.js) bago
+  // tayo sumubscribe sa onAuthStateChanged. Kung hindi natin ito hihintayin,
+  // may tsansang mauna ang Firebase SDK na mag-hydrate ng `currentUser`
+  // gamit ang DEFAULT persistence (IndexedDB, SHARED sa buong browser) bago
+  // pa man ma-apply ang session-scoped persistence natin.
+  let unsubscribe = () => {};
+  let cancelled = false;
+
+  authReady.finally(() => {
+    if (cancelled) return;
+    unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
     setFirebaseUser(fbUser);
 
     // Habang may aktibong fresh login flow (beginLogin() ~ endLogin()) sa
@@ -238,7 +257,7 @@ export function UserProvider({ children }) {
 
         if (isConfirmedActiveSession) {
           setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
+          sessionStorage.setItem('user', JSON.stringify(userData));
 
           // ── Auto-reconfirm session pagkatapos mag-refresh ──
           // Dumadaan lang ang confirmSession() sa handleLogin() ng login
@@ -256,7 +275,7 @@ export function UserProvider({ children }) {
           // (mananatiling buhay ang shared session para sa totoong legit
           // na tab); sapat na ang hindi pagpakita ng `user` dito.
           setUser(null);
-          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
         }
       }
 
@@ -267,11 +286,15 @@ export function UserProvider({ children }) {
       setDataReady(true);
     } else {
       setUser(null);
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
     }
+    });
   });
 
-  return () => unsubscribe();
+  return () => {
+    cancelled = true;
+    unsubscribe();
+  };
 }, []);
 
   // ── Session heartbeat ──
@@ -404,6 +427,26 @@ export function UserProvider({ children }) {
     const unsub = onSnapshot(doc(db, collectionName, user.uid), (snap) => {
       if (!snap.exists()) return;
 
+      // ── Confirmed-session guard (bagong fix) ──
+      // Ang effect na ito ay naka-gate sa `user?.uid`/`user?.role`, na
+      // pwedeng galing pa lang sa OPTIMISTIC localStorage restore (line
+      // ~18-22) — agad available sa unang mount, BAGO pa man matapos ang
+      // buong restore-gate validation sa itaas (authReady → onAuthStateChanged
+      // → getDocFromServer → session-match check). Ibig sabihin, posibleng
+      // maagang mag-subscribe ang listener na ito at makatanggap ng
+      // snapshot BAGO pa man ma-confirm kung legit nga ba ang tab na ito.
+      // Kung mag-react tayo dito nang wala pang confirmation, delikado
+      // itong maging FALSE POSITIVE kick-out — ma-clear ang sessionStorage
+      // at ma-hard-navigate papuntang '/' kahit legit at tama naman pala
+      // ang session, dahil lang sa isang maagang/stale snapshot.
+      //
+      // Ang `isSessionConfirmedRef` ay `true` lang matapos talagang
+      // ma-confirm ng confirmSession() — tinatawag ito ng handleLogin()
+      // pagkatapos ng fresh login, AT ng restore-gate sa itaas pagkatapos
+      // ma-verify na tugma ang storedSessionId sa Firestore. Bago 'yon,
+      // huwag munang pansinin ang anumang snapshot dito.
+      if (!isSessionConfirmedRef.current) return;
+
       const myTabSessionId = sessionStorage.getItem('itfun_sessionId');
       // Kung wala pang naka-store na sessionId sa tab na ito (hal. hindi pa
       // ito ang nag-claim ng session sa una), huwag muna tayong gagawa ng
@@ -416,7 +459,7 @@ export function UserProvider({ children }) {
       if (currentActiveSessionId && currentActiveSessionId !== myTabSessionId) {
         sessionStorage.removeItem('itfun_sessionId');
         setUser(null);
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
         alert('You have been logged out because this account was used in another window or device.');
         window.location.href = '/';
       }

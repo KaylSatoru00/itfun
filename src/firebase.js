@@ -24,19 +24,30 @@ export const rtdb = getDatabase(app);
 // SHARED sa BUONG BROWSER, hindi per-tab. Kaya kapag nag-login ng ibang
 // account ang Tab 2, na-o-overwrite ang shared na `currentUser`, at
 // nafi-fire ang onAuthStateChanged sa Tab 1 gamit na ang bagong (maling)
-// account — dahilan kung bakit "nalo-logout" si Tab 1 kahit hindi naman
-// niya account ang ginamit.
+// account.
 //
 // Ang `browserSessionPersistence` ay naka-scope sa `sessionStorage`, na
-// TAB-ISOLATED by design (hindi ito nagbo-broadcast sa ibang tabs) —
-// kaya independent na ang Firebase Auth identity ng bawat tab. Tugma rin
-// ito sa existing na `itfun_sessionId` mo sa sessionStorage, na tab-scoped
-// na rin.
+// TAB-ISOLATED by design — kaya independent na ang Firebase Auth identity
+// ng bawat tab.
 //
-// KRITIKAL: kailangan itong ma-set NANG SYNCHRONOUS SA MODULE LOAD, bago
-// pa man ma-mount ang UserProvider (user_context.jsx) at bago pa man
-// tumakbo ang unang onAuthStateChanged listener nito — kung hindi,
-// posibleng may race condition sa unang restore attempt sa page load.
-setPersistence(auth, browserSessionPersistence).catch((err) => {
+// ── `authReady` (race-condition guard) ──
+// Ang `setPersistence()` ay ASYNCHRONOUS. Kung basta na lang tayong tumawag
+// dito nang hindi hinihintay (fire-and-forget), may maliit na window kung
+// saan ang Firebase SDK mismo ay maaaring mag-atempt na mag-hydrate ng
+// `currentUser` gamit ang DEFAULT persistence (IndexedDB, shared sa buong
+// browser) BAGO pa man matapos ma-apply ang session-scoped persistence na
+// 'to — lalo na sa mga REFRESH, kung saan sabay-sabay tumatakbo ang
+// module re-init (kasama ang onAuthStateChanged subscription sa
+// user_context.jsx) at itong setPersistence() call. Kung may naiwang
+// leftover na Firebase Auth entry sa shared IndexedDB (hal. mula sa
+// mga naunang tab/session bago pa na-apply ang fix na ito), posibleng
+// ma-hydrate muna nito ang MALING account sa panandaliang sandaling 'yon.
+//
+// Ini-export natin ang Promise na 'to para maaaring i-`await` muna ng
+// `user_context.jsx` bago ito sumubscribe sa `onAuthStateChanged` —
+// sinisiguradong naka-set na ang session-scoped persistence bago pa man
+// magsimulang mag-restore ng session ang app sa kahit anong page load
+// (kasama ang refresh).
+export const authReady = setPersistence(auth, browserSessionPersistence).catch((err) => {
   console.error('Failed to set Firebase Auth persistence:', err);
 });
