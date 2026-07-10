@@ -46,6 +46,15 @@ function PvpQuiz() {
   useEffect(() => {
     if (!socket) return;
 
+    // KRITIKAL: dahil ang `itfun_roomPin`/`itfun_playerName` sa localStorage
+    // ay SHARED sa buong browser (hindi tab/account-scoped), posibleng may
+    // naiwang stale na room session dito galing sa IBANG account na dating
+    // gumamit ng browser na ito (hal. nag-disconnect nang hindi nag-"Leave
+    // Room"). Kaya HINDI natin basta pinagkakatiwalaan ang `savedName` para
+    // mag-auto-rejoin — palagi nating ipinapadala ang `user?.uid` ng
+    // KASALUKUYANG naka-login na account, at ang server (`rejoin-room`
+    // handler) mismo ang bahalang tumanggi kung hindi ito tumutugma sa
+    // uid na naka-record sa slot — kahit magkatugma ang pin/playerName.
     const savedPin = localStorage.getItem('itfun_roomPin');
     const savedName = localStorage.getItem('itfun_playerName');
     const savedIsHost = localStorage.getItem('itfun_isHost') === 'true';
@@ -55,7 +64,7 @@ function PvpQuiz() {
       return;
     }
 
-    socket.emit('rejoin-room', { pin: savedPin, playerName: savedName }, (response) => {
+    socket.emit('rejoin-room', { pin: savedPin, playerName: savedName, uid: user?.uid }, (response) => {
       console.log('🔁 landing-page auto-rejoin response:', response);
 
       if (response?.success) {

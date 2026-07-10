@@ -49,6 +49,7 @@ function WaitingLobby() {
         moduleId,
         quizType,
         questions,
+        uid: user?.uid,
       }, (response) => {
         console.log('🏠 create-room response:', response);
         if (response.success) {
@@ -75,12 +76,20 @@ function WaitingLobby() {
     // mawala kahit isara yung tab/browser. Ang backend na ang magde-decide
     // kung valid pa ba ang rejoin (base sa kung "finished" na ba ang quiz,
     // hindi sa oras) — kaya wala nang time-based na "isFresh" gate dito.
+    //
+    // KRITIKAL: kahit magkatugma ang `savedName` dito sa `playerDisplayName`
+    // (parehong display name lang naman ito), ang TUNAY na security check
+    // ay nasa server — palagi nating ipinapadala ang `user?.uid` ng
+    // KASALUKUYANG naka-login na account sa `rejoin-room` sa ibaba, HINDI
+    // yung galing sa localStorage. Kaya kahit may naiwang stale na
+    // `itfun_playerName`/`itfun_roomPin` ang ibang account dati sa browser
+    // na 'to, tatanggihan pa rin ito ng server dahil hindi tutugma ang uid.
     const savedPin = localStorage.getItem('itfun_roomPin');
     const savedName = localStorage.getItem('itfun_playerName');
     const savedIsHost = localStorage.getItem('itfun_isHost') === 'true';
 
     if (savedPin && savedName === playerDisplayName && savedIsHost) {
-      socket.emit('rejoin-room', { pin: savedPin, playerName: playerDisplayName }, (response) => {
+      socket.emit('rejoin-room', { pin: savedPin, playerName: playerDisplayName, uid: user?.uid }, (response) => {
         console.log('🔁 host rejoin-room response:', response);
         if (response?.success) {
           setRoomPin(savedPin);
@@ -93,7 +102,8 @@ function WaitingLobby() {
             navigate(`/quiz-arena?pin=${savedPin}`);
           }
         } else {
-          // Wala nang mahanap na room/player — gumawa na lang ng bago
+          // Wala nang mahanap na room/player (o hindi tumugma ang uid) —
+          // gumawa na lang ng bago.
           localStorage.removeItem('itfun_roomPin');
           localStorage.removeItem('itfun_playerName');
           localStorage.removeItem('itfun_isHost');

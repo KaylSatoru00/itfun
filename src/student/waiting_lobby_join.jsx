@@ -69,11 +69,17 @@ function WaitingLobbyJoin() {
     // sa oras) — kaya wala nang time-based na "isFresh" gate dito sa
     // frontend; kung wala nang mahanap na record sa backend, mabibigo lang
     // naman ang rejoin at babagsak sa normal na doJoinRoom() sa baba.
+    //
+    // KRITIKAL: palagi nating ipinapadala ang `user?.uid` ng KASALUKUYANG
+    // naka-login na account (hindi galing sa localStorage) — ang server na
+    // ang bahalang tumanggi kung hindi ito tumutugma sa naka-record na uid
+    // ng slot, kahit magkatugma pa ang display name o may naiwang stale na
+    // itfun_roomPin/itfun_playerName mula sa ibang account sa browser na 'to.
     const savedPin = localStorage.getItem('itfun_roomPin');
     const savedName = localStorage.getItem('itfun_playerName');
 
     if (savedPin === pin && savedName === playerDisplayName) {
-      socket.emit('rejoin-room', { pin, playerName: playerDisplayName }, (response) => {
+      socket.emit('rejoin-room', { pin, playerName: playerDisplayName, uid: user?.uid }, (response) => {
         console.log('🔁 join rejoin-room response:', response);
         if (response?.success) {
           setPlayers(response.state.players);

@@ -539,10 +539,21 @@ io.on('connection', (socket) => {
   // ── Create Room ──
   socket.on('create-room', async (data, callback) => {
     try {
-      const { hostName, moduleId, lessonId, quizType, questions } = data;
+      const { hostName, moduleId, lessonId, quizType, questions, uid } = data;
+
+      // Kailangan ng `uid` dito mismo sa paglikha ng room — ito ang magiging
+      // permanenteng identity ng host slot. Kung wala nito, walang paraan
+      // ang `rejoin-room` sa ibaba para ma-verify kung legit na host nga
+      // ang bumabalik (babalik lang tayo sa lumang playerName-only na
+      // bug na kagagawa lang natin).
+      if (!uid) {
+        callback({ success: false, error: 'Missing uid — please log in again.' });
+        return;
+      }
 
       const room = await roomManager.createRoom({
         hostId: socket.id,
+        hostUid: uid,
         hostName,
         moduleId,
         lessonId,
@@ -554,6 +565,7 @@ io.on('connection', (socket) => {
       socket.data.roomPin = room.pin;
       socket.data.playerId = socket.id;
       socket.data.playerName = hostName;
+      socket.data.uid = uid;
       socket.data.isHost = true;
 
       callback({ success: true, room });
@@ -603,6 +615,7 @@ io.on('connection', (socket) => {
 
       const player = roomManager.addPlayer(pin, {
         id: socket.id,
+        uid,
         name: playerName,
         score: 0,
       });
@@ -611,6 +624,7 @@ io.on('connection', (socket) => {
       socket.data.roomPin = pin;
       socket.data.playerId = socket.id;
       socket.data.playerName = playerName;
+      socket.data.uid = uid;
       socket.data.isHost = false;
 
       callback({ success: true, room });
@@ -634,7 +648,7 @@ io.on('connection', (socket) => {
   // ── Rejoin Room (e.g. after page refresh) ──
   socket.on('rejoin-room', async (data, callback) => {
     try {
-      const { pin, playerName } = data;
+      const { pin, playerName, uid } = data;
 
       const room = roomManager.getRoom(pin);
       if (!room) {
@@ -642,16 +656,33 @@ io.on('connection', (socket) => {
         return;
       }
 
-      const existingPlayer = roomManager.findPlayerByName(pin, playerName);
+      // ── KRITIKAL: identity ang batayan dito, hindi playerName ──
+      // Dating basta `findPlayerByName(pin, playerName)` lang — ibig
+      // sabihin kahit sinong socket, basta may tumugmang display-name
+      // string, ay nakakapasok sa slot na 'yon (kahit ibang account/
+      // ibang tao talaga). Kaya dito, `uid` (mula sa authenticated
+      // Firebase account) ang TANGING pagbabatayan — hindi na
+      // sapat ang tumugmang pangalan lang.
+      if (!uid) {
+        callback({ success: false, error: 'Missing uid — please log in again.' });
+        return;
+      }
+
+      const existingPlayer = roomManager.findPlayerByUid(pin, uid);
       if (!existingPlayer) {
+        // Sadyang generic ang error message — hindi natin gustong ibunyag
+        // kung "may player nga pala dito pero ibang uid" (info leak) vs
+        // "walang player talaga" — pareho lang dapat itong itsura sa
+        // kabilang panig.
         callback({ success: false, error: 'Player not found in room' });
         return;
       }
 
       // Kung may naka-schedule pang pagtanggal galing sa disconnect handler
       // (waiting-room grace period), kanselahin na — nag-rejoin naman pala
-      // siya sa oras.
-      const timerKey = `${pin}:${playerName}`;
+      // siya sa oras. Naka-uid din ang key na 'to ngayon (dating playerName)
+      // para consistent sa bagong identity model.
+      const timerKey = `${pin}:${uid}`;
       const pendingTimer = disconnectTimers.get(timerKey);
       if (pendingTimer) {
         clearTimeout(pendingTimer);
@@ -669,9 +700,15 @@ io.on('connection', (socket) => {
 
       const wasHost = existingPlayer.id === room.hostId;
       const oldSocketId = existingPlayer.id;
-      roomManager.reassignPlayerSocket(pin, playerName, socket.id);
+      // Gamitin ang SERVER-SIDE na naka-record na pangalan ng player
+      // (`existingPlayer.name`), hindi na yung `playerName` galing sa
+      // client payload — para hindi ito magamit bilang "display name
+      // spoofing" channel sa mga tumitingin (leaderboard, room-update,
+      // atbp.) sa panahon ng rejoin.
+      const verifiedPlayerName = existingPlayer.name;
+      roomManager.reassignPlayerSocket(pin, uid, socket.id);
       // Lumitaw ulit siya sa leaderboard ng ibang players.
-      roomManager.markPlayerConnected(pin, playerName);
+      roomManager.markPlayerConnected(pin, uid);
 
       // Kung may ongoing quiz, dalhin din yung "nakasagot na ba siya" status
       // papunta sa bagong socket.id — kung hindi, makakasagot siya ulit sa
@@ -683,7 +720,8 @@ io.on('connection', (socket) => {
       socket.join(pin);
       socket.data.roomPin = pin;
       socket.data.playerId = socket.id;
-      socket.data.playerName = playerName;
+      socket.data.playerName = verifiedPlayerName;
+      socket.data.uid = uid;
       socket.data.isHost = wasHost;
 
       let state;
@@ -711,7 +749,7 @@ io.on('connection', (socket) => {
         };
       }
 
-      console.log(`🔁 ${playerName} rejoined room ${pin} as ${socket.id}`);
+      console.log(`🔁 ${verifiedPlayerName} (uid ${uid}) rejoined room ${pin} as ${socket.id}`);
 
       // Huwag ipasa yung buong `room` object — may room.quizEngine na
       // circular reference pabalik sa room mismo (quizEngine.room === room),
@@ -733,7 +771,7 @@ io.on('connection', (socket) => {
 
       io.to(pin).emit('player-reconnected', {
         playerId: socket.id,
-        playerName,
+        playerName: verifiedPlayerName,
       });
 
       io.to(pin).emit('room-update', {
@@ -855,6 +893,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const pin = socket.data.roomPin;
     const playerName = socket.data.playerName;
+    const uid = socket.data.uid;
     if (!pin || !playerName) return;
 
     const room = roomManager.getRoom(pin);
@@ -893,7 +932,10 @@ io.on('connection', (socket) => {
     // grace-period + totoong pagtanggal.
     console.log(`🔴 Client disconnected: ${socket.id} (${playerName}) — ${REJOIN_GRACE_MS / 1000}s grace period bago tanggalin`);
 
-    const timerKey = `${pin}:${playerName}`;
+    // Naka-uid ang key na 'to (dating playerName) — consistent sa bagong
+    // identity model, at iniiwasan ang collision kung magkatulad ang
+    // display name ng dalawang magkaibang account.
+    const timerKey = `${pin}:${uid}`;
 
     // Kung may naunang timer na (edge case), i-clear muna
     const existingTimer = disconnectTimers.get(timerKey);
@@ -901,7 +943,7 @@ io.on('connection', (socket) => {
 
     const timer = setTimeout(() => {
       disconnectTimers.delete(timerKey);
-      finalizePlayerRemoval(pin, socket.id, playerName);
+      finalizePlayerRemoval(pin, socket.id, uid, playerName);
     }, REJOIN_GRACE_MS);
 
     disconnectTimers.set(timerKey, timer);
@@ -935,13 +977,15 @@ io.on('connection', (socket) => {
   }
 
   // ── Helper: Finalize player removal after grace period expires ──
-  function finalizePlayerRemoval(pin, socketId, playerName) {
+  function finalizePlayerRemoval(pin, socketId, uid, playerName) {
     const room = roomManager.getRoom(pin);
     if (!room) return;
 
     // Kung nag-rejoin na yung player gamit ang ibang bagong socket.id,
     // huwag na siyang tanggalin — yung dating socket.id lang ang "patay".
-    const currentPlayer = room.players.find((p) => p.name === playerName);
+    // Naka-uid ang matching (dating playerName) — parehong dahilan sa
+    // ibang lugar: unique/permanent ito, hindi tulad ng display name.
+    const currentPlayer = room.players.find((p) => p.uid === uid);
     if (currentPlayer && currentPlayer.id !== socketId) {
       console.log(`↩️ ${playerName} already rejoined with a new socket — skipping removal`);
       return;

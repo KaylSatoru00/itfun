@@ -7,7 +7,7 @@ class RoomManager {
     return String(Math.floor(100000 + Math.random() * 900000));
   }
 
-  async createRoom({ hostId, hostName, moduleId, lessonId, quizType, questions }) {
+  async createRoom({ hostId, hostUid, hostName, moduleId, lessonId, quizType, questions }) {
     const pin = this.generatePin();
     const room = {
       pin,
@@ -17,7 +17,7 @@ class RoomManager {
       lessonId,
       quizType,
       questions: questions || [],
-      players: [{ id: hostId, name: hostName, score: 0, disconnected: false }],
+      players: [{ id: hostId, uid: hostUid, name: hostName, score: 0, disconnected: false }],
       status: 'waiting',
       createdAt: new Date(),
       quizEngine: null,
@@ -64,11 +64,27 @@ class RoomManager {
     return room.players.find((p) => p.name === playerName) || null;
   }
 
-  reassignPlayerSocket(pin, playerName, newSocketId) {
+  // ── Ang TUNAY na identity lookup para sa reconnection ──
+  // Hindi tulad ng `findPlayerByName` (display name lang, hindi unique/
+  // permanent), ang `uid` ay direktang galing sa authenticated Firebase
+  // account ng player — kaya ito ang dapat gamitin para i-verify kung
+  // "siya nga ba talaga" ang bumabalik, hindi lang basta may tumugmang
+  // pangalan.
+  findPlayerByUid(pin, uid) {
+    if (!uid) return null;
+    const room = this.rooms.get(pin);
+    if (!room) return null;
+    return room.players.find((p) => p.uid === uid) || null;
+  }
+
+  // Naka-uid ang matching dito (hindi na `playerName`) — sinisigurado
+  // nitong ang socket na papalitan lang ang naaayon sa TAMANG player,
+  // kahit magkatulad ang display name ng dalawang magkaibang account.
+  reassignPlayerSocket(pin, uid, newSocketId) {
     const room = this.rooms.get(pin);
     if (!room) return null;
 
-    const player = room.players.find((p) => p.name === playerName);
+    const player = room.players.find((p) => p.uid === uid);
     if (!player) return null;
 
     const oldId = player.id;
@@ -104,10 +120,12 @@ class RoomManager {
 
   // Ginagamit ng rejoin-room handler pagkatapos i-reassign yung socket id
   // ng bumalik na player, para lumitaw ulit siya sa leaderboard ng lahat.
-  markPlayerConnected(pin, playerName) {
+  // Naka-uid ang matching (dating playerName) — parehong dahilan sa
+  // reassignPlayerSocket sa itaas.
+  markPlayerConnected(pin, uid) {
     const room = this.rooms.get(pin);
     if (!room) return null;
-    const player = room.players.find((p) => p.name === playerName);
+    const player = room.players.find((p) => p.uid === uid);
     if (player) player.disconnected = false;
     return player;
   }
