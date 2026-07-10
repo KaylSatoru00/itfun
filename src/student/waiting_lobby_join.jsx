@@ -46,6 +46,29 @@ function WaitingLobbyJoin() {
       }, (response) => {
         console.log('👥 join-room response:', response);
         if (response.success) {
+          // KRITIKAL: kung may `response.state`, ibig sabihin hindi 'to
+          // fresh na pagsali — na-detect ng server na existing player na
+          // pala tayo (uid match), kaya nire-reroute nito papunta sa
+          // parehong rejoin logic (`performRejoin`) sa halip na gumawa ng
+          // bagong slot. Kailangan din nating i-treat 'to bilang totoong
+          // rejoin dito sa frontend — kung ongoing na o tapos na ang quiz,
+          // dapat diretso tayong dalhin sa quiz-arena, hindi manatili sa
+          // waiting lobby.
+          if (response.state) {
+            setPlayers(response.state.players);
+            setHostName(response.room?.hostName || hostName);
+
+            localStorage.setItem('itfun_roomPin', pin);
+            localStorage.setItem('itfun_playerName', playerDisplayName);
+            localStorage.setItem('itfun_isHost', response.isHost ? 'true' : 'false');
+            localStorage.setItem('itfun_sessionTime', Date.now().toString());
+
+            if (response.state.finished || response.state.question) {
+              navigate(`/quiz-arena?pin=${pin}`);
+            }
+            return;
+          }
+
           setPlayers(response.room.players);
           setHostName(response.room.hostName);
 
