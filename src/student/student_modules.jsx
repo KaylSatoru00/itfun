@@ -4,6 +4,9 @@ import './student_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
+import { CiLogout } from 'react-icons/ci';
+import { LuSwords } from 'react-icons/lu';
+import { SiBookstack } from 'react-icons/si';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { auth, db, rtdb } from '../firebase';
@@ -591,11 +594,11 @@ function LearningModules() {
       {/* Bottom Navigation */}
       <div className="bottom-nav">
         <div className="bottom-nav-btn active" onClick={() => navigate('/learning-modules')}>
-          <span className="bottom-nav-icon">📚</span>
+          <span className="bottom-nav-icon"><SiBookstack /></span>
           <span className="bottom-nav-label">LEARNING MODULES</span>
         </div>
         <div className="bottom-nav-btn" onClick={() => navigate('/pvp-quiz')}>
-          <span className="bottom-nav-icon">⚔️</span>
+          <span className="bottom-nav-icon"><LuSwords /></span>
           <span className="bottom-nav-label">PVP QUIZ ARENA</span>
         </div>
       </div>
@@ -624,8 +627,10 @@ function LearningModules() {
                 <div style={{
                   width: '64px', height: '64px', borderRadius: '50%',
                   background: '#fdecea', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '32px',
-                }}>🚪</div>
+                  justifyContent: 'center',
+                }}>
+                  <CiLogout size={32} color="#c8102e" />
+                </div>
                 <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '15px', color: '#333', margin: 0, textAlign: 'center', fontWeight: 'bold' }}>
                   Are you sure you want to exit?
                 </p>

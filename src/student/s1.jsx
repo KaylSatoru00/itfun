@@ -300,7 +300,7 @@ function Chapter1() {
             <>
               <div className="chap-section-header">
                 <h2 className="chap-section-main-title">Introduction of Computer</h2>
-                <p className="chap-section-subtitle">The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
+                <p>The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
               </div>
 
               {flipItem && (
@@ -403,9 +403,9 @@ function Chapter1() {
                 <p className="chap-adv-subtitle">Disadvantages:</p>
                 <div className="chap-accordion">
                   {[
-                    { title: '1. Dependency', desc: "It functions as per a user's instruction, so it is fully dependent on human being." },
-                    { title: '2. Environment', desc: 'The operating environment of computer should be dust free and suitable.' },
-                    { title: '3. No Feeling', desc: 'It cannot make judgment based on feeling, taste, experience, and knowledge unlike a human being.' },
+                    { title: 'Dependency', desc: "It functions as per a user's instruction, so it is fully dependent on human being." },
+                    { title: 'Environment', desc: 'The operating environment of computer should be dust free and suitable.' },
+                    { title: 'No Feeling', desc: 'It cannot make judgment based on feeling, taste, experience, and knowledge unlike a human being.' },
                   ].map((item, i) => (
                     <AccordionItem key={i} title={item.title} description={item.desc} isOpen={advOpenIndex === (i + 9)} onToggle={() => setAdvOpenIndex(advOpenIndex === (i + 9) ? null : (i + 9))} itemId={`func_dis_${i}`} onInteract={func.trackInteraction} />
                   ))}

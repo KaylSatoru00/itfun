@@ -143,7 +143,7 @@ function FacultyChapter2() {
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Language of Computer</h2>
-                <p className="chap-section-subtitle">Binary System</p>
+                <p>Binary System</p>
               </div>
 
               <div className="s2-img-wrapper">

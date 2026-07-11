@@ -12,6 +12,8 @@ import b2Img from '../assets/b2.png';
 import d1Img from '../assets/d1.png';
 import { useProgressTracker } from '../hooks/useProgressTracker';
 import { useModuleSection } from '../hooks/useModuleSection';
+import { PiBinary } from 'react-icons/pi';
+import { TbNumber10 } from 'react-icons/tb';
 import './s3.css';
 
 // ── Lesson totals ──
@@ -43,7 +45,7 @@ function AccordionItem({ title, description, isOpen, onToggle, itemId, onInterac
   );
 }
 
-function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId, onInteract }) {
+function FlipCard({ frontImage, frontLabel, backText, backIcon = <PiBinary />, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const handleClick = () => {
     if (!flipped && onInteract) onInteract(itemId);
@@ -55,7 +57,7 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
         <div className="chap-flip-card-front">
           {frontImage ? <img src={frontImage} alt={frontLabel} /> : (
             <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🔢</span>
+              <PiBinary size={48} color="#A50034" />
               <span>{frontLabel}</span>
             </div>
           )}
@@ -82,7 +84,7 @@ function FlipCardImageBack({ frontLabel, backImage, backAlt, itemId, onInteract 
       <div className="chap-flip-card-inner">
         <div className="chap-flip-card-front">
           <div className="chap-flip-card-front-placeholder">
-            <span style={{ fontSize: 36 }}>🔢</span>
+            <PiBinary size={36} color="#A50034" />
             <span style={{ fontSize: 13, textAlign: 'center', padding: '0 8px' }}>{frontLabel}</span>
           </div>
           <div className="chap-flip-card-front-overlay"><span>Flip to see example</span><span>↩</span></div>
@@ -221,7 +223,7 @@ function Chapter3() {
               </div>
 
               <div className="s2-img-wrapper" style={{ marginTop: 24 }}>
-                <FlipCard frontImage={numbersystemImg} frontLabel="Number System" backIcon="🔢" backText="A computer can understand positional number system where there are only a few symbols called digits and these symbols represent different values depending on the position they occupy in the number." itemId="ns_flipcard_1" onInteract={nsT.trackInteraction} />
+                <FlipCard frontImage={numbersystemImg} frontLabel="Number System" backIcon={<PiBinary size={36} color="#fff" />} backText="A computer can understand positional number system where there are only a few symbols called digits and these symbols represent different values depending on the position they occupy in the number." itemId="ns_flipcard_1" onInteract={nsT.trackInteraction} />
               </div>
 
               <div className="s2-body-block" style={{ marginTop: 20 }}>
@@ -255,7 +257,7 @@ function Chapter3() {
                 <p className="s2-body-text">The number system that we use in our day-to-day life is the decimal number system. Decimal number system has base 10 as it uses 10 digits from 0 to 9.</p>
               </div>
               <div className="s2-img-wrapper" style={{ marginTop: 24 }}>
-                <FlipCard frontImage={decimalImg} frontLabel="Decimal Number System" backIcon="🔟" backText="In decimal number system, the successive positions to the left of the decimal point represent units, tens, hundreds, thousands and so on." itemId="ns_flipcard_2" onInteract={nsT.trackInteraction} />
+                <FlipCard frontImage={decimalImg} frontLabel="Decimal Number System" backIcon={<TbNumber10 size={36} color="#fff" />} backText="In decimal number system, the successive positions to the left of the decimal point represent units, tens, hundreds, thousands and so on." itemId="ns_flipcard_2" onInteract={nsT.trackInteraction} />
               </div>
 
               <div className="s2-section-divider" />

@@ -399,7 +399,7 @@ function FacultyChapter1() {
               {/* Section Title & Subtitle */}
               <div className="chap-section-header">
                 <h2 className="chap-section-main-title">Introduction of Computer</h2>
-                <p className="chap-section-subtitle">The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
+                <p>The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
               </div>
 
               {/* Flip card + side text row */}

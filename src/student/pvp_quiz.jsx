@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
 import { useSocket } from '../socket_context';
+import { LuSwords } from 'react-icons/lu';
+import { SiBookstack } from 'react-icons/si';
 import './pvp_quiz.css';
 
 function PvpQuiz() {
@@ -223,11 +225,11 @@ function PvpQuiz() {
       {/* Bottom Navigation */}
       <div className="bottom-nav">
         <div className="bottom-nav-btn" onClick={() => navigate('/learning-modules')}>
-          <span className="bottom-nav-icon">📚</span>
+          <span className="bottom-nav-icon"><SiBookstack /></span>
           <span className="bottom-nav-label">LEARNING MODULES</span>
         </div>
         <div className="bottom-nav-btn active" onClick={() => navigate('/pvp-quiz')}>
-          <span className="bottom-nav-icon">⚔️</span>
+          <span className="bottom-nav-icon"><LuSwords /></span>
           <span className="bottom-nav-label">PVP QUIZ ARENA</span>
         </div>
       </div>

@@ -383,6 +383,7 @@
   max-width: 600px;
   line-height: 1.65;
   font-style: italic;
+  text-align: center;
 }
 
 @media (max-width: 768px) {

@@ -10,6 +10,8 @@ import binaryImg from '../assets/binary.jpg';
 import b1Img from '../assets/b1.png';
 import b2Img from '../assets/b2.png';
 import d1Img from '../assets/d1.png';
+import { PiBinary } from 'react-icons/pi';
+import { TbNumber10 } from 'react-icons/tb';
 import './f3.css';
 
 /* ── Accordion ── */
@@ -45,7 +47,7 @@ function AccordionItem({ title, description, isOpen, onToggle }) {
 }
 
 /* ── Flip Card — image front, text back ── */
-function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡' }) {
+function FlipCard({ frontImage, frontLabel, backText, backIcon = <PiBinary /> }) {
   const [flipped, setFlipped] = useState(false);
   return (
     <div
@@ -58,7 +60,7 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡' }) {
             ? <img src={frontImage} alt={frontLabel} />
             : (
               <div className="chap-flip-card-front-placeholder">
-                <span style={{ fontSize: 48 }}>🔢</span>
+                <PiBinary size={48} color="#A50034" />
                 <span>{frontLabel}</span>
               </div>
             )
@@ -194,7 +196,7 @@ function FacultyChapter3() {
                 <FlipCard
                   frontImage={numbersystemImg}
                   frontLabel="Number System"
-                  backIcon="🔢"
+                  backIcon={<PiBinary size={36} color="#fff" />}
                   backText="A computer can understand positional number system where there are only a few symbols called digits and these symbols represent different values depending on the position they occupy in the number."
                 />
               </div>
@@ -248,7 +250,7 @@ function FacultyChapter3() {
                 <FlipCard
                   frontImage={decimalImg}
                   frontLabel="Decimal Number System"
-                  backIcon="🔟"
+                  backIcon={<TbNumber10 size={36} color="#fff" />}
                   backText="In decimal number system, the successive positions to the left of the decimal point represent units, tens, hundreds, thousands and so on."
                 />
               </div>

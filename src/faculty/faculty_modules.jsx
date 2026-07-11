@@ -4,6 +4,7 @@ import './faculty_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdAccountCircle } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
+import { CiLogout } from 'react-icons/ci';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { auth, db, rtdb } from '../firebase';
@@ -326,8 +327,10 @@ function FacultyModules() {
                 <div style={{
                   width: '64px', height: '64px', borderRadius: '50%',
                   background: '#fdecea', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '32px',
-                }}>🚪</div>
+                  justifyContent: 'center',
+                }}>
+                  <CiLogout size={32} color="#c8102e" />
+                </div>
                 <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '15px', color: '#333', margin: 0, textAlign: 'center', fontWeight: 'bold' }}>
                   Are you sure you want to exit?
                 </p>
