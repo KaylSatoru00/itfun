@@ -223,15 +223,18 @@ function LearningModules() {
     navigate('/');
   };
 
-  /* ── Body background ── */
+  /* ── Body background ──
+     Puti (#ffffff) habang wala pang na-join na instructor ("Join
+     Instructor" state); lumilipat sa #F2D7D5 kapag may na-join na
+     ("My Instructor" state). */
   useEffect(() => {
     document.body.style.backgroundImage  = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = myCourses.length > 0 ? '#F2D7D5' : '#ffffff';
     return () => {
       document.body.style.backgroundImage  = '';
       document.body.style.backgroundColor = '';
     };
-  }, []);
+  }, [myCourses.length]);
 
   /* ── Close search dropdown on outside click ── */
   useEffect(() => {
@@ -522,16 +525,18 @@ function LearningModules() {
 
         <div className="navbar-spacer" />
         <div className="top-center-btns">
-          <button className="top-btn" onClick={() => setShowMyCourse(true)}>
-            Class Instructor {myCourses.length > 0 && (
-              <span style={{
-                background: '#c8102e', color: '#fff', borderRadius: '50%',
-                fontSize: '10px', padding: '1px 5px', marginLeft: '4px', fontWeight: 'bold',
-              }}>{myCourses.length}</span>
-            )}
-          </button>
-          <button className="top-btn" onClick={() => { setShowJoinModal(true); setJoinStep('input'); }}>
-            Join Instructor
+          <button
+            className="top-btn"
+            onClick={() => {
+              if (myCourses.length > 0) {
+                setShowMyCourse(true);
+              } else {
+                setShowJoinModal(true);
+                setJoinStep('input');
+              }
+            }}
+          >
+            {myCourses.length > 0 ? 'My Instructor' : 'Join Instructor'}
           </button>
           <div
             className="avatar-circle"
