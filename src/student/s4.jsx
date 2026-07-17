@@ -93,6 +93,8 @@ function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }
 /* ────────────────────────────────────────────
    Flip Card — image front, text back — with tracking
 ─────────────────────────────────────────────*/
+// Expand/morph reveal (fx-expand): lumalapad ang card sa buong row —
+// photo sa kaliwang column, description sa maluwag na white panel.
 function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const handleClick = useCallback(() => {
@@ -104,30 +106,35 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
 
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-expand ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {frontImage
-            ? <img src={frontImage} alt={frontLabel} />
-            : (
-              <div className="chap-flip-card-front-placeholder">
-                <span style={{ fontSize: 48 }}>🖥️</span>
-                <span>{frontLabel}</span>
-              </div>
-            )
-          }
-          <div className="chap-flip-card-front-overlay">
-            <span>Flip for description</span>
-            <span>↩</span>
+      <div className="fx-face fx-front">
+        {frontImage
+          ? <img src={frontImage} alt={frontLabel} />
+          : (
+            <div className="fx-placeholder">
+              <span style={{ fontSize: 48 }}>🖥️</span>
+              <span>{frontLabel}</span>
+            </div>
+          )
+        }
+        <div className="fx-strip">
+          <span>Tap for description</span>
+          <span>⤢</span>
+        </div>
+      </div>
+      <div className="fx-detail">
+        {frontImage && (
+          <div className="fx-detail-img">
+            <img src={frontImage} alt={frontLabel} />
           </div>
-        </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
+        )}
+        <div className="fx-detail-txt">
+          <h3>{backIcon} {frontLabel}</h3>
           <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
         </div>
+        <span className="fx-detail-note">tap to close</span>
       </div>
     </div>
   );
@@ -147,29 +154,21 @@ function FlipCardImageBack({ frontLabel, backImage, backAlt, itemId, onInteract 
 
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-expand ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front" style={{
-          background: 'linear-gradient(160deg,#A50034 0%,#c8102e 100%)',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          padding: '24px 28px', textAlign: 'center'
-        }}>
-          <p style={{
-            fontSize: 20, fontWeight: 'bold', color: '#fff',
-            lineHeight: 1.5, margin: 0,
-            textTransform: 'uppercase', letterSpacing: '1.5px'
-          }}>{frontLabel}</p>
-          <div className="chap-flip-card-front-overlay" style={{ background: 'linear-gradient(to top, rgba(80,0,20,0.7) 0%, transparent 100%)' }}>
-            <span>Flip to see</span>
-            <span>↩</span>
-          </div>
+      <div className="fx-face fx-front fx-front-label">
+        <p>{frontLabel}</p>
+        <div className="fx-strip">
+          <span>Tap to see</span>
+          <span>⤢</span>
         </div>
-        <div className="chap-flip-card-back" style={{ padding: 8, background: '#111' }}>
-          <img src={backImage} alt={backAlt} style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 12 }} />
+      </div>
+      <div className="fx-detail">
+        <div className="fx-detail-full">
+          <img src={backImage} alt={backAlt} />
         </div>
+        <span className="fx-detail-note">tap to close</span>
       </div>
     </div>
   );

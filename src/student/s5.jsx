@@ -76,7 +76,13 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
   const [flipped, setFlipped] = useState(false);
   const [counted, setCounted] = useState(false);
 
-  const handleClick = useCallback(() => {
+  // Circle-wipe reveal (fx-wipe): bumubukas mula sa puntong tinapik —
+  // fixed ang laki, kaya hindi nagagalaw ang side-by-side pair.
+  const handleClick = useCallback((e) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--cx', `${((e.clientX - r.left) / r.width) * 100}%`);
+    el.style.setProperty('--cy', `${((e.clientY - r.top) / r.height) * 100}%`);
     const next = !flipped;
     setFlipped(next);
     if (next && !counted) {
@@ -87,30 +93,28 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
 
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-wipe ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {frontImage
-            ? <img src={frontImage} alt={frontLabel} />
-            : (
-              <div className="chap-flip-card-front-placeholder">
-                <span style={{ fontSize: 48 }}>💾</span>
-                <span>{frontLabel}</span>
-              </div>
-            )
-          }
-          <div className="chap-flip-card-front-overlay">
-            <span>Flip for description</span>
-            <span>↩</span>
-          </div>
+      <div className="fx-face fx-front">
+        {frontImage
+          ? <img src={frontImage} alt={frontLabel} />
+          : (
+            <div className="fx-placeholder">
+              <span style={{ fontSize: 48 }}>💾</span>
+              <span>{frontLabel}</span>
+            </div>
+          )
+        }
+        <div className="fx-strip">
+          <span>Tap for description</span>
+          <span>↪</span>
         </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
-          <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">{backIcon}</span>
+        <p>{backText}</p>
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );

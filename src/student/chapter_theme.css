@@ -319,3 +319,237 @@
 @media (prefers-reduced-motion: reduce) {
   .chap-panel .chap-start-game-btn { animation: none; }
 }
+
+/* ═══════════ FX CARDS — varied reveal transitions ═══════════
+   Replacements for the old uniform 180° in-place flip (chap-flip-card).
+   Assignments (approved via flip-transition-samples.html):
+   fade = s1 intro · slide = s2 · wipe = s3 text + s5 ·
+   expand = s3 examples + s4 · tilt = s6 · stagger = s7 · zoom = s8 */
+
+.chap-panel .fx-card {
+  position: relative;
+  width: 300px;
+  height: 310px;
+  max-width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #17151a;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  flex-shrink: 0;
+}
+.chap-panel .fx-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+}
+.chap-panel .fx-front img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.chap-panel .fx-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+}
+.chap-panel .fx-strip {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, transparent, rgba(120, 8, 26, 0.95) 65%);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  z-index: 1;
+}
+.chap-panel .fx-back {
+  background: linear-gradient(160deg, #8c0b22, #5c0716);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+.chap-panel .fx-back p { margin: 0; }
+.chap-panel .fx-back-icon { font-size: 28px; }
+.chap-panel .fx-hint {
+  position: absolute;
+  bottom: 8px; left: 0; right: 0;
+  font-size: 0.66rem;
+  opacity: 0.65;
+}
+.chap-panel .fx-front-label { background: linear-gradient(160deg, #a50034, #c8102e); }
+.chap-panel .fx-front-label > p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── 1. Crossfade (s1 intro) ── */
+.chap-panel .fx-fade .fx-face { transition: opacity 0.45s ease; }
+.chap-panel .fx-fade .fx-back { opacity: 0; pointer-events: none; }
+.chap-panel .fx-fade.open .fx-front { opacity: 0; }
+.chap-panel .fx-fade.open .fx-back { opacity: 1; pointer-events: auto; }
+
+/* ── 2. Slide / push (s2) ── */
+.chap-panel .fx-slide .fx-face { transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1); }
+.chap-panel .fx-slide .fx-back { transform: translateX(100%); }
+.chap-panel .fx-slide.open .fx-front { transform: translateX(-100%); }
+.chap-panel .fx-slide.open .fx-back { transform: translateX(0); }
+
+/* ── 3. Clip-path circle wipe (s3 text cards, s5) ── */
+.chap-panel .fx-wipe .fx-back {
+  clip-path: circle(0% at var(--cx, 50%) var(--cy, 50%));
+  transition: clip-path 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chap-panel .fx-wipe.open .fx-back { clip-path: circle(150% at var(--cx, 50%) var(--cy, 50%)); }
+
+/* ── 4. Expand / morph into wide panel (s3 examples, s4) ── */
+.chap-panel .fx-expand {
+  transition: width 0.5s cubic-bezier(0.35, 0, 0.25, 1), height 0.5s cubic-bezier(0.35, 0, 0.25, 1);
+}
+.chap-panel .fx-expand.open { width: 100%; height: 400px; }
+.chap-panel .fx-expand .fx-front { transition: opacity 0.3s ease 0.1s; }
+.chap-panel .fx-expand.open .fx-front { opacity: 0; pointer-events: none; }
+.chap-panel .fx-detail {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease 0.18s;
+}
+.chap-panel .fx-expand.open .fx-detail { opacity: 1; pointer-events: auto; }
+.chap-panel .fx-detail-img {
+  flex: 0 0 36%;
+  background: #131116;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.chap-panel .fx-detail-img img { width: 100%; height: 100%; object-fit: cover; }
+.chap-panel .fx-detail-txt { flex: 1; padding: 22px 28px; overflow: auto; }
+.chap-panel .fx-detail-txt h3 {
+  font-family: 'Poppins', sans-serif;
+  color: #c8102e;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+.chap-panel .fx-detail-txt p {
+  font-family: 'Montserrat', sans-serif;
+  color: #333;
+  font-size: 0.88rem;
+  line-height: 1.75;
+  margin: 0;
+}
+.chap-panel .fx-detail-full {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+.chap-panel .fx-detail-full img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.chap-panel .fx-detail-note {
+  position: absolute;
+  top: 8px; right: 12px;
+  font-size: 0.68rem;
+  color: #999;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ── 5. 3D tilt-then-swap (s6) ── */
+.chap-panel .fx-tilt { perspective: 900px; background: transparent; overflow: visible; box-shadow: none; }
+.chap-panel .fx-tilt-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #17151a;
+  transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+.chap-panel .fx-tilt.open .fx-tilt-inner { transform: rotateY(14deg) rotateX(4deg); }
+.chap-panel .fx-tilt .fx-face { transition: opacity 0.4s ease 0.08s; }
+.chap-panel .fx-tilt .fx-back { opacity: 0; pointer-events: none; }
+.chap-panel .fx-tilt.open .fx-front { opacity: 0; }
+.chap-panel .fx-tilt.open .fx-back { opacity: 1; pointer-events: auto; }
+
+/* ── 6. Staggered list reveal (s7) ── */
+.chap-panel .fx-stagger .fx-front { transition: opacity 0.3s ease; }
+.chap-panel .fx-stagger.open .fx-front { opacity: 0; pointer-events: none; }
+.chap-panel .fx-stagger .fx-back {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  padding-top: 24px;
+}
+.chap-panel .fx-stagger.open .fx-back { opacity: 1; pointer-events: auto; }
+.chap-panel .fx-stagger .fx-back { overflow-y: auto; padding-bottom: 30px; }
+.chap-panel .fx-stagger .fx-back ul { margin: 4px 0 0; padding: 0; }
+.chap-panel .fx-stagger .fx-back li {
+  list-style: none;
+  font-size: 0.84rem;
+  padding: 4px 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.chap-panel .fx-stagger.open li:nth-child(1) { transition-delay: 0.15s; }
+.chap-panel .fx-stagger.open li:nth-child(2) { transition-delay: 0.27s; }
+.chap-panel .fx-stagger.open li:nth-child(3) { transition-delay: 0.39s; }
+.chap-panel .fx-stagger.open li:nth-child(4) { transition-delay: 0.51s; }
+.chap-panel .fx-stagger.open li:nth-child(5) { transition-delay: 0.63s; }
+.chap-panel .fx-stagger.open li:nth-child(6) { transition-delay: 0.75s; }
+.chap-panel .fx-stagger.open li { opacity: 1; transform: translateY(0); }
+
+/* ── 7. Zoom reveal (s8) ── */
+.chap-panel .fx-zoom .fx-front { transition: transform 0.5s ease, opacity 0.45s ease, filter 0.45s ease; }
+.chap-panel .fx-zoom.open .fx-front { transform: scale(1.35); opacity: 0; filter: blur(6px); pointer-events: none; }
+.chap-panel .fx-zoom .fx-back {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.92);
+  transition: transform 0.45s ease 0.12s, opacity 0.45s ease 0.12s;
+}
+.chap-panel .fx-zoom.open .fx-back { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+/* fx responsive + reduced motion */
+@media (max-width: 640px) {
+  .chap-panel .fx-card { width: 100%; height: 280px; }
+  .chap-panel .fx-expand.open { height: 440px; }
+  .chap-panel .fx-detail { flex-direction: column; }
+  .chap-panel .fx-detail-img { flex: 0 0 130px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chap-panel .fx-face,
+  .chap-panel .fx-expand,
+  .chap-panel .fx-tilt-inner,
+  .chap-panel .fx-stagger .fx-back li { transition: none !important; }
+}

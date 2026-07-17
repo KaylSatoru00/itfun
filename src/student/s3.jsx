@@ -45,34 +45,40 @@ function AccordionItem({ title, description, isOpen, onToggle, itemId, onInterac
   );
 }
 
+// Circle-wipe reveal (fx-wipe): ang description ay bumubukas mula mismo
+// sa puntong tinapik — fixed ang laki ng card.
 function FlipCard({ frontImage, frontLabel, backText, backIcon = <PiBinary />, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
-  const handleClick = () => {
+  const handleClick = (e) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--cx', `${((e.clientX - r.left) / r.width) * 100}%`);
+    el.style.setProperty('--cy', `${((e.clientY - r.top) / r.height) * 100}%`);
     if (!flipped && onInteract) onInteract(itemId);
     setFlipped(f => !f);
   };
   return (
-    <div className={`chap-flip-card ${flipped ? 'flipped' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {frontImage ? <img src={frontImage} alt={frontLabel} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <PiBinary size={48} color="#A50034" />
-              <span>{frontLabel}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
-        </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
-          <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+    <div className={`fx-card fx-wipe ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <div className="fx-face fx-front">
+        {frontImage ? <img src={frontImage} alt={frontLabel} /> : (
+          <div className="fx-placeholder">
+            <PiBinary size={48} color="#fff" />
+            <span>{frontLabel}</span>
+          </div>
+        )}
+        <div className="fx-strip"><span>Tap for description</span><span>↪</span></div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">{backIcon}</span>
+        <p>{backText}</p>
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );
 }
 
+// Expand/morph reveal (fx-expand): lumalapad ang card sa buong row para
+// makita nang malinaw ang worked-example image sa loob ng white panel.
 function FlipCardImageBack({ frontLabel, backImage, backAlt, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const handleClick = () => {
@@ -80,19 +86,16 @@ function FlipCardImageBack({ frontLabel, backImage, backAlt, itemId, onInteract 
     setFlipped(f => !f);
   };
   return (
-    <div className={`chap-flip-card ${flipped ? 'flipped' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          <div className="chap-flip-card-front-placeholder">
-            <PiBinary size={36} color="#A50034" />
-            <span style={{ fontSize: 13, textAlign: 'center', padding: '0 8px' }}>{frontLabel}</span>
-          </div>
-          <div className="chap-flip-card-front-overlay"><span>Flip to see example</span><span>↩</span></div>
+    <div className={`fx-card fx-expand ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <div className="fx-face fx-front fx-front-label">
+        <p>{frontLabel}</p>
+        <div className="fx-strip"><span>Tap to see example</span><span>⤢</span></div>
+      </div>
+      <div className="fx-detail">
+        <div className="fx-detail-full">
+          <img src={backImage} alt={backAlt} />
         </div>
-        <div className="chap-flip-card-back" style={{ padding: 8 }}>
-          <img src={backImage} alt={backAlt} style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }} />
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+        <span className="fx-detail-note">tap to close</span>
       </div>
     </div>
   );

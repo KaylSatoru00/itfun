@@ -61,7 +61,7 @@ function CircleProgress({ percent = 0, active = false }) {
   );
 }
 
-// ── Tracked FlipCard ──
+// ── Tracked FlipCard — crossfade dissolve (fx-fade) ──
 function FlipCard({ image, text, title, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   useEffect(() => { setFlipped(false); }, [title]);
@@ -72,22 +72,20 @@ function FlipCard({ image, text, title, itemId, onInteract }) {
   };
 
   return (
-    <div className={`chap-flip-card ${flipped ? 'flipped' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {image ? <img src={image} alt={title} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🖥️</span>
-              <span>{title}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
-        </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">💡</span>
-          {Array.isArray(text) ? text.map((para, i) => <p key={i}>{para}</p>) : <p>{text}</p>}
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+    <div className={`fx-card fx-fade ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <div className="fx-face fx-front">
+        {image ? <img src={image} alt={title} /> : (
+          <div className="fx-placeholder">
+            <span style={{ fontSize: 48 }}>🖥️</span>
+            <span>{title}</span>
+          </div>
+        )}
+        <div className="fx-strip"><span>Tap for description</span><span>↪</span></div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">💡</span>
+        {Array.isArray(text) ? text.map((para, i) => <p key={i}>{para}</p>) : <p>{text}</p>}
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );

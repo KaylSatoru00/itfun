@@ -83,14 +83,17 @@ function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }
 /* ────────────────────────────────────────────
    Flip Card — calls onInteract(id) once on first flip
 ─────────────────────────────────────────────*/
-function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId, onInteract }) {
+// Staggered list reveal (fx-stagger): nag-fade out ang photo, tapos ang
+// bawat list item ay sunud-sunod na pumapasok. `backItems` (array) ang
+// nagre-render bilang staggered list; fallback ang `backText` paragraph.
+function FlipCard({ frontImage, frontLabel, backTitle, backItems, backText, backIcon = '💡', itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const handleClick = useCallback(() => {
     const nextFlipped = !flipped;
     setFlipped(nextFlipped);
-    
+
     if (nextFlipped && !hasInteracted) {
       setHasInteracted(true);
       if (onInteract) {
@@ -101,30 +104,37 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
 
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-stagger ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {frontImage
-            ? <img src={frontImage} alt={frontLabel} />
-            : (
-              <div className="chap-flip-card-front-placeholder">
-                <span style={{ fontSize: 48 }}>📄</span>
-                <span>{frontLabel}</span>
-              </div>
-            )
-          }
-          <div className="chap-flip-card-front-overlay">
-            <span>Flip for description</span>
-            <span>↩</span>
-          </div>
+      <div className="fx-face fx-front">
+        {frontImage
+          ? <img src={frontImage} alt={frontLabel} />
+          : (
+            <div className="fx-placeholder">
+              <span style={{ fontSize: 48 }}>📄</span>
+              <span>{frontLabel}</span>
+            </div>
+          )
+        }
+        <div className="fx-strip">
+          <span>Tap for description</span>
+          <span>↪</span>
         </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">{backIcon}</span>
+        {backItems ? (
+          <>
+            <strong>{backTitle || frontLabel}</strong>
+            <ul>
+              {backItems.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          </>
+        ) : (
           <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+        )}
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );
@@ -336,7 +346,15 @@ function Chapter7() {
                   frontImage={msofficeImg}
                   frontLabel="MS Office Applications"
                   backIcon="📱"
-                  backText="Microsoft Office includes Word (word processing), Excel (spreadsheets), PowerPoint (presentations), Outlook (email), Access (databases), Publisher (desktop publishing), and more."
+                  backTitle="Microsoft Office includes:"
+                  backItems={[
+                    '📝 Word — word processing',
+                    '📊 Excel — spreadsheets',
+                    '📽️ PowerPoint — presentations',
+                    '✉️ Outlook — email',
+                    '🗂️ Access — databases',
+                    '📰 Publisher — desktop publishing',
+                  ]}
                   itemId="s7-fc-apps"
                   onInteract={introTracker.trackInteraction}
                 />
@@ -354,7 +372,14 @@ function Chapter7() {
                   frontImage={versionsImg}
                   frontLabel="MS Office Versions"
                   backIcon="📅"
-                  backText="Major versions include Office 95, 97, 2000, XP, 2003, 2007, 2010, 2013, 2016, 2019, and Microsoft 365 (subscription-based). Each version introduced new features and improved user interface."
+                  backTitle="Major versions:"
+                  backItems={[
+                    'Office 95 · 97 · 2000 · XP',
+                    'Office 2003 · 2007 · 2010',
+                    'Office 2013 · 2016 · 2019',
+                    'Microsoft 365 — subscription-based',
+                    'Each version improved features and UI',
+                  ]}
                   itemId="s7-fc-versions"
                   onInteract={introTracker.trackInteraction}
                 />

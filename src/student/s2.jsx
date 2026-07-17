@@ -49,6 +49,8 @@ function AccordionItem({ title, description, isOpen, onToggle, itemId, onInterac
   );
 }
 
+// Slide/push reveal (fx-slide): ang photo ay dumudulas palabas pa-kaliwa
+// habang ang description ay pumapasok mula sa kanan.
 function FlipCard({ image, title, backText, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const handleClick = () => {
@@ -56,22 +58,20 @@ function FlipCard({ image, title, backText, itemId, onInteract }) {
     setFlipped(f => !f);
   };
   return (
-    <div className={`chap-flip-card ${flipped ? 'flipped' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {image ? <img src={image} alt={title} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🖥️</span>
-              <span>{title}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
-        </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">💡</span>
-          <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+    <div className={`fx-card fx-slide ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <div className="fx-face fx-front">
+        {image ? <img src={image} alt={title} /> : (
+          <div className="fx-placeholder">
+            <span style={{ fontSize: 48 }}>🖥️</span>
+            <span>{title}</span>
+          </div>
+        )}
+        <div className="fx-strip"><span>Tap for description</span><span>↪</span></div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">💡</span>
+        <p>{backText}</p>
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );

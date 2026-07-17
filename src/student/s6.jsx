@@ -101,31 +101,33 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
     }
   }, [flipped, hasInteracted, onInteract, itemId]);
 
+  // 3D tilt-then-swap (fx-tilt): bahagyang tumatagilid ang card habang
+  // nag-crossfade ang faces — subtle, hindi buong 180° na ikot.
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-tilt ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
+      <div className="fx-tilt-inner">
+        <div className="fx-face fx-front">
           {frontImage
             ? <img src={frontImage} alt={frontLabel} />
             : (
-              <div className="chap-flip-card-front-placeholder">
+              <div className="fx-placeholder">
                 <span style={{ fontSize: 48 }}>🌐</span>
                 <span>{frontLabel}</span>
               </div>
             )
           }
-          <div className="chap-flip-card-front-overlay">
-            <span>Flip for description</span>
-            <span>↩</span>
+          <div className="fx-strip">
+            <span>Tap for description</span>
+            <span>↪</span>
           </div>
         </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
+        <div className="fx-face fx-back">
+          <span className="fx-back-icon">{backIcon}</span>
           <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
+          <span className="fx-hint">Tap to go back</span>
         </div>
       </div>
     </div>
