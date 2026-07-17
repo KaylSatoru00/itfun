@@ -1,155 +1,191 @@
-/* student_login.css — RESPONSIVE VERSION */
+/* student_login.css — student auth forms (layout shell in auth_shell.css)
+   Classes are sl-* namespaced to avoid clashing with the legacy
+   faculty_login.css globals (.input-group, .form-title, .panel, …). */
 
-html, body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-}
-
-.login-wrapper {
-  position: fixed;
-  inset: 0;
-  overflow-y: auto;
-  display: grid;
-  place-items: center;
-  padding: 40px 16px;
-  box-sizing: border-box;
-  background-color: #ececec;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 1440 900' preserveAspectRatio='xMidYMid slice'%3E%3Crect width='1440' height='900' fill='%23ececec'/%3E%3Cpolygon points='350,0 1440,0 1440,900 700,900' fill='%23f5f5f5'/%3E%3Cpolygon points='450,0 1440,0 1440,900 800,900' fill='%23fafafa'/%3E%3Cpolygon points='580,0 1440,0 1440,900 930,900' fill='%23f2f2f2'/%3E%3Cpolygon points='700,0 1440,0 1440,900 1050,900' fill='%23f8f8f8'/%3E%3Cpolygon points='850,0 1440,0 1440,900 1200,900' fill='%23efefef'/%3E%3Cpolygon points='0,0 220,0 100,900 0,900' fill='%23f5f5f5'/%3E%3Cpolygon points='0,0 160,0 50,900 0,900' fill='%23fafafa'/%3E%3Cpolygon points='345,0 380,0 255,900 220,900' fill='%23ffffff'/%3E%3Cpolygon points='445,0 462,0 340,900 322,900' fill='%23ffffff'/%3E%3Cpolygon points='575,0 588,0 463,900 450,900' fill='%23ffffff'/%3E%3Cpolygon points='695,0 705,0 583,900 573,900' fill='%23ffffff'/%3E%3Cpolygon points='155,0 220,0 95,900 30,900' fill='%23c8102e'/%3E%3Cpolygon points='170,0 200,0 68,900 42,900' fill='%23a00d24'/%3E%3Cpolygon points='0,400 60,400 310,900 250,900' fill='%23c8102e'/%3E%3Cpolygon points='0,420 35,420 275,900 240,900' fill='%23a00d24'/%3E%3C%2Fsvg%3E");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.panel {
-  width: min(800px, 92vw);
+.sl-card {
+  width: min(440px, 100%);
   background: #fff;
-  border-radius: 20px;
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px;
-  gap: 14px;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  box-sizing: border-box;
+  border-radius: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
-.form-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #000;
-  font-family: Arial, sans-serif;
+.sl-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  color: #1a1a1e;
   margin: 0;
+  text-align: center;
 }
 
-.input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  outline: none;
-  box-sizing: border-box;
+.sl-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  color: #6c6c72;
+  margin: 0.25rem 0 0;
+  text-align: center;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.input-group label {
-  font-size: 12px;
+.sl-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #555;
-  margin-bottom: 4px;
-  padding-left: 2px;
+  color: #55555c;
+  margin-bottom: 0.3rem;
+}
+.sl-label.sl-missing {
+  color: #c8102e;
 }
 
-.name-row {
-  display: flex;
-  gap: 8px;
+.sl-field .form-control {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+}
+
+/* password eye toggle */
+.sl-pass {
+  position: relative;
   width: 100%;
-  align-items: flex-end;
+}
+.sl-pass .form-control {
+  padding-right: 2.6rem;
+}
+.sl-eye {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.sl-eye:hover {
+  color: #c8102e;
 }
 
-.name-row .input-group {
-  flex: 1;
-}
-
-.forgot {
-  font-size: 13px;
+.sl-forgot {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: #c8102e;
   align-self: flex-end;
   cursor: pointer;
   margin: 0;
 }
-
-.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background: #c8102e;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-family: Arial, sans-serif;
-  cursor: pointer;
-}
-
-.toggle-text {
-  font-size: 13px;
-  color: #555;
-  font-family: Arial, sans-serif;
-  margin: 0;
-}
-
-.toggle-text span {
-  color: #c8102e;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.go-back-btn {
-  margin-top: 4px;
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 13px;
-  font-family: Arial, sans-serif;
-  cursor: pointer;
+.sl-forgot:hover {
   text-decoration: underline;
 }
 
-.go-back-btn:hover {
+.sl-toggle-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #6c6c72;
+  margin: 0;
+  text-align: center;
+}
+.sl-toggle-text span {
+  color: #c8102e;
+  cursor: pointer;
+  font-weight: 700;
+}
+.sl-toggle-text span:hover {
+  text-decoration: underline;
+}
+
+.sl-back-btn {
+  background: none;
+  border: none;
+  color: #9a9aa2;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: center;
+}
+.sl-back-btn:hover {
   color: #c8102e;
 }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 600px) {
-  .panel {
-    padding: 28px 20px;
-    border-radius: 14px;
-    margin: 20px auto;
-  }
+/* password requirements checklist */
+.sl-checklist {
+  width: 100%;
+  background: #fdf3f4;
+  border: 1px solid #f2d7d5;
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+.sl-checklist-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #55555c;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sl-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  margin-bottom: 0.15rem;
+}
+.sl-check-item .sl-check-mark {
+  font-weight: 700;
+}
+.sl-check-item.ok  { color: #2e7d32; }
+.sl-check-item.bad { color: #8a8a90; }
+.sl-check-item.bad .sl-check-mark { color: #c8102e; }
 
-  .form-title {
-    font-size: 22px;
-  }
+.sl-hint {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  margin: -0.35rem 0 0;
+  align-self: flex-start;
+}
+.sl-hint.ok  { color: #2e7d32; }
+.sl-hint.bad { color: #c8102e; }
 
-  .name-row {
-    flex-direction: column;
-    gap: 0;
-  }
+/* OTP / email icon bubble */
+.sl-mail-bubble {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #fdeaea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  margin: 0 auto;
 }
 
-@media (max-width: 400px) {
-  .panel {
-    padding: 24px 16px;
-    border-radius: 12px;
-    margin: 12px auto;
-  }
+.sl-otp-input {
+  text-align: center;
+  font-size: 1.5rem !important;
+  letter-spacing: 0.5em;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
+
+.sl-note {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #55555c;
+  text-align: center;
+  margin: 0;
+}
+.sl-note strong {
+  color: #c8102e;
+}
+.sl-note.sl-note-muted {
+  font-size: 0.8rem;
+  color: #77777e;
 }

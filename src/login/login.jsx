@@ -6,6 +6,7 @@ import { HiArrowRight } from "react-icons/hi";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
+import AuthShell from './auth_shell.jsx';
 
 const sideVariants = {
   hidden: {},
@@ -65,39 +66,9 @@ function Login() {
   };
 
   return (
-    <motion.div
-      className="rp-wrapper"
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, ease: 'easeIn' }}
-    >
-      {/* ── Brand panel ── */}
-      <div className="rp-brand">
-        <div className="rp-blob rp-blob-1" />
-        <div className="rp-blob rp-blob-2" />
-        <div className="rp-blob rp-blob-3" />
-
-        <motion.div
-          className="rp-brand-content"
-          initial={{ opacity: 0, x: -32 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-        >
-          <h1 className="rp-wordmark">
-            IT<span className="rp-accent">Fun</span>
-          </h1>
-          <p className="rp-tagline">IT Fundamentals Made Fun</p>
-          <div className="rp-chips">
-            <span className="rp-chip">9 Learning Modules</span>
-            <span className="rp-chip">PVP Quiz Arena</span>
-            <span className="rp-chip">Gamified Quizzes</span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ── Role selection ── */}
+    <AuthShell>
       <motion.div
-        className="rp-side"
+        className="d-flex flex-column align-items-center gap-3 w-100"
         variants={sideVariants}
         initial="hidden"
         animate="show"
@@ -124,7 +95,7 @@ function Login() {
           />
         </div>
       </motion.div>
-    </motion.div>
+    </AuthShell>
   );
 }
 

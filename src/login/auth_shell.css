@@ -1,0 +1,148 @@
+/* auth_shell.css — shared split-screen auth layout (brand panel + form side) */
+
+.as-wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--itfun-dark, #060607);
+}
+
+/* ── Left: brand panel ── */
+.as-brand {
+  position: relative;
+  flex: 1 1 52%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 5rem);
+  color: #fff;
+  overflow: hidden;
+  background: var(--itfun-dark, #060607);
+}
+
+.as-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.as-blob-1 {
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, #c8102e 0%, transparent 70%);
+  top: -140px; left: -120px;
+  animation: as-drift-1 14s ease-in-out infinite alternate;
+}
+.as-blob-2 {
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, #a50034 0%, transparent 70%);
+  bottom: -160px; right: -80px;
+  animation: as-drift-2 18s ease-in-out infinite alternate;
+}
+.as-blob-3 {
+  width: 260px; height: 260px;
+  background: radial-gradient(circle, #eab8c9 0%, transparent 70%);
+  top: 45%; left: 55%;
+  opacity: 0.18;
+  animation: as-drift-1 22s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes as-drift-1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(60px, 40px) scale(1.15); }
+}
+@keyframes as-drift-2 {
+  from { transform: translate(0, 0) scale(1.1); }
+  to   { transform: translate(-50px, -60px) scale(0.95); }
+}
+
+.as-brand-content {
+  position: relative;
+  z-index: 1;
+}
+
+.as-wordmark {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  line-height: 1;
+  margin: 0;
+  color: #fff;
+}
+.as-wordmark .as-accent {
+  color: #c8102e;
+  text-shadow: 0 0 40px rgba(200, 16, 46, 0.6);
+}
+
+.as-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0.75rem 0 2rem;
+}
+
+.as-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.as-chip {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--itfun-beige, #f2d7d5);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  backdrop-filter: blur(6px);
+}
+
+/* ── Right: content side ── */
+.as-side {
+  flex: 1 1 48%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 4rem);
+  background: #f7f5f5;
+  border-top-left-radius: 2rem;
+  border-bottom-left-radius: 2rem;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.45);
+  overflow-y: auto;
+}
+
+/* ── Responsive: stack on tablets/phones ── */
+@media (max-width: 900px) {
+  .as-wrapper {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .as-brand {
+    flex: 0 0 auto;
+    min-height: 30vh;
+    padding: 2.5rem 1.5rem 2.5rem;
+    text-align: center;
+    align-items: center;
+  }
+  .as-chips {
+    justify-content: center;
+  }
+  .as-side {
+    flex: 1 0 auto;
+    justify-content: flex-start;
+    border-radius: 2rem 2rem 0 0;
+    margin-top: -1.5rem;
+    padding-top: 2rem;
+    box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-blob-1, .as-blob-2, .as-blob-3 {
+    animation: none;
+  }
+}
