@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import './student_login.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { auth, db } from '../firebase';
 import {
   createUserWithEmailAndPassword,
@@ -11,71 +9,10 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useUser } from '../user_context';
 import AuthShell from './auth_shell.jsx';
-
-function toPascalCase(str) {
-  return str.replace(/\b\w/g, c => c.toUpperCase());
-}
-
-const passwordRules = [
-  { id: 'length',    label: 'At least 8 characters',              test: p => p.length >= 8 },
-  { id: 'upper',     label: 'At least one uppercase letter (A–Z)', test: p => /[A-Z]/.test(p) },
-  { id: 'lower',     label: 'At least one lowercase letter (a–z)', test: p => /[a-z]/.test(p) },
-  { id: 'number',    label: 'At least one number (0–9)',           test: p => /[0-9]/.test(p) },
-  { id: 'special',   label: 'At least one special character (!@#$%&*_…)', test: p => /[!@#$%^&*_\-+=?]/.test(p) },
-  { id: 'nospace',   label: 'No spaces',                           test: p => !/\s/.test(p) && p.length > 0 },
-];
-
-function PasswordChecklist({ password }) {
-  if (!password) return null;
-  return (
-    <div className="sl-checklist">
-      <p className="sl-checklist-title">Password requirements</p>
-      {passwordRules.map(rule => {
-        const ok = rule.test(password);
-        return (
-          <div key={rule.id} className={`sl-check-item ${ok ? 'ok' : 'bad'}`}>
-            <span className="sl-check-mark">{ok ? '✓' : '✗'}</span>
-            <span>{rule.label}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function RequiredLabel({ label, touched, value }) {
-  const missing = touched && !value;
-  return (
-    <label className={`sl-label ${missing ? 'sl-missing' : ''}`}>
-      {label} <span style={{ color: '#c8102e' }}>*</span>
-    </label>
-  );
-}
-
-function PasswordInput({ value, onChange, placeholder, invalid, onKeyDown }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="sl-pass">
-      <input
-        type={show ? 'text' : 'password'}
-        className={`form-control ${invalid ? 'is-invalid' : ''}`}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onKeyDown={onKeyDown}
-      />
-      <button type="button" className="sl-eye" tabIndex={-1} onClick={() => setShow(s => !s)}>
-        {show ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
-      </button>
-    </div>
-  );
-}
-
-const screenVariants = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 26 } },
-  exit: { opacity: 0, y: -12, transition: { duration: 0.18 } },
-};
+import {
+  toPascalCase, passwordRules, PasswordChecklist,
+  RequiredLabel, PasswordInput, screenVariants,
+} from './auth_form_kit.jsx';
 
 function StudentLogin() {
   const [screen, setScreen] = useState('login');
@@ -307,7 +244,7 @@ function StudentLogin() {
   return (
     <AuthShell>
       <motion.div
-        className="sl-card itfun-form"
+        className="af-card itfun-form"
         initial={{ opacity: 0, y: 28, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 24 }}
@@ -323,29 +260,29 @@ function StudentLogin() {
             className="d-flex flex-column gap-3 w-100"
           >
             <motion.div
-              className="sl-mail-bubble"
+              className="af-mail-bubble"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
             >
               📧
             </motion.div>
-            <h1 className="sl-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
-            <p className="sl-note">
+            <h1 className="af-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
+            <p className="af-note">
               A 6-digit verification code was sent to<br />
               <strong>{signupEmail}</strong>
             </p>
-            <p className="sl-note sl-note-muted">
+            <p className="af-note af-note-muted">
               Enter the code below to verify your account.
             </p>
             {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
-            <div className="sl-field">
+            <div className="af-field">
               <input
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
-                className={`form-control form-control-lg sl-otp-input ${otpTouched && !otpCode ? 'is-invalid' : ''}`}
+                className={`form-control form-control-lg af-otp-input ${otpTouched && !otpCode ? 'is-invalid' : ''}`}
                 placeholder="000000"
                 value={otpCode}
                 onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -357,7 +294,7 @@ function StudentLogin() {
             <button className="btn btn-itfun w-100 py-2" onClick={handleVerifyOtp} disabled={loading}>
               {loading ? 'Verifying...' : 'Verify'}
             </button>
-            <p className="sl-toggle-text">
+            <p className="af-toggle-text">
               Didn't receive it?{' '}
               <span onClick={handleResendOtp}>
                 {loading ? 'Sending...' : 'Resend'}
@@ -376,13 +313,13 @@ function StudentLogin() {
           >
             {!resetSent ? (
               <>
-                <h1 className="sl-title">Reset Password</h1>
-                <p className="sl-note sl-note-muted">
+                <h1 className="af-title">Reset Password</h1>
+                <p className="af-note af-note-muted">
                   Enter the email linked to your account and we'll send you a link to reset your password.
                 </p>
                 {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
-                <div className="sl-field">
+                <div className="af-field">
                   <RequiredLabel label="Email" touched={resetTouched} value={resetEmail} />
                   <input
                     type="email"
@@ -398,30 +335,30 @@ function StudentLogin() {
                 <button className="btn btn-itfun w-100 py-2" onClick={handleForgotPassword} disabled={loading}>
                   {loading ? 'Sending...' : 'Send Reset Link'}
                 </button>
-                <button className="sl-back-btn" onClick={() => { setScreen('login'); setError(''); }}>Back to Login</button>
+                <button className="af-back-btn" onClick={() => { setScreen('login'); setError(''); }}>Back to Login</button>
               </>
             ) : (
               <>
                 <motion.div
-                  className="sl-mail-bubble"
+                  className="af-mail-bubble"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
                 >
                   📧
                 </motion.div>
-                <h1 className="sl-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
-                <p className="sl-note">
+                <h1 className="af-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
+                <p className="af-note">
                   If an account exists for<br />
                   <strong>{resetEmail}</strong>, a password reset link has been sent.
                 </p>
-                <p className="sl-note sl-note-muted">
+                <p className="af-note af-note-muted">
                   Click the link in the email to set a new password, then come back to log in.
                 </p>
                 <button className="btn btn-itfun w-100 py-2" onClick={() => { setScreen('login'); setError(''); }}>
                   Go to Login
                 </button>
-                <p className="sl-toggle-text">
+                <p className="af-toggle-text">
                   Didn't receive it?{' '}
                   <span onClick={handleForgotPassword}>
                     {loading ? 'Sending...' : 'Resend'}
@@ -440,11 +377,11 @@ function StudentLogin() {
             initial="initial" animate="animate" exit="exit"
             className="d-flex flex-column gap-3 w-100"
           >
-            <h1 className="sl-title">Student Login</h1>
-            <p className="sl-sub">Log in to continue learning</p>
+            <h1 className="af-title">Student Login</h1>
+            <p className="af-sub">Log in to continue learning</p>
             {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
-            <div className="sl-field">
+            <div className="af-field">
               <RequiredLabel label="Email" touched={loginTouched.email} value={loginEmail} />
               <input
                 type="email"
@@ -455,7 +392,7 @@ function StudentLogin() {
                 onBlur={() => setLoginTouched(t => ({ ...t, email: true }))}
               />
             </div>
-            <div className="sl-field d-flex flex-column">
+            <div className="af-field d-flex flex-column">
               <RequiredLabel label="Password" touched={loginTouched.password} value={loginPassword} />
               <PasswordInput
                 placeholder="••••••••"
@@ -466,7 +403,7 @@ function StudentLogin() {
               />
             </div>
             <p
-              className="sl-forgot"
+              className="af-forgot"
               onClick={() => {
                 setError('');
                 setResetEmail(loginEmail);
@@ -480,11 +417,11 @@ function StudentLogin() {
             <button className="btn btn-itfun w-100 py-2" onClick={handleLogin} disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </button>
-            <p className="sl-toggle-text">
+            <p className="af-toggle-text">
               Don't have an account?{' '}
               <span onClick={() => { setScreen('signup'); setError(''); }}>Sign Up</span>
             </p>
-            <button className="sl-back-btn" onClick={() => navigate('/')}>Go back</button>
+            <button className="af-back-btn" onClick={() => navigate('/')}>Go back</button>
           </motion.div>
         )}
 
@@ -496,12 +433,12 @@ function StudentLogin() {
             initial="initial" animate="animate" exit="exit"
             className="d-flex flex-column gap-3 w-100"
           >
-            <h1 className="sl-title">Sign Up as Student</h1>
-            <p className="sl-sub">Create your account to start playing and learning</p>
+            <h1 className="af-title">Sign Up as Student</h1>
+            <p className="af-sub">Create your account to start playing and learning</p>
             {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
             <div className="row g-2">
-              <div className="col-sm-6 sl-field">
+              <div className="col-sm-6 af-field">
                 <RequiredLabel label="First Name" touched={signupTouched.firstName} value={firstName} />
                 <input
                   type="text"
@@ -512,7 +449,7 @@ function StudentLogin() {
                   onBlur={() => setSignupTouched(t => ({ ...t, firstName: true }))}
                 />
               </div>
-              <div className="col-sm-6 sl-field">
+              <div className="col-sm-6 af-field">
                 <RequiredLabel label="Last Name" touched={signupTouched.lastName} value={lastName} />
                 <input
                   type="text"
@@ -525,7 +462,7 @@ function StudentLogin() {
               </div>
             </div>
 
-            <div className="sl-field">
+            <div className="af-field">
               <RequiredLabel label="Email" touched={signupTouched.email} value={signupEmail} />
               <input
                 type="email"
@@ -538,7 +475,7 @@ function StudentLogin() {
             </div>
 
             <div className="row g-2">
-              <div className="col-sm-6 sl-field d-flex flex-column">
+              <div className="col-sm-6 af-field d-flex flex-column">
                 <RequiredLabel label="Password" touched={signupTouched.password} value={signupPassword} />
                 <PasswordInput
                   placeholder="••••••••"
@@ -550,7 +487,7 @@ function StudentLogin() {
                   }}
                 />
               </div>
-              <div className="col-sm-6 sl-field d-flex flex-column">
+              <div className="col-sm-6 af-field d-flex flex-column">
                 <RequiredLabel label="Confirm Password" touched={signupTouched.confirmPassword} value={confirmPassword} />
                 <PasswordInput
                   placeholder="••••••••"
@@ -566,10 +503,10 @@ function StudentLogin() {
 
             {/* confirm password mismatch hint */}
             {signupTouched.confirmPassword && confirmPassword && signupPassword !== confirmPassword && (
-              <p className="sl-hint bad">✗ Passwords do not match</p>
+              <p className="af-hint bad">✗ Passwords do not match</p>
             )}
             {signupTouched.confirmPassword && confirmPassword && signupPassword === confirmPassword && (
-              <p className="sl-hint ok">✓ Passwords match</p>
+              <p className="af-hint ok">✓ Passwords match</p>
             )}
 
             {/* live password checklist */}
@@ -578,11 +515,11 @@ function StudentLogin() {
             <button className="btn btn-itfun w-100 py-2" onClick={handleSignUp} disabled={loading}>
               {loading ? 'Creating account...' : 'Sign Up'}
             </button>
-            <p className="sl-toggle-text">
+            <p className="af-toggle-text">
               Already have an account?{' '}
               <span onClick={() => { setScreen('login'); setError(''); }}>Login</span>
             </p>
-            <button className="sl-back-btn" onClick={() => navigate('/')}>Go back</button>
+            <button className="af-back-btn" onClick={() => navigate('/')}>Go back</button>
           </motion.div>
         )}
 
