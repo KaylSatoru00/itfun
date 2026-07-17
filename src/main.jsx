@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import './theme.css'
 import './index.css'
 import { UserProvider } from './user_context'
 import { SocketProvider } from './socket_context'
