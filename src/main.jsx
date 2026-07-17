@@ -31,6 +31,9 @@ import Chapter6 from './student/s6.jsx'
 import Chapter7 from './student/s7.jsx'
 import Chapter8 from './student/s8.jsx'
 import Chapter9 from './student/s9.jsx'
+// Shared dark-chrome theme for all chapter pages — imported AFTER the
+// s1–s9 imports so its overrides sit later in the CSS bundle.
+import './student/chapter_theme.css'
 
 // Faculty
 import FacultyModules from './faculty/faculty_modules.jsx'
@@ -75,12 +78,12 @@ function AnimatedRoutes() {
         <Route path="/student-chapter-1" element={<Chapter1 />} />
         <Route path="/student-chapter-2" element={<Chapter2 />} />
         <Route path="/student-chapter-3" element={<Chapter3 />} />
-        <Route path="/student-chapter-4" element={<Chapter4 />} />
+        <Route path="/student-chapter-4" element={<Chapter1 />} />
         <Route path="/student-chapter-5" element={<Chapter5 />} />
         <Route path="/student-chapter-6" element={<Chapter6 />} />
         <Route path="/student-chapter-7" element={<Chapter7 />} />
         <Route path="/student-chapter-8" element={<Chapter8 />} />
-        <Route path="/student-chapter-9" element={<Chapter9 />} />
+        <Route path="/student-chapter-9" element={<Chapter1 />} />
         <Route path="/faculty-chapter-1" element={<FacultyChapter1 />} />
         <Route path="/faculty-chapter-2" element={<FacultyChapter2 />} />
         <Route path="/faculty-chapter-3" element={<FacultyChapter3 />} />
