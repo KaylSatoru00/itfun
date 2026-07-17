@@ -2,11 +2,17 @@
 import { useState, useEffect, useRef } from 'react';
 import './student_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdAccountCircle } from 'react-icons/md';
+import { MdAccountCircle, MdViewCarousel, MdGridView } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { CiLogout } from 'react-icons/ci';
 import { LuSwords } from 'react-icons/lu';
 import { SiBookstack } from 'react-icons/si';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCoverflow, Navigation, Pagination, Keyboard } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { auth, db, rtdb } from '../firebase';
@@ -159,6 +165,9 @@ function LearningModules() {
   );
   const [progressLoading, setProgressLoading] = useState(true);
 
+  // ── Carousel vs grid view toggle ──
+  const [view, setView] = useState('carousel');
+
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user, setUser, beginLogout }  = useUser();
@@ -224,12 +233,12 @@ function LearningModules() {
   };
 
   /* ── Body background ──
-     Puti (#ffffff) habang wala pang na-join na instructor ("Join
-     Instructor" state); lumilipat sa #F2D7D5 kapag may na-join na
-     ("My Instructor" state). */
+     Dark brand background sa redesign (dating puti/#F2D7D5 depende sa
+     join state — ang join state ay makikita pa rin sa navbar button na
+     "Join Instructor" vs "My Instructor"). */
   useEffect(() => {
     document.body.style.backgroundImage  = 'none';
-    document.body.style.backgroundColor = myCourses.length > 0 ? '#F2D7D5' : '#ffffff';
+    document.body.style.backgroundColor = '#060607';
     return () => {
       document.body.style.backgroundImage  = '';
       document.body.style.backgroundColor = '';
@@ -449,18 +458,64 @@ function LearningModules() {
     return `hsl(${Math.abs(hash) % 360}, 60%, 45%)`;
   }
 
-  /* ── Panel CSS class names ── */
-  const panelClass = (num) => `sub-panel-${num}`;
+  /* ── Module card (shared between carousel slides and grid cells) ── */
+  const renderModuleCard = (module) => {
+    const state  = moduleStates[module.id] ?? { unlocked: false, completed: false, overallPercent: 0 };
+    const locked = !state.unlocked;
+
+    return (
+      <div
+        className={`mod-card ${locked ? 'locked' : 'unlocked'}`}
+        onClick={() => handleModuleClick(module)}
+      >
+        <div className="mod-card-img">
+          <img src={module.img} alt={`Module ${module.num}`} loading="lazy" />
+          <span className="mod-num-chip">Module {module.num}</span>
+          {locked ? (
+            <span className="mod-status-chip locked">🔒 Locked</span>
+          ) : state.completed ? (
+            <span className="mod-status-chip done">✓ Completed</span>
+          ) : state.overallPercent > 0 ? (
+            <span className="mod-status-chip prog">In Progress</span>
+          ) : null}
+        </div>
+        {locked && (
+          <div className="mod-lock-overlay"><span>🔒</span></div>
+        )}
+        <div className="mod-card-body">
+          <h3 className="mod-card-title">{module.label}</h3>
+          <div className="mod-progress-row">
+            <div className="mod-progress-track">
+              <div className="mod-progress-fill" style={{ width: `${state.overallPercent}%` }} />
+            </div>
+            <span className="mod-progress-pct">{state.overallPercent}%</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Pagsimula ng carousel sa "current" module ng student: ang pinakahuling
+  // naka-unlock. Re-mount ang Swiper kapag na-confirm na ang progress
+  // (initialSlide is mount-time only).
+  const currentModuleIndex = (() => {
+    let idx = 0;
+    MODULES.forEach((m, i) => {
+      if (moduleStates[m.id]?.unlocked) idx = i;
+    });
+    return idx;
+  })();
 
   return (
     <motion.div
-      className="lm-panel"
+      className="lm-panel sm-page"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
       {/* ── Top Navbar ── */}
       <div className="top-navbar">
+        <div className="lm-wordmark">IT<span>Fun</span></div>
 
         {/* ── Search Bar with Dropdown ── */}
         <div className="search-bar" ref={searchRef} style={{ position: 'relative' }}>
@@ -549,51 +604,90 @@ function LearningModules() {
         </div>
       </div>
 
-      {/* ── Module panels ── */}
+      {/* ── Module cards: coverflow carousel (default) o grid ── */}
       <div className="lm-scroll-body">
-        <div className="modules-grid">
-          {MODULES.map((module) => {
-            const state    = moduleStates[module.id] ?? { unlocked: false, completed: false, overallPercent: 0 };
-            const locked   = !state.unlocked;
-            const cssClass = panelClass(module.num);
-
-            return (
-              <div
-                key={module.id}
-                className={cssClass}
-                onClick={() => handleModuleClick(module)}
-                style={{
-                  cursor: locked ? 'not-allowed' : 'pointer',
-                  filter: locked ? 'grayscale(100%) brightness(0.5)' : 'none',
-                  transition: 'filter 0.3s ease',
-                  userSelect: 'none',
-                  position: 'relative',
-                }}
-              >
-                {locked && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.4)',
-                    borderRadius: '12px',
-                    zIndex: 2,
-                    pointerEvents: 'none',
-                  }}>
-                    <span style={{ fontSize: '48px', color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>🔒</span>
-                  </div>
-                )}
-
-                <div className="panel-content">
-                  <h3 className="panel-title">{module.label}</h3>
-                  <div className="panel-image-wrapper">
-                    <img src={module.img} alt={`Module ${module.num}`} className="panel-image" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="lm-heading">
+          <h2>
+            Welcome back{user?.firstName ? `, ${user.firstName}` : ''}! 👋
+          </h2>
+          <p>Pick up where you left off — swipe through your learning modules.</p>
+          <div className="lm-view-toggle">
+            <button
+              className={`lm-view-btn ${view === 'carousel' ? 'active' : ''}`}
+              onClick={() => setView('carousel')}
+            >
+              <MdViewCarousel size={16} /> Carousel
+            </button>
+            <button
+              className={`lm-view-btn ${view === 'grid' ? 'active' : ''}`}
+              onClick={() => setView('grid')}
+            >
+              <MdGridView size={16} /> View All
+            </button>
+          </div>
         </div>
+
+        <AnimatePresence mode="wait">
+          {view === 'carousel' ? (
+            <motion.div
+              key="carousel"
+              className="lm-carousel-wrap"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Swiper
+                className="lm-swiper"
+                // Re-mount kapag server-confirmed na ang progress para
+                // tumama ang initialSlide sa current module ng student.
+                key={progressLoading ? 'loading' : 'ready'}
+                modules={[EffectCoverflow, Navigation, Pagination, Keyboard]}
+                effect="coverflow"
+                grabCursor
+                centeredSlides
+                slidesPerView="auto"
+                initialSlide={currentModuleIndex}
+                coverflowEffect={{
+                  rotate: 32,
+                  stretch: 0,
+                  depth: 140,
+                  modifier: 1,
+                  slideShadows: true,
+                }}
+                navigation
+                pagination={{ clickable: true }}
+                keyboard={{ enabled: true }}
+              >
+                {MODULES.map((module) => (
+                  <SwiperSlide key={module.id}>
+                    {renderModuleCard(module)}
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="grid"
+              className="lm-grid"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+            >
+              {MODULES.map((module) => (
+                <motion.div
+                  key={module.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (module.num - 1) * 0.04 }}
+                >
+                  {renderModuleCard(module)}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Bottom Navigation */}
