@@ -39,7 +39,7 @@ import './s1.css';
 // ── Lesson item totals ──
 // introduction : 4 accordion + 2 flipcards = 6
 // functionalities : 9 advantages + 3 disadvantages = 12
-// history : 8 PersonFlipCards + 9 invention accordions = 17
+// history : 8 InventorStage reveals + 9 invention accordions = 17
 const LESSON_TOTALS = {
   introduction: 6,
   functionalities: 12,
@@ -124,31 +124,57 @@ function AccordionItem({ title, description, isOpen, onToggle, itemId, onInterac
   );
 }
 
-// ── Tracked PersonFlipCard ──
-function PersonFlipCard({ image, name, description, wide = false, itemId, onInteract }) {
-  const [flipped, setFlipped] = useState(false);
-  const handleClick = () => {
-    if (!flipped && onInteract) onInteract(itemId);
-    setFlipped(f => !f);
+// ── InventorStage — center-to-left reveal ──
+// Default: naka-CENTER ang portrait ng inventor sa isang "stage" row.
+// On click: ang portrait ay umiikot (rotateY) HABANG gumagalaw pa-kaliwa
+// (Framer Motion layout animation), at ang description panel ang pumapalit
+// sa gitna — Bootstrap horizontal-card ang end state. Click ulit (o ✕)
+// para bumalik sa center. Ang unang reveal pa rin ang nagti-trigger ng
+// progress tracking (same itemId gaya ng dating PersonFlipCard flip).
+function InventorStage({ image, name, description, wide = false, itemId, onInteract }) {
+  const [revealed, setRevealed] = useState(false);
+  const handleToggle = () => {
+    if (!revealed && onInteract) onInteract(itemId);
+    setRevealed(r => !r);
   };
   return (
-    <div className={`chap-person-flip-card ${flipped ? 'flipped' : ''} ${wide ? 'wide' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {image ? <img src={image} alt={name} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🧑‍💻</span>
-              <span>{name}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
+    <div className={`chap-stage ${revealed ? 'revealed' : ''}`}>
+      <motion.div
+        layout
+        className={`chap-stage-portrait ${wide ? 'wide' : ''}`}
+        onClick={handleToggle}
+        animate={{ rotateY: revealed ? 360 : 0 }}
+        transition={{ layout: { type: 'spring', stiffness: 220, damping: 26 }, rotateY: { duration: 0.6, ease: 'easeInOut' } }}
+        whileHover={{ scale: revealed ? 1 : 1.03 }}
+      >
+        {image ? <img src={image} alt={name} /> : (
+          <div className="chap-stage-portrait-placeholder">
+            <span style={{ fontSize: 48 }}>🧑‍💻</span>
+            <span>{name}</span>
+          </div>
+        )}
+        <div className="chap-stage-portrait-overlay">
+          <span>{revealed ? 'Tap to close' : `Meet ${name.split(' ')[0]}`}</span>
+          <span>{revealed ? '✕' : '↪'}</span>
         </div>
-        <div className="chap-flip-card-back chap-person-flip-back">
-          <span className="chap-person-flip-name">{name}</span>
-          <p>{description}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
-      </div>
+      </motion.div>
+
+      <AnimatePresence mode="popLayout">
+        {revealed && (
+          <motion.div
+            layout
+            className="chap-stage-panel"
+            initial={{ opacity: 0, x: 90 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 60, transition: { duration: 0.2 } }}
+            transition={{ type: 'spring', stiffness: 220, damping: 26, delay: 0.08 }}
+          >
+            <button className="chap-stage-close" onClick={handleToggle} aria-label="Close">✕</button>
+            <h3 className="chap-stage-panel-name">{name}</h3>
+            <p className="chap-stage-panel-body">{description}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -159,9 +185,14 @@ function HistoryPersonBlock({ name, label, image, description, inventions, openI
     <>
       <div className="chap-history-divider" />
       <div className="chap-history-block">
-        <h2 className="chap-history-title">{name}</h2>
-        {label && <p className="chap-history-label">{label}</p>}
-        <PersonFlipCard image={image} name={name} description={description} wide={wide} itemId={personItemId} onInteract={onInteract} />
+        {/* Structural change: dating left-aligned heading + in-place flip
+            card — ngayon centered heading sa ibabaw ng stage row, at ang
+            portrait ang naka-center hanggang i-reveal ang description. */}
+        <div className="chap-stage-heading">
+          <h2 className="chap-history-title">{name}</h2>
+          {label && <p className="chap-history-label">{label}</p>}
+        </div>
+        <InventorStage image={image} name={name} description={description} wide={wide} itemId={personItemId} onInteract={onInteract} />
         <p className="chap-pascal-invention-label">{inventions.length > 1 ? 'Inventions' : 'Invention'}</p>
         <div className="chap-accordion">
           {inventions.map((item, i) => (
