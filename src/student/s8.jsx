@@ -164,7 +164,7 @@ function Chapter8() {
       <div className="ao-body">
 
           <div className={`ao-lesson ${activeSection === 'applications' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('applications'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('applications')}>
               <span className="ao-caret">{activeSection === 'applications' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Application of Computers in Different Fields</span>

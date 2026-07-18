@@ -334,7 +334,7 @@ function Chapter9() {
 
       <div className="ao-body">
           <div className={`ao-lesson ${activeSection === 'keyboarding' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('keyboarding'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('keyboarding')}>
               <span className="ao-caret">{activeSection === 'keyboarding' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Keyboarding</span>

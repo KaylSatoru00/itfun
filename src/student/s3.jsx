@@ -204,7 +204,7 @@ function Chapter3() {
       <div className="ao-body">
 
           <div className={`ao-lesson ${activeSection === 'numbersystem' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('numbersystem'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('numbersystem')}>
               <span className="ao-caret">{activeSection === 'numbersystem' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Decimal & Binary Number System</span>
@@ -288,7 +288,7 @@ function Chapter3() {
 
 
           <div className={`ao-lesson ${activeSection === 'conversions' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('conversions'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('conversions')}>
               <span className="ao-caret">{activeSection === 'conversions' ? '▼' : '▶'}</span>
               <span className="ao-num">02</span>
               <span className="ao-label">Number System Conversions (Binary, Decimal)</span>
@@ -330,7 +330,7 @@ function Chapter3() {
 
 
           <div className={`ao-lesson ${activeSection === 'converter' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('converter'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('converter')}>
               <span className="ao-caret">{activeSection === 'converter' ? '▼' : '▶'}</span>
               <span className="ao-num">⚙</span>
               <span className="ao-label">Number Converter Tool</span>

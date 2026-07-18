@@ -288,7 +288,7 @@ function Chapter7() {
 
           {/* ══ INTRODUCTION TO MS OFFICE ══ */}
           <div className={`ao-lesson ${activeSection === 'intro' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('intro'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('intro')}>
               <span className="ao-caret">{activeSection === 'intro' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Introduction to MS Office</span>
@@ -390,7 +390,7 @@ function Chapter7() {
 
           {/* ══ MS POWERPOINT, WORD, & EXCEL (CONSOLIDATED) ══ */}
           <div className={`ao-lesson ${activeSection === 'apps' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('apps'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('apps')}>
               <span className="ao-caret">{activeSection === 'apps' ? '▼' : '▶'}</span>
               <span className="ao-num">02</span>
               <span className="ao-label">MS PowerPoint, Word, & Excel</span>

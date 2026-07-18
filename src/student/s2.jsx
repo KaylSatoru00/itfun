@@ -164,7 +164,7 @@ function Chapter2() {
 
           {/* ── Language of Computer ── */}
           <div className={`ao-lesson ${activeSection === 'language' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('language'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('language')}>
               <span className="ao-caret">{activeSection === 'language' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Language of Computer</span>
@@ -203,7 +203,7 @@ function Chapter2() {
 
           {/* ── Personal Computers ── */}
           <div className={`ao-lesson ${activeSection === 'personal' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('personal'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('personal')}>
               <span className="ao-caret">{activeSection === 'personal' ? '▼' : '▶'}</span>
               <span className="ao-num">02</span>
               <span className="ao-label">Personal Computers (PC)</span>
@@ -234,7 +234,7 @@ function Chapter2() {
 
           {/* ── Workstation ── */}
           <div className={`ao-lesson ${activeSection === 'workstation' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('workstation'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('workstation')}>
               <span className="ao-caret">{activeSection === 'workstation' ? '▼' : '▶'}</span>
               <span className="ao-num">03</span>
               <span className="ao-label">Workstation</span>
@@ -263,7 +263,7 @@ function Chapter2() {
 
           {/* ── Minicomputer, Mainframe & Supercomputer ── */}
           <div className={`ao-lesson ${activeSection === 'minicomputer' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('minicomputer'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('minicomputer')}>
               <span className="ao-caret">{activeSection === 'minicomputer' ? '▼' : '▶'}</span>
               <span className="ao-num">04</span>
               <span className="ao-label">Minicomputer, Mainframe & Supercomputer</span>

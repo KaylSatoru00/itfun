@@ -297,9 +297,6 @@ function Chapter1() {
     setActiveSection(key);
     setOpenIndex(null);
     setAdvOpenIndex(null);
-    // Course-player layout: buong page na ang nag-i-scroll, kaya balik-taas
-    // tuwing magpapalit ng lesson.
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const currentItems = sectionData.introduction;

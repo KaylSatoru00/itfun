@@ -250,7 +250,7 @@ function Chapter5() {
       <div className="ao-body">
 
           <div className={`ao-lesson ${activeSection === 'software' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('software'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('software')}>
               <span className="ao-caret">{activeSection === 'software' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Types of Software (System, Application and Operating System)</span>

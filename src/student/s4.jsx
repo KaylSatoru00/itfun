@@ -383,7 +383,7 @@ function Chapter4() {
 
           {/* ══ PARTS OF COMPUTER ══ */}
           <div className={`ao-lesson ${activeSection === 'parts' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('parts'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('parts')}>
               <span className="ao-caret">{activeSection === 'parts' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Parts of Computer</span>
@@ -679,7 +679,7 @@ function Chapter4() {
 
           {/* ══ INPUT AND OUTPUT DEVICES ══ */}
           <div className={`ao-lesson ${activeSection === 'iodevices' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('iodevices'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('iodevices')}>
               <span className="ao-caret">{activeSection === 'iodevices' ? '▼' : '▶'}</span>
               <span className="ao-num">02</span>
               <span className="ao-label">Input and Output Devices</span>

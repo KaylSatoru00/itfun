@@ -559,8 +559,12 @@
    separate block cards + prev/next footer + module-complete banner.
    Generic cp-* names so s2–s9 reuse them in later rounds. */
 
-/* header scrolls away; the lesson stepper is what stays pinned */
-.chap-panel.cp-page .chap-header { position: static; }
+/* header stays pinned at the top of the viewport on chapter pages */
+.chap-panel.cp-page .chap-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
 
 .chap-panel .cp-stepper {
   position: sticky;
@@ -694,9 +698,6 @@
    bar sa ilalim ng header; content blocks naka-nest sa loob. */
 
 .chap-panel .ao-progress {
-  position: sticky;
-  top: 0;
-  z-index: 30;
   height: 8px;
   background: rgba(255, 255, 255, 0.08);
 }

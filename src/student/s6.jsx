@@ -260,7 +260,7 @@ function Chapter6() {
 
           {/* ══ CHARACTERISTICS ══ */}
           <div className={`ao-lesson ${activeSection === 'characteristics' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('characteristics'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('characteristics')}>
               <span className="ao-caret">{activeSection === 'characteristics' ? '▼' : '▶'}</span>
               <span className="ao-num">01</span>
               <span className="ao-label">Characteristics of a Computer Network</span>
@@ -341,7 +341,7 @@ function Chapter6() {
 
           {/* ══ INTERNET AND INTRANET ══ */}
           <div className={`ao-lesson ${activeSection === 'internet' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('internet'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('internet')}>
               <span className="ao-caret">{activeSection === 'internet' ? '▼' : '▶'}</span>
               <span className="ao-num">02</span>
               <span className="ao-label">Internet and Intranet</span>
@@ -446,7 +446,7 @@ function Chapter6() {
 
           {/* ══ AREAS OF NETWORK ══ */}
           <div className={`ao-lesson ${activeSection === 'areas' ? 'open' : ''}`}>
-            <button className="ao-lesson-header" onClick={() => { setActiveSection('areas'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('areas')}>
               <span className="ao-caret">{activeSection === 'areas' ? '▼' : '▶'}</span>
               <span className="ao-num">03</span>
               <span className="ao-label">Areas of Network</span>
