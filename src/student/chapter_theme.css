@@ -799,3 +799,16 @@
   .chap-panel .ao-lesson-header { padding: 14px; font-size: 0.9rem; gap: 10px; }
   .chap-panel .ao-lesson-inner { padding: 12px; }
 }
+
+/* ═══════════ MOBILE STICKY FIX ═══════════
+   Bawat sN.css ay may mobile compat rule na
+   `#root:has(.chap-panel) { overflow: auto !important }` sa ≤768px —
+   ginagawa nitong scrollport ng sticky header ang #root, pero ang BODY
+   ang totoong nag-i-scroll, kaya hindi pumipirmi ang header sa mobile.
+   Panatilihing visible ang overflow ng #root para body pa rin ang
+   scroll container na kinakapitan ng sticky header + progress bar. */
+@media (max-width: 768px) {
+  #root#root:has(.chap-panel) {
+    overflow: visible !important;
+  }
+}
