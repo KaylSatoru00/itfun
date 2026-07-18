@@ -270,9 +270,26 @@ function Chapter1() {
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = '#060607';
+    // index.css locks body sa 100vh + overflow:hidden at ang #root ay
+    // position:fixed (fixed-viewport pages). Ang accordion-outline layout
+    // ay normal page scroll, kaya i-unlock habang nasa page na ito;
+    // ibalik lahat pag-alis.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.position = 'static';
+      root.style.display = 'block';
+    }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      if (root) {
+        root.style.position = '';
+        root.style.display = '';
+      }
     };
   }, []);
 
@@ -284,14 +301,6 @@ function Chapter1() {
     // tuwing magpapalit ng lesson.
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  // Lesson order — ginagamit ng stepper at ng prev/next footer nav
-  const SECTIONS = [
-    { key: 'introduction', label: 'Introduction of Computer' },
-    { key: 'functionalities', label: 'Functionalities of a Computer' },
-    { key: 'history', label: 'History of Computers' },
-  ];
-  const secIndex = SECTIONS.findIndex(s => s.key === activeSection);
 
   const currentItems = sectionData.introduction;
   const flipItem = currentItems.find(item => item.flipImage);
@@ -308,29 +317,26 @@ function Chapter1() {
         </div>
       </div>
 
-      {/* ── Sticky lesson stepper (dating left sidebar) ── */}
-      <nav className="cp-stepper">
-        {SECTIONS.map(({ key, label }) => (
-          <button key={key} className={`cp-step ${activeSection === key ? 'active' : ''}`} onClick={() => handleSectionChange(key)}>
-            <CircleProgress percent={progress[key]} active={activeSection === key} />
-            <span>{label}</span>
-          </button>
-        ))}
-      </nav>
+      {/* ── Thin module progress bar (average ng 3 lessons) ── */}
+      <div className="ao-progress">
+        <div style={{ width: `${Math.round((progress.introduction + progress.functionalities + progress.history) / 3)}%` }} />
+      </div>
 
-      {/* ── Centered content column: hiwa-hiwalay na block cards ── */}
-      <div className="cp-body">
-        <motion.div
-          key={activeSection}
-          className="cp-lesson"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
+      {/* ── Accordion Outline: mga lesson mismo ang collapsible bars ── */}
+      <div className="ao-body">
 
-          {/* ── INTRODUCTION ── */}
+          {/* ── 01 · INTRODUCTION ── */}
+          <div className={`ao-lesson ${activeSection === 'introduction' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => handleSectionChange('introduction')}>
+              <span className="ao-caret">{activeSection === 'introduction' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Introduction of Computer</span>
+              <span className="ao-pct">{Math.round(progress.introduction)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'introduction' && (
-            <>
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner">
               <div className="cp-block cp-hero">
                 <div className="chap-section-header">
                   <h2 className="chap-section-main-title">Introduction of Computer</h2>
@@ -391,12 +397,24 @@ function Chapter1() {
                   <FlipCard image={pic2} text="A collection of facts, such as numbers, words, measurements, observations or even just descriptions of things" title="What is Data?" itemId="intro_flipcard_2" onInteract={intro.trackInteraction} />
                 </div>
               </div>
-            </>
+            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-          {/* ── FUNCTIONALITIES ── */}
+          {/* ── 02 · FUNCTIONALITIES ── */}
+          <div className={`ao-lesson ${activeSection === 'functionalities' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => handleSectionChange('functionalities')}>
+              <span className="ao-caret">{activeSection === 'functionalities' ? '▼' : '▶'}</span>
+              <span className="ao-num">02</span>
+              <span className="ao-label">Functionalities of a Computer</span>
+              <span className="ao-pct">{Math.round(progress.functionalities)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'functionalities' && (
-            <>
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner">
               <div className="cp-block cp-hero">
                 <h2 className="chap-section-main-title" style={{ margin: 0 }}>Functionalities of a Computer</h2>
               </div>
@@ -453,12 +471,24 @@ function Chapter1() {
                   ))}
                 </div>
               </div>
-            </>
+            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-          {/* ── HISTORY ── */}
+          {/* ── 03 · HISTORY ── */}
+          <div className={`ao-lesson ${activeSection === 'history' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => handleSectionChange('history')}>
+              <span className="ao-caret">{activeSection === 'history' ? '▼' : '▶'}</span>
+              <span className="ao-num">03</span>
+              <span className="ao-label">History of Computers</span>
+              <span className="ao-pct">{Math.round(progress.history)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'history' && (
-            <>
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner">
               <div className="chap-history-section cp-block">
 
                 <div className="chap-history-block">
@@ -566,36 +596,22 @@ function Chapter1() {
                 </div>
 
               </div>
-            </>
+            </div>
+            </motion.div>
           )}
-
-          {/* ── Linear flow: prev / next lesson ── */}
-          <div className="cp-footer-nav">
-            <button
-              className="cp-nav-prev"
-              disabled={secIndex === 0}
-              onClick={() => secIndex > 0 && handleSectionChange(SECTIONS[secIndex - 1].key)}
-            >
-              ◀ {secIndex > 0 ? SECTIONS[secIndex - 1].label : 'Previous'}
-            </button>
-            <button
-              className="cp-nav-next"
-              disabled={secIndex === SECTIONS.length - 1}
-              onClick={() => secIndex < SECTIONS.length - 1 && handleSectionChange(SECTIONS[secIndex + 1].key)}
-            >
-              {secIndex < SECTIONS.length - 1 ? `Next: ${SECTIONS[secIndex + 1].label}` : 'Last lesson'} ▶
-            </button>
+          </AnimatePresence>
           </div>
 
-          {/* ── Module-complete banner (dating sidebar/mobile buttons) ── */}
-          {allLessonsComplete && (
+          {/* ── Module-complete banner / locked hint ── */}
+          {allLessonsComplete ? (
             <div className="cp-banner">
               <h3>🎉 Module 1 complete!</h3>
               <p>You've finished all lessons. Ready to test your knowledge?</p>
               <button className="chap-start-game-btn" onClick={() => navigate('/gamified-1')}>START GAME</button>
             </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
           )}
-        </motion.div>
       </div>
     </motion.div>
   );
