@@ -155,11 +155,12 @@ function Chapter8() {
           <span className="chap-chapter-label">Chapter 8</span>
           <h1 className="chap-title">Application of Computers in Different Fields</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round(appPct)}%` }} />
+        </div>
       </div>
 
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round(appPct)}%` }} />
-      </div>
 
       <div className="ao-body">
 

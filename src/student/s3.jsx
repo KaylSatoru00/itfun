@@ -195,11 +195,12 @@ function Chapter3() {
           <span className="chap-chapter-label">LEARNING MODULE 3</span>
           <h1 className="chap-title">Number System & Conversions</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.numbersystem + progress.conversions) / 2)}%` }} />
+        </div>
       </div>
 
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round((progress.numbersystem + progress.conversions) / 2)}%` }} />
-      </div>
 
       <div className="ao-body">
 

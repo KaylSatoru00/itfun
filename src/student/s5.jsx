@@ -240,12 +240,12 @@ function Chapter5() {
           <span className="chap-chapter-label">LEARNING MODULE 5</span>
           <h1 className="chap-title">Types of Software</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round(progress.software)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round(progress.software)}%` }} />
-      </div>
 
       <div className="ao-body">
 

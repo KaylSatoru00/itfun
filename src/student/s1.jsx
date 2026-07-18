@@ -312,12 +312,12 @@ function Chapter1() {
           <span className="chap-chapter-label">LEARNING MODULE 1</span>
           <h1 className="chap-title">Introduction to Computers and History of Computers</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.introduction + progress.functionalities + progress.history) / 3)}%` }} />
+        </div>
       </div>
 
-      {/* ── Thin module progress bar (average ng 3 lessons) ── */}
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round((progress.introduction + progress.functionalities + progress.history) / 3)}%` }} />
-      </div>
 
       {/* ── Accordion Outline: mga lesson mismo ang collapsible bars ── */}
       <div className="ao-body">

@@ -154,11 +154,12 @@ function Chapter2() {
           <span className="chap-chapter-label">LEARNING MODULE 2</span>
           <h1 className="chap-title">Language & Types of Computers with Their Uses</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.language + progress.personal + progress.workstation + progress.minicomputer) / 4)}%` }} />
+        </div>
       </div>
 
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round((progress.language + progress.personal + progress.workstation + progress.minicomputer) / 4)}%` }} />
-      </div>
 
       <div className="ao-body">
 

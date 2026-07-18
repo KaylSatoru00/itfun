@@ -372,12 +372,12 @@ function Chapter4() {
           <span className="chap-chapter-label">LEARNING MODULE 4</span>
           <h1 className="chap-title">Hardware Components & I/O Devices</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.parts + progress.iodevices) / 2)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round((progress.parts + progress.iodevices) / 2)}%` }} />
-      </div>
 
       <div className="ao-body">
 

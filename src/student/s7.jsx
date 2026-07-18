@@ -277,12 +277,12 @@ function Chapter7() {
           <span className="chap-chapter-label">LEARNING MODULE 7</span>
           <h1 className="chap-title">Microsoft Office Applications</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.intro + progress.apps) / 2)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round((progress.intro + progress.apps) / 2)}%` }} />
-      </div>
 
       <div className="ao-body">
 

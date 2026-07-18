@@ -326,11 +326,12 @@ function Chapter9() {
           <span className="chap-chapter-label">Chapter 9</span>
           <h1 className="chap-title">Keyboarding</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round(kbPct)}%` }} />
+        </div>
       </div>
 
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round(kbPct)}%` }} />
-      </div>
 
       <div className="ao-body">
           <div className={`ao-lesson ${activeSection === 'keyboarding' ? 'open' : ''}`}>

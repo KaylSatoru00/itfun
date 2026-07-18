@@ -249,12 +249,12 @@ function Chapter6() {
           <span className="chap-chapter-label">LEARNING MODULE 6</span>
           <h1 className="chap-title">Networking Fundamentals</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.characteristics + progress.internet + progress.areas) / 3)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="ao-progress">
-        <div style={{ width: `${Math.round((progress.characteristics + progress.internet + progress.areas) / 3)}%` }} />
-      </div>
 
       <div className="ao-body">
 
