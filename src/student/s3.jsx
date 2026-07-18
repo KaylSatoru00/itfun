@@ -146,10 +146,20 @@ function Chapter3() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#060607';
+    // index.css locks body/#root sa fixed viewport — i-unlock para
+    // maka-scroll nang normal ang accordion-outline layout.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    const rootEl = document.getElementById('root');
+    if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      const rootReset = document.getElementById('root');
+      if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
     };
   }, []);
 
@@ -177,7 +187,7 @@ function Chapter3() {
   }
 
   return (
-    <motion.div className="chap-panel" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
+    <motion.div className="chap-panel cp-page" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
 
       <div className="chap-header">
         <button className="chap-back-btn" onClick={() => navigate('/learning-modules')}>← Back</button>
@@ -187,33 +197,23 @@ function Chapter3() {
         </div>
       </div>
 
-      <div className="chap-layout">
+      <div className="ao-progress">
+        <div style={{ width: `${Math.round((progress.numbersystem + progress.conversions) / 2)}%` }} />
+      </div>
 
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {navItems.map(({ key, label }) => (
-                <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => setActiveSection(key)}>
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
+      <div className="ao-body">
 
-          <div className="chap-card-tool">
-            <button
-              className={`chap-tool-btn ${activeSection === 'converter' ? 'active' : ''}`}
-              onClick={() => setActiveSection('converter')}
-            >
-              <span>CONVERT TOOL</span>
+          <div className={`ao-lesson ${activeSection === 'numbersystem' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => { setActiveSection('numbersystem'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <span className="ao-caret">{activeSection === 'numbersystem' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Decimal & Binary Number System</span>
+              <span className="ao-pct">{Math.round(progress.numbersystem)}%</span>
             </button>
-          </div>
-        </div>
-
-        <div className="chap-card-main">
-
+          <AnimatePresence initial={false}>
           {activeSection === 'numbersystem' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Number System</h2>
@@ -281,9 +281,23 @@ function Chapter3() {
                 </ul>
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
+
+          <div className={`ao-lesson ${activeSection === 'conversions' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => { setActiveSection('conversions'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <span className="ao-caret">{activeSection === 'conversions' ? '▼' : '▶'}</span>
+              <span className="ao-num">02</span>
+              <span className="ao-label">Number System Conversions (Binary, Decimal)</span>
+              <span className="ao-pct">{Math.round(progress.conversions)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'conversions' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Binary to Decimal Number Conversion</h2>
@@ -309,9 +323,23 @@ function Chapter3() {
                 <FlipCardImageBack frontLabel="DECIMAL TO BINARY NUMBER CONVERSION" backImage={d1Img} backAlt="Decimal to Binary Example" itemId="conv_fc_d1" onInteract={convT.trackInteraction} />
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
+
+          <div className={`ao-lesson ${activeSection === 'converter' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => { setActiveSection('converter'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <span className="ao-caret">{activeSection === 'converter' ? '▼' : '▶'}</span>
+              <span className="ao-num">⚙</span>
+              <span className="ao-label">Number Converter Tool</span>
+              <span className="ao-pct">TOOL</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'converter' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <div className="s3-converter-page">
               <div className="s3-converter-header">
                 <span className="s3-converter-icon">⇄</span>
@@ -359,9 +387,13 @@ function Chapter3() {
                 </div>
               </div>
             </div>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-        </div>
+
+
       </div>
     </motion.div>
   );

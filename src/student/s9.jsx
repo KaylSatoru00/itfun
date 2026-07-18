@@ -1,5 +1,5 @@
 // s9.jsx — Keyboarding
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -289,11 +289,30 @@ function Chapter9() {
 
   const allLessonsComplete = kbPct >= 100;
 
+  // Dark brand bg + i-unlock ang fixed-viewport styles (index.css) para
+  // maka-scroll nang normal ang accordion-outline layout.
+  useEffect(() => {
+    document.body.style.backgroundImage = 'none';
+    document.body.style.backgroundColor = '#060607';
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    const rootEl = document.getElementById('root');
+    if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
+    return () => {
+      document.body.style.backgroundImage = '';
+      document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      const rootReset = document.getElementById('root');
+      if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
+    };
+  }, []);
+
   const toggle = (key) => setOpenAccordion(prev => prev === key ? null : key);
 
   return (
     <motion.div
-      className="chap-panel"
+      className="chap-panel cp-page"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -309,38 +328,22 @@ function Chapter9() {
         </div>
       </div>
 
-      <div className="chap-layout">
+      <div className="ao-progress">
+        <div style={{ width: `${Math.round(kbPct)}%` }} />
+      </div>
 
-        {/* ── Left Nav ── */}
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <div className="chap-nav-buttons">
-              {navItems.map(item => {
-                const pct = item.key === 'keyboarding' ? kbPct : 0;
-                return (
-                  <button
-                    key={item.key}
-                    className={`chap-nav-btn ${activeSection === item.key ? 'active' : ''}`}
-                    onClick={() => setActiveSection(item.key)}
-                  >
-                    <CircleProgress percent={pct} active={activeSection === item.key} />
-                    <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-9')}>
-              START GAME
+      <div className="ao-body">
+          <div className={`ao-lesson ${activeSection === 'keyboarding' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => { setActiveSection('keyboarding'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <span className="ao-caret">{activeSection === 'keyboarding' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Keyboarding</span>
+              <span className="ao-pct">{Math.round(kbPct)}%</span>
             </button>
-          )}
-        </div>
-
-        {/* ── Main Content ── */}
-        <div className="chap-card-main">
+          <AnimatePresence initial={false}>
           {activeSection === 'keyboarding' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               {/* ── Title ── */}
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
@@ -414,16 +417,22 @@ function Chapter9() {
 
               </div>
             </>
+            </div></div></motion.div>
           )}
-        </div>
+          </AnimatePresence>
+          </div>
 
+
+          {allLessonsComplete ? (
+            <div className="cp-banner">
+              <h3>🎉 Module 9 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-9')}>START GAME</button>
+            </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
+          )}
       </div>
-
-      {allLessonsComplete && (
-        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-9')}>
-          START GAME
-        </button>
-      )}
     </motion.div>
   );
 }

@@ -220,10 +220,20 @@ function Chapter7() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#060607';
+    // index.css locks body/#root sa fixed viewport — i-unlock para
+    // maka-scroll nang normal ang accordion-outline layout.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    const rootEl = document.getElementById('root');
+    if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      const rootReset = document.getElementById('root');
+      if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
     };
   }, []);
 
@@ -252,7 +262,7 @@ function Chapter7() {
 
   return (
     <motion.div
-      className="chap-panel"
+      className="chap-panel cp-page"
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
@@ -270,37 +280,24 @@ function Chapter7() {
       </div>
 
       {/* ── Layout ── */}
-      <div className="chap-layout">
+      <div className="ao-progress">
+        <div style={{ width: `${Math.round((progress.intro + progress.apps) / 2)}%` }} />
+      </div>
 
-        {/* ── Left Nav Card ── */}
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {navItems.map(({ key, label }) => (
-                <button
-                  key={key}
-                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                  onClick={() => setActiveSection(key)}
-                >
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-7')}>
-              START GAME
-            </button>
-          )}
-        </div>
-
-        {/* ── Main Right Card ── */}
-        <div className="chap-card-main">
+      <div className="ao-body">
 
           {/* ══ INTRODUCTION TO MS OFFICE ══ */}
+          <div className={`ao-lesson ${activeSection === 'intro' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => { setActiveSection('intro'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <span className="ao-caret">{activeSection === 'intro' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Introduction to MS Office</span>
+              <span className="ao-pct">{Math.round(progress.intro)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'intro' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Introduction to MS Office</h2>
@@ -385,10 +382,24 @@ function Chapter7() {
                 />
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
+
 
           {/* ══ MS POWERPOINT, WORD, & EXCEL (CONSOLIDATED) ══ */}
+          <div className={`ao-lesson ${activeSection === 'apps' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => { setActiveSection('apps'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              <span className="ao-caret">{activeSection === 'apps' ? '▼' : '▶'}</span>
+              <span className="ao-num">02</span>
+              <span className="ao-label">MS PowerPoint, Word, & Excel</span>
+              <span className="ao-pct">{Math.round(progress.apps)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'apps' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               {/* ══ POWERPOINT ══ */}
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
@@ -540,16 +551,23 @@ function Chapter7() {
                 </p>
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-        </div>
+
+
+          {allLessonsComplete ? (
+            <div className="cp-banner">
+              <h3>🎉 Module 7 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-7')}>START GAME</button>
+            </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
+          )}
       </div>
-
-      {allLessonsComplete && (
-        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-7')}>
-          START GAME
-        </button>
-      )}
     </motion.div>
   );
 }
