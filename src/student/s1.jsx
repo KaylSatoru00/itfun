@@ -276,6 +276,7 @@ function Chapter1() {
     // ibalik lahat pag-alis.
     document.body.style.overflow = 'auto';
     document.body.style.height = 'auto';
+    document.body.style.width = '100%';
     const root = document.getElementById('root');
     if (root) {
       root.style.position = 'static';
@@ -286,6 +287,7 @@ function Chapter1() {
       document.body.style.backgroundColor = '';
       document.body.style.overflow = '';
       document.body.style.height = '';
+      document.body.style.width = '';
       if (root) {
         root.style.position = '';
         root.style.display = '';

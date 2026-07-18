@@ -7,6 +7,9 @@
 
 /* ── Page shell ── */
 .chap-panel.chap-panel {
+  /* sN.css uses width:100vw which overflows by the scrollbar width once
+     the page can scroll vertically — 100% ang tama */
+  width: 100%;
   background:
     radial-gradient(1000px 420px at 90% -10%, rgba(200, 16, 46, 0.16), transparent 60%),
     radial-gradient(800px 420px at -10% 110%, rgba(165, 0, 52, 0.12), transparent 60%),
@@ -712,7 +715,7 @@
 }
 
 .chap-panel .ao-body {
-  width: min(900px, 100%);
+  width: min(94%, 1400px);
   margin: 0 auto;
   padding: clamp(16px, 3vh, 28px) clamp(12px, 3vw, 20px) 70px;
   display: flex;

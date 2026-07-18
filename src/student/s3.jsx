@@ -151,6 +151,7 @@ function Chapter3() {
     // maka-scroll nang normal ang accordion-outline layout.
     document.body.style.overflow = 'auto';
     document.body.style.height = 'auto';
+    document.body.style.width = '100%';
     const rootEl = document.getElementById('root');
     if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
     return () => {
@@ -158,6 +159,7 @@ function Chapter3() {
       document.body.style.backgroundColor = '';
       document.body.style.overflow = '';
       document.body.style.height = '';
+      document.body.style.width = '';
       const rootReset = document.getElementById('root');
       if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
     };
