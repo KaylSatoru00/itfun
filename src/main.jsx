@@ -78,12 +78,12 @@ function AnimatedRoutes() {
         <Route path="/student-chapter-1" element={<Chapter1 />} />
         <Route path="/student-chapter-2" element={<Chapter2 />} />
         <Route path="/student-chapter-3" element={<Chapter3 />} />
-        <Route path="/student-chapter-4" element={<Chapter1 />} />
+        <Route path="/student-chapter-4" element={<Chapter4 />} />
         <Route path="/student-chapter-5" element={<Chapter5 />} />
         <Route path="/student-chapter-6" element={<Chapter6 />} />
         <Route path="/student-chapter-7" element={<Chapter7 />} />
         <Route path="/student-chapter-8" element={<Chapter8 />} />
-        <Route path="/student-chapter-9" element={<Chapter1 />} />
+        <Route path="/student-chapter-9" element={<Chapter9 />} />
         <Route path="/faculty-chapter-1" element={<FacultyChapter1 />} />
         <Route path="/faculty-chapter-2" element={<FacultyChapter2 />} />
         <Route path="/faculty-chapter-3" element={<FacultyChapter3 />} />
