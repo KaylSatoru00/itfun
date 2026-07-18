@@ -269,7 +269,7 @@ function Chapter1() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#060607';
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
@@ -280,13 +280,24 @@ function Chapter1() {
     setActiveSection(key);
     setOpenIndex(null);
     setAdvOpenIndex(null);
+    // Course-player layout: buong page na ang nag-i-scroll, kaya balik-taas
+    // tuwing magpapalit ng lesson.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Lesson order — ginagamit ng stepper at ng prev/next footer nav
+  const SECTIONS = [
+    { key: 'introduction', label: 'Introduction of Computer' },
+    { key: 'functionalities', label: 'Functionalities of a Computer' },
+    { key: 'history', label: 'History of Computers' },
+  ];
+  const secIndex = SECTIONS.findIndex(s => s.key === activeSection);
 
   const currentItems = sectionData.introduction;
   const flipItem = currentItems.find(item => item.flipImage);
 
   return (
-    <motion.div className="chap-panel" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
+    <motion.div className="chap-panel cp-page" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
 
       {/* ── Header ── */}
       <div className="chap-header">
@@ -297,44 +308,39 @@ function Chapter1() {
         </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="chap-layout">
+      {/* ── Sticky lesson stepper (dating left sidebar) ── */}
+      <nav className="cp-stepper">
+        {SECTIONS.map(({ key, label }) => (
+          <button key={key} className={`cp-step ${activeSection === key ? 'active' : ''}`} onClick={() => handleSectionChange(key)}>
+            <CircleProgress percent={progress[key]} active={activeSection === key} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
 
-        {/* Left Nav */}
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {[
-                { key: 'introduction', label: 'Introduction of Computer' },
-                { key: 'functionalities', label: 'Functionalities of a Computer' },
-                { key: 'history', label: 'History of Computers' },
-              ].map(({ key, label }) => (
-                <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => handleSectionChange(key)}>
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-1')}>START GAME</button>
-          )}
-        </div>
-
-        {/* Main Content */}
-        <div className="chap-card-main">
+      {/* ── Centered content column: hiwa-hiwalay na block cards ── */}
+      <div className="cp-body">
+        <motion.div
+          key={activeSection}
+          className="cp-lesson"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
 
           {/* ── INTRODUCTION ── */}
           {activeSection === 'introduction' && (
             <>
-              <div className="chap-section-header">
-                <h2 className="chap-section-main-title">Introduction of Computer</h2>
-                <p>The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
+              <div className="cp-block cp-hero">
+                <div className="chap-section-header">
+                  <h2 className="chap-section-main-title">Introduction of Computer</h2>
+                  <p>The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
+                </div>
               </div>
 
               {flipItem && (
                 <AnimatePresence mode="wait">
-                  <motion.div key="intro-flip" className="chap-flip-row" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }} style={{ marginBottom: 28 }}>
+                  <motion.div key="intro-flip" className="cp-block chap-flip-row" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
                     <FlipCard image={flipItem.flipImage} text={flipItem.flipText} title={flipItem.title} itemId="intro_flipcard_1" onInteract={intro.trackInteraction} />
                     <div className="chap-flip-side-text">
                       <p className="chap-flip-side-body">Computers are used in almost every aspect of modern life, including education, business, healthcare, banking, communication, and entertainment.</p>
@@ -349,23 +355,26 @@ function Chapter1() {
                 </AnimatePresence>
               )}
 
-              <div className="chap-concepts-header">
-                <h2 className="chap-concepts-title">Concepts of Computer</h2>
-                <p className="chap-concepts-subtitle">A Computer performs four basic operations:</p>
+              <div className="cp-block">
+                <div className="chap-concepts-header">
+                  <h2 className="chap-concepts-title">Concepts of Computer</h2>
+                  <p className="chap-concepts-subtitle">A Computer performs four basic operations:</p>
+                </div>
+
+                <div className="chap-accordion">
+                  {currentItems.map((item, i) => (
+                    <AccordionItem key={i} title={item.title} description={item.description} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} itemId={`intro_acc_${i}`} onInteract={intro.trackInteraction} />
+                  ))}
+                </div>
               </div>
 
-              <div className="chap-accordion">
-                {currentItems.map((item, i) => (
-                  <AccordionItem key={i} title={item.title} description={item.description} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} itemId={`intro_acc_${i}`} onInteract={intro.trackInteraction} />
-                ))}
-              </div>
+              <div className="cp-block">
+                <div className="chap-data-header">
+                  <h2 className="chap-data-title">What is Data?</h2>
+                  <p className="chap-data-subtitle">An information that can be interpreted and used by computers</p>
+                </div>
 
-              <div className="chap-data-header">
-                <h2 className="chap-data-title">What is Data?</h2>
-                <p className="chap-data-subtitle">An information that can be interpreted and used by computers</p>
-              </div>
-
-              <div className="chap-flip-row" style={{ marginTop: 20 }}>
+                <div className="chap-flip-row" style={{ marginTop: 20 }}>
                 <div className="chap-flip-side-text">
                   <p className="chap-flip-side-examples-label">Examples of Data</p>
                   <ul className="chap-flip-side-list">
@@ -379,7 +388,8 @@ function Chapter1() {
                     <p className="chap-data-example-row"><span className="chap-data-example-label">Information:</span> Average Grade = 87.67</p>
                   </div>
                 </div>
-                <FlipCard image={pic2} text="A collection of facts, such as numbers, words, measurements, observations or even just descriptions of things" title="What is Data?" itemId="intro_flipcard_2" onInteract={intro.trackInteraction} />
+                  <FlipCard image={pic2} text="A collection of facts, such as numbers, words, measurements, observations or even just descriptions of things" title="What is Data?" itemId="intro_flipcard_2" onInteract={intro.trackInteraction} />
+                </div>
               </div>
             </>
           )}
@@ -387,9 +397,11 @@ function Chapter1() {
           {/* ── FUNCTIONALITIES ── */}
           {activeSection === 'functionalities' && (
             <>
-              <div style={{ marginBottom: 28, textAlign: 'center', width: '100%' }}>
-                <h2 className="chap-section-main-title">Functionalities of a Computer</h2>
+              <div className="cp-block cp-hero">
+                <h2 className="chap-section-main-title" style={{ margin: 0 }}>Functionalities of a Computer</h2>
               </div>
+
+              <div className="cp-block">
 
               <div className="chap-func-list" style={{ width: '100%', alignItems: 'center' }}>
                 {[
@@ -408,8 +420,9 @@ function Chapter1() {
                   </div>
                 ))}
               </div>
+              </div>
 
-              <div className="chap-adv-section">
+              <div className="chap-adv-section cp-block">
                 <p className="chap-adv-subtitle">Advantages:</p>
                 <div className="chap-accordion">
                   {[
@@ -428,7 +441,7 @@ function Chapter1() {
                 </div>
               </div>
 
-              <div className="chap-adv-section">
+              <div className="chap-adv-section cp-block">
                 <p className="chap-adv-subtitle">Disadvantages:</p>
                 <div className="chap-accordion">
                   {[
@@ -446,7 +459,7 @@ function Chapter1() {
           {/* ── HISTORY ── */}
           {activeSection === 'history' && (
             <>
-              <div className="chap-history-section">
+              <div className="chap-history-section cp-block">
 
                 <div className="chap-history-block">
                   <h2 className="chap-history-title chap-history-title-center">History of Computers</h2>
@@ -556,12 +569,34 @@ function Chapter1() {
             </>
           )}
 
-        </div>
-      </div>
+          {/* ── Linear flow: prev / next lesson ── */}
+          <div className="cp-footer-nav">
+            <button
+              className="cp-nav-prev"
+              disabled={secIndex === 0}
+              onClick={() => secIndex > 0 && handleSectionChange(SECTIONS[secIndex - 1].key)}
+            >
+              ◀ {secIndex > 0 ? SECTIONS[secIndex - 1].label : 'Previous'}
+            </button>
+            <button
+              className="cp-nav-next"
+              disabled={secIndex === SECTIONS.length - 1}
+              onClick={() => secIndex < SECTIONS.length - 1 && handleSectionChange(SECTIONS[secIndex + 1].key)}
+            >
+              {secIndex < SECTIONS.length - 1 ? `Next: ${SECTIONS[secIndex + 1].label}` : 'Last lesson'} ▶
+            </button>
+          </div>
 
-      {allLessonsComplete && (
-        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-1')}>START GAME</button>
-      )}
+          {/* ── Module-complete banner (dating sidebar/mobile buttons) ── */}
+          {allLessonsComplete && (
+            <div className="cp-banner">
+              <h3>🎉 Module 1 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-1')}>START GAME</button>
+            </div>
+          )}
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

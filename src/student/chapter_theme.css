@@ -553,3 +553,138 @@
   .chap-panel .fx-tilt-inner,
   .chap-panel .fx-stagger .fx-back li { transition: none !important; }
 }
+
+/* ═══════════ COURSE PLAYER LAYOUT (s1 structure redesign) ═══════════
+   Option A: sticky horizontal lesson stepper + centered column of
+   separate block cards + prev/next footer + module-complete banner.
+   Generic cp-* names so s2–s9 reuse them in later rounds. */
+
+/* header scrolls away; the lesson stepper is what stays pinned */
+.chap-panel.cp-page .chap-header { position: static; }
+
+.chap-panel .cp-stepper {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px clamp(10px, 2vw, 20px);
+  background: rgba(10, 9, 11, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 16, 46, 0.35);
+  overflow-x: auto;
+}
+.chap-panel .cp-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #55555c;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 6px 16px 6px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s ease;
+  flex-shrink: 0;
+}
+.chap-panel .cp-step:hover { border-color: rgba(200, 16, 46, 0.5); color: #c8102e; }
+.chap-panel .cp-step.active {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(200, 16, 46, 0.4);
+}
+
+.chap-panel .cp-body {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: clamp(18px, 3vh, 30px) clamp(12px, 3vw, 20px) 70px;
+  box-sizing: border-box;
+}
+.chap-panel .cp-lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.chap-panel .cp-block {
+  background: #fff;
+  border-radius: 18px;
+  padding: clamp(18px, 3.5vw, 30px);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+}
+.chap-panel .cp-block .chap-section-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.chap-panel .cp-hero {
+  text-align: center;
+  border-top: 5px solid #c8102e;
+}
+
+.chap-panel .cp-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.chap-panel .cp-footer-nav button {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: 999px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chap-panel .cp-nav-prev {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.chap-panel .cp-nav-prev:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); }
+.chap-panel .cp-nav-next {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35);
+}
+.chap-panel .cp-nav-next:hover:not(:disabled) { transform: translateY(-2px); }
+.chap-panel .cp-footer-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.chap-panel .cp-banner {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 18px 50px rgba(200, 16, 46, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.chap-panel .cp-banner h3 { font-family: 'Poppins', sans-serif; margin: 0; font-size: 1.3rem; }
+.chap-panel .cp-banner p { font-family: 'Montserrat', sans-serif; margin: 0 0 10px; font-size: 0.9rem; opacity: 0.9; }
+.chap-panel .cp-banner .chap-start-game-btn {
+  background: #fff;
+  color: #c8102e;
+  animation: none;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 640px) {
+  .chap-panel .cp-stepper { justify-content: flex-start; }
+  .chap-panel .cp-step span { font-size: 0.7rem; }
+  .chap-panel .cp-footer-nav button { max-width: none; flex: 1; }
+}
