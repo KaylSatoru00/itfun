@@ -238,7 +238,7 @@ function LearningModules() {
      "Join Instructor" vs "My Instructor"). */
   useEffect(() => {
     document.body.style.backgroundImage  = 'none';
-    document.body.style.backgroundColor = '#060607';
+    document.body.style.backgroundColor = '#F2D7D5';
     return () => {
       document.body.style.backgroundImage  = '';
       document.body.style.backgroundColor = '';
