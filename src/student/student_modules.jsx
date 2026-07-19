@@ -7,12 +7,6 @@ import { IoSearchCircle } from 'react-icons/io5';
 import { CiLogout } from 'react-icons/ci';
 import { LuSwords } from 'react-icons/lu';
 import { SiBookstack } from 'react-icons/si';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCoverflow, Navigation, Pagination, Keyboard } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/effect-coverflow';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { auth, db, rtdb } from '../firebase';
@@ -35,15 +29,24 @@ import img9 from '../assets/panel9.jpg';
    Module metadata
 ──────────────────────────────────────────────*/
 const MODULES = [
-  { id: 'module1', num: 1, route: '/student-chapter-1', label: 'Introduction to Computers and History of Computers', img: img1 },
-  { id: 'module2', num: 2, route: '/student-chapter-2', label: 'Language & Types of Computers with Their Uses',       img: img2 },
-  { id: 'module3', num: 3, route: '/student-chapter-3', label: 'Number System & Conversions',                         img: img3 },
-  { id: 'module4', num: 4, route: '/student-chapter-4', label: 'Hardware Components, Input and Output Devices & Basic PC-Building', img: img4 },
-  { id: 'module5', num: 5, route: '/student-chapter-5', label: 'Types of Software',                                   img: img5 },
-  { id: 'module6', num: 6, route: '/student-chapter-6', label: 'Networking Fundamentals',                             img: img6 },
-  { id: 'module7', num: 7, route: '/student-chapter-7', label: 'Microsoft Office Applications',                       img: img7 },
-  { id: 'module8', num: 8, route: '/student-chapter-8', label: 'Application of Computers in Different Fields',        img: img8 },
-  { id: 'module9', num: 9, route: '/student-chapter-9', label: 'Keyboarding',                                         img: img9 },
+  { id: 'module1', num: 1, route: '/student-chapter-1', label: 'Introduction to Computers and History of Computers', img: img1,
+    desc: 'Meet the machine: what a computer is, its four basic operations, and the inventors who started it all.' },
+  { id: 'module2', num: 2, route: '/student-chapter-2', label: 'Language & Types of Computers with Their Uses',       img: img2,
+    desc: 'From pocket-size PCs to room-size supercomputers — the language of computers and their many forms.' },
+  { id: 'module3', num: 3, route: '/student-chapter-3', label: 'Number System & Conversions',                         img: img3,
+    desc: 'Binary, decimal, and the conversions between them — the math computers actually speak.' },
+  { id: 'module4', num: 4, route: '/student-chapter-4', label: 'Hardware Components, Input and Output Devices & Basic PC-Building', img: img4,
+    desc: 'Keyboards to CPUs: the parts of a computer, how data flows in and out, and building a PC.' },
+  { id: 'module5', num: 5, route: '/student-chapter-5', label: 'Types of Software',                                   img: img5,
+    desc: 'System, application, and operating systems — the invisible half of computing.' },
+  { id: 'module6', num: 6, route: '/student-chapter-6', label: 'Networking Fundamentals',                             img: img6,
+    desc: 'How computers talk: networks, the Internet and intranet, and everything in between.' },
+  { id: 'module7', num: 7, route: '/student-chapter-7', label: 'Microsoft Office Applications',                       img: img7,
+    desc: 'Word, Excel, and PowerPoint — the everyday tools of the digital workplace.' },
+  { id: 'module8', num: 8, route: '/student-chapter-8', label: 'Application of Computers in Different Fields',        img: img8,
+    desc: 'Business, banking, healthcare, and more — how computers power the world around us.' },
+  { id: 'module9', num: 9, route: '/student-chapter-9', label: 'Keyboarding',                                         img: img9,
+    desc: 'Home-row technique and shortcut keys to type faster and work smarter.' },
 ];
 
 /* ─────────────────────────────────────────────
@@ -167,6 +170,15 @@ function LearningModules() {
 
   // ── Carousel vs grid view toggle ──
   const [view, setView] = useState('carousel');
+
+  // ── Stacked carousel order ──
+  // `order` = array of MODULES indices. Ang naka-ACTIVE (full-size + text)
+  // ay ang nasa position 1; ang position 0 ay ang "under" card (full-size
+  // din pero nakatago sa likod) — ito ang eksaktong 2-card na istraktura ng
+  // reference (MDJAmin) na nagbibigay ng grow-into-place animation. Next =
+  // ilipat ang unang item sa dulo; Prev = kabaligtaran.
+  const [order, setOrder] = useState(() => MODULES.map((_, i) => i));
+  const orderInitRef = useRef(false);
 
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -496,8 +508,7 @@ function LearningModules() {
   };
 
   // Pagsimula ng carousel sa "current" module ng student: ang pinakahuling
-  // naka-unlock. Re-mount ang Swiper kapag na-confirm na ang progress
-  // (initialSlide is mount-time only).
+  // naka-unlock.
   const currentModuleIndex = (() => {
     let idx = 0;
     MODULES.forEach((m, i) => {
@@ -505,6 +516,34 @@ function LearningModules() {
     });
     return idx;
   })();
+
+  // Kapag na-confirm na ang progress mula sa server, i-rotate ang order para
+  // ang current module ang mapunta sa ACTIVE slot (position 1). Isang beses
+  // lang — pagkatapos, kontrolado na ng prev/next/tap ang order.
+  useEffect(() => {
+    if (progressLoading || orderInitRef.current) return;
+    orderInitRef.current = true;
+    const n = MODULES.length;
+    const start = (currentModuleIndex - 1 + n) % n; // isang card bago ang active
+    setOrder(Array.from({ length: n }, (_, i) => (start + i) % n));
+  }, [progressLoading, currentModuleIndex]);
+
+  const goNext = () => setOrder(o => [...o.slice(1), o[0]]);
+  const goPrev = () => setOrder(o => [o[o.length - 1], ...o.slice(0, -1)]);
+  // I-dala ang tinapik na peek card papuntang ACTIVE slot (position 1).
+  const bringToActive = (pos) => {
+    if (pos >= 2) setOrder(o => [...o.slice(pos - 1), ...o.slice(0, pos - 1)]);
+  };
+
+  // Class ayon sa posisyon sa stack (tugma sa reference geometry).
+  const stackPosClass = (pos) => {
+    if (pos === 0) return 'stk-under';   // full-size, nasa likod (walang text)
+    if (pos === 1) return 'stk-active';  // full-size, may text — ito ang bukas
+    if (pos === 2) return 'stk-peek peek-1';
+    if (pos === 3) return 'stk-peek peek-2';
+    if (pos === 4) return 'stk-peek peek-3';
+    return 'stk-hidden';
+  };
 
   return (
     <motion.div
@@ -637,34 +676,61 @@ function LearningModules() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
             >
-              <Swiper
-                className="lm-swiper"
-                // Re-mount kapag server-confirmed na ang progress para
-                // tumama ang initialSlide sa current module ng student.
-                key={progressLoading ? 'loading' : 'ready'}
-                modules={[EffectCoverflow, Navigation, Pagination, Keyboard]}
-                effect="coverflow"
-                grabCursor
-                centeredSlides
-                slidesPerView="auto"
-                initialSlide={currentModuleIndex}
-                coverflowEffect={{
-                  rotate: 32,
-                  stretch: 0,
-                  depth: 140,
-                  modifier: 1,
-                  slideShadows: true,
-                }}
-                navigation
-                pagination={{ clickable: true }}
-                keyboard={{ enabled: true }}
-              >
-                {MODULES.map((module) => (
-                  <SwiperSlide key={module.id}>
-                    {renderModuleCard(module)}
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+              {/* ── Stacked-card carousel (adapted from MDJAmin,
+                  freefrontend.com/css-carousels) ── */}
+              <div className="stk-carousel">
+                <div className="stk-stage">
+                  {order.map((modIdx, pos) => {
+                    const module = MODULES[modIdx];
+                    const state  = moduleStates[module.id] ?? { unlocked: false, completed: false, overallPercent: 0 };
+                    const locked = !state.unlocked;
+                    const isActive = pos === 1;
+
+                    return (
+                      <div
+                        key={module.id}
+                        className={`stk-item ${stackPosClass(pos)} ${locked ? 'locked' : ''}`}
+                        style={{ backgroundImage: `url(${module.img})` }}
+                        onClick={pos >= 2 ? () => bringToActive(pos) : undefined}
+                      >
+                        <span className="stk-chip">Module {module.num}</span>
+                        {locked
+                          ? <span className="stk-lock">🔒 Locked</span>
+                          : state.completed
+                            ? <span className="stk-lock done">✓ Completed</span>
+                            : null}
+
+                        {isActive && (
+                          // key={module.id} → nagre-mount tuwing nagbabago ang
+                          // active card, kaya muling tumutugtog ang blur/slide
+                          // -up entrance animation (tulad sa reference).
+                          <div className="stk-content" key={module.id}>
+                            <div className="stk-name">{module.label}</div>
+                            <div className="stk-des">{module.desc}</div>
+                            <div className="stk-prog">
+                              <div className="stk-track">
+                                <div className="stk-fill" style={{ width: `${state.overallPercent}%` }} />
+                              </div>
+                              <span>{locked ? 'Locked' : `${state.overallPercent}% complete`}</span>
+                            </div>
+                            <button
+                              className="stk-cta"
+                              onClick={(e) => { e.stopPropagation(); handleModuleClick(module); }}
+                            >
+                              {locked ? '🔒 LOCKED' : (state.overallPercent > 0 ? 'CONTINUE MODULE ▶' : 'START MODULE ▶')}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="stk-btns">
+                  <button className="stk-nav stk-prev" onClick={goPrev} aria-label="Previous module">◁</button>
+                  <button className="stk-nav stk-next" onClick={goNext} aria-label="Next module">▷</button>
+                </div>
+              </div>
             </motion.div>
           ) : (
             <motion.div
