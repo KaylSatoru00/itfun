@@ -249,11 +249,12 @@
   padding: clamp(8px, 2vh, 20px) 0 clamp(12px, 2.5vh, 28px);
 }
 
-/* ══════════ STACKED-CARD CAROUSEL (MDJAmin pattern) ══════════ */
+/* ══════════ STACKED-CARD CAROUSEL (MDJAmin pattern) ══════════
+   Sizing = approved Option B (large hero + noticeably bigger side cards). */
 .lm-panel.sm-page .stk-carousel {
   position: relative;
-  width: min(920px, 94vw);
-  height: 430px;
+  width: min(1340px, 95vw);
+  height: 560px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(10px);
@@ -268,8 +269,8 @@
   position: absolute;
   top: 50%;
   transform: translate(0, -50%);
-  width: 190px;
-  height: 250px;
+  width: 300px;
+  height: 400px;
   border-radius: 16px;
   box-shadow: 0 24px 44px rgba(80, 8, 22, 0.35);
   background-position: 50% 50%;
@@ -298,10 +299,10 @@
 }
 
 /* receding peeks on the right */
-.lm-panel.sm-page .stk-item.peek-1 { left: 58%; cursor: pointer; }
-.lm-panel.sm-page .stk-item.peek-2 { left: calc(58% + 210px); cursor: pointer; }
-.lm-panel.sm-page .stk-item.peek-3 { left: calc(58% + 420px); cursor: pointer; }
-.lm-panel.sm-page .stk-item.stk-hidden { left: calc(58% + 630px); opacity: 0; pointer-events: none; }
+.lm-panel.sm-page .stk-item.peek-1 { left: 54%; cursor: pointer; }
+.lm-panel.sm-page .stk-item.peek-2 { left: calc(54% + 325px); cursor: pointer; }
+.lm-panel.sm-page .stk-item.peek-3 { left: calc(54% + 650px); cursor: pointer; }
+.lm-panel.sm-page .stk-item.stk-hidden { left: calc(54% + 975px); opacity: 0; pointer-events: none; }
 .lm-panel.sm-page .stk-item.stk-under { pointer-events: none; }
 
 /* locked peek cards dimmed */
@@ -346,9 +347,9 @@
 .lm-panel.sm-page .stk-content {
   position: absolute;
   top: 50%;
-  left: 64px;
-  width: 380px;
-  max-width: 52%;
+  left: 84px;
+  width: 500px;
+  max-width: 48%;
   text-align: left;
   color: #fff;
   transform: translate(0, -50%);
@@ -356,7 +357,7 @@
 }
 .lm-panel.sm-page .stk-name {
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(1.5rem, 3.4vw, 2rem);
+  font-size: clamp(1.8rem, 3.6vw, 2.5rem);
   text-transform: uppercase;
   font-weight: 800;
   line-height: 1.18;

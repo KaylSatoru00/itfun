@@ -269,7 +269,7 @@ function Chapter1() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#060607';
+    document.body.style.backgroundColor = '#F2D7D5';
     // index.css locks body sa 100vh + overflow:hidden at ang #root ay
     // position:fixed (fixed-viewport pages). Ang accordion-outline layout
     // ay normal page scroll, kaya i-unlock habang nasa page na ito;

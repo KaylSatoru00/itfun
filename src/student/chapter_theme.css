@@ -10,10 +10,10 @@
   /* sN.css uses width:100vw which overflows by the scrollbar width once
      the page can scroll vertically — 100% ang tama */
   width: 100%;
-  background:
-    radial-gradient(1000px 420px at 90% -10%, rgba(200, 16, 46, 0.16), transparent 60%),
-    radial-gradient(800px 420px at -10% 110%, rgba(165, 0, 52, 0.12), transparent 60%),
-    var(--itfun-dark, #060607);
+  /* Same light radial-spotlight gradient as student_modules.css
+     (Sample B: white halo → #F2D7D5 → #EAB8C9). Background only — the
+     dark sticky header/chrome and all flip-card layouts are untouched. */
+  background: radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%);
   font-family: 'Montserrat', Arial, sans-serif;
 }
 

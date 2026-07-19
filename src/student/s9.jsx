@@ -293,7 +293,7 @@ function Chapter9() {
   // maka-scroll nang normal ang accordion-outline layout.
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#060607';
+    document.body.style.backgroundColor = '#F2D7D5';
     document.body.style.overflow = 'auto';
     document.body.style.height = 'auto';
     document.body.style.width = '100%';

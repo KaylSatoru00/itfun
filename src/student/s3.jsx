@@ -146,7 +146,7 @@ function Chapter3() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#060607';
+    document.body.style.backgroundColor = '#F2D7D5';
     // index.css locks body/#root sa fixed viewport — i-unlock para
     // maka-scroll nang normal ang accordion-outline layout.
     document.body.style.overflow = 'auto';
