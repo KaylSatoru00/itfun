@@ -1,9 +1,12 @@
-/* waiting_lobby.css */
+/* waiting_lobby.css — Split Arena (Pair B)
+   Two-panel lobby: solid maroon info panel (PIN · copy · module) beside a
+   light roster card. Class names are kept from the previous version so the
+   JSX/functionality is untouched — only the visuals changed. */
 
 .waiting-lobby-panel {
   width: 100%;
   min-height: 100vh;
-  background: #ffffff;
+  background: radial-gradient(760px 400px at 50% -8%, #ffffff 0%, #FDF3F4 55%, #FBEAEC 100%);
   display: flex;
   flex-direction: column;
   font-family: 'Poppins', sans-serif;
@@ -11,121 +14,153 @@
   overflow-x: hidden;
 }
 
-/* ── Main layout: sidebar + right area ── */
+/* ── Main layout: sidebar + roster ── */
 .waiting-lobby-content {
-  display: flex;
   flex: 1;
-  gap: 0;
-  padding: 30px;
   width: 100%;
-  height: 100vh;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px;
+  display: flex;
+  gap: 22px;
+  align-items: stretch;
   box-sizing: border-box;
 }
 
-/* ── Left sidebar ── */
+/* ── Left info panel (maroon) ── */
 .lobby-sidebar {
-  width: 230px;
+  width: 240px;
   flex-shrink: 0;
-  background: #A50034;
-  border-radius: 20px;
+  background: linear-gradient(160deg, #A50034 0%, #7d0027 100%);
+  border-radius: 22px;
   padding: 30px 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 26px;
+  gap: 24px;
   color: #fff;
-  box-shadow: 0 8px 20px rgba(165, 0, 52, 0.25);
+  box-shadow: 0 12px 28px rgba(165, 0, 52, 0.28);
 }
 
 .pin-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .pin-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1.5px;
-  color: #ffcdd2;
+  letter-spacing: 2px;
+  color: #ffd0d8;
   text-transform: uppercase;
 }
 
 .pin-code {
-  font-size: 38px;
+  font-size: 40px;
   font-weight: 900;
   color: #fff;
   letter-spacing: 5px;
+  line-height: 1;
 }
 
 .copy-btn {
-  margin-top: 8px;
-  padding: 7px 18px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.35);
+  margin-top: 10px;
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 30px;
   color: #fff;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .copy-btn:hover {
-  background: rgba(255,255,255,0.28);
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
 }
 
 /* ── Module card inside sidebar ── */
 .module-card {
   background: #fff;
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 18px 16px;
   text-align: center;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
 .module-card-img {
-  font-size: 42px;
+  font-size: 40px;
   margin-bottom: 8px;
 }
 
 .module-card-text {
-  font-size: 12px;
-  color: #333;
+  font-size: 12.5px;
+  color: #4a3f40;
   font-weight: 600;
   line-height: 1.4;
   margin: 0;
+  font-family: 'Montserrat', sans-serif;
 }
 
-/* ── Right main area ── */
+.module-card-text strong {
+  color: #A50034;
+}
+
+/* ── Right roster card ── */
 .lobby-main {
   flex: 1;
-  background: #fdf2f3;
-  border: 1px solid #f3d6da;
-  border-radius: 20px;
-  margin-left: 24px;
-  padding: 34px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
+  padding: 24px 26px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 22px rgba(200, 16, 46, 0.07);
+  min-width: 0;
+}
+
+/* header row: title + live count pill */
+.lobby-main-head {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .waiting-text {
   font-size: 19px;
   color: #A50034;
-  font-weight: 700;
-  margin-bottom: 30px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.player-count-pill {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: 'Montserrat', sans-serif;
+  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.2);
 }
 
 /* ── Player avatars grid ── */
 .players-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 22px;
-  justify-content: center;
+  gap: 18px 16px;
+  justify-content: flex-start;
   flex: 1;
   align-content: flex-start;
   width: 100%;
@@ -138,80 +173,96 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  width: 74px;
 }
 
 .player-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  font-weight: 700;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  border: 2.5px solid #fff;
 }
 
 .player-avatar-name {
   font-size: 12px;
-  color: #555;
+  color: #5a4f50;
   font-weight: 600;
   text-align: center;
-  max-width: 90px;
+  max-width: 74px;
   white-space: normal;
   word-break: break-word;
-  line-height: 1.3;
+  line-height: 1.25;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* ── Actions ── */
 .lobby-actions {
   margin-top: auto;
-  padding-top: 26px;
+  padding-top: 24px;
   width: 100%;
   display: flex;
   justify-content: center;
 }
 
 .start-quiz-btn {
-  padding: 14px 44px;
-  background: #A50034;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #C8102E, #A50034);
   color: #fff;
   border: none;
-  border-radius: 30px;
+  border-radius: 16px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 6px 14px rgba(165, 0, 52, 0.3);
-  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 8px 18px rgba(200, 16, 46, 0.3);
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
 }
 
 .start-quiz-btn:hover:not(:disabled) {
-  background: #c8102e;
   transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(200, 16, 46, 0.42);
 }
 
 .start-quiz-btn:disabled {
   background: #e0b9c2;
+  color: #fff;
   box-shadow: none;
   cursor: not-allowed;
 }
 
 .host-waiting-text {
-  font-size: 15px;
-  color: #888;
-  font-style: italic;
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+  color: #A50034;
+  font-weight: 700;
+  font-style: normal;
+  font-family: 'Montserrat', sans-serif;
+  padding: 13px;
+  background: rgba(234, 184, 201, 0.28);
+  border: 1px solid rgba(200, 16, 46, 0.14);
+  border-radius: 14px;
+  margin: 0;
 }
 
 .leave-btn {
   margin-top: 16px;
   background: none;
   border: none;
-  color: #aaa;
+  color: #b09a9c;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
+  align-self: center;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .leave-btn:hover {
@@ -233,7 +284,7 @@
 
 .back-btn {
   padding: 11px 30px;
-  background: #A50034;
+  background: linear-gradient(135deg, #C8102E, #A50034);
   color: #fff;
   border: none;
   border-radius: 30px;
@@ -243,7 +294,7 @@
 }
 
 .back-btn:hover {
-  background: #c8102e;
+  transform: translateY(-1px);
 }
 
 /* ──────────────────────────────────────
@@ -252,6 +303,7 @@
 @media (max-width: 860px) {
   .waiting-lobby-content {
     flex-direction: column;
+    align-items: stretch;
     height: auto;
     min-height: 100vh;
     padding: 16px;
@@ -263,42 +315,47 @@
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
     padding: 20px;
     gap: 18px;
   }
 
   .pin-section {
     flex: 1;
-    min-width: 160px;
+    min-width: 150px;
   }
 
   .module-card {
     flex: 1;
-    min-width: 160px;
+    min-width: 150px;
   }
 
   .lobby-main {
-    margin-left: 0;
-    padding: 22px;
-    max-height: 70vh;
-  }
-
-  .players-grid {
-    max-height: 40vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-right: 4px;
+    padding: 20px;
   }
 
   .pin-code {
-    font-size: 30px;
+    font-size: 32px;
     letter-spacing: 3px;
+  }
+
+  /* index.css locks the viewport (body overflow:hidden + #root fixed);
+     unlock it here so a tall stacked lobby (many players) can scroll and
+     the Start / Leave controls stay reachable on phones. */
+  body:has(.waiting-lobby-panel) {
+    overflow: auto !important;
+    height: auto !important;
+  }
+  #root:has(.waiting-lobby-panel) {
+    position: static !important;
+    overflow: auto !important;
+    height: auto !important;
   }
 }
 
 @media (max-width: 480px) {
   .waiting-lobby-content {
-    padding: 10px;
+    padding: 12px;
   }
 
   .lobby-sidebar {
@@ -306,18 +363,22 @@
   }
 
   .pin-code {
-    font-size: 26px;
+    font-size: 28px;
     letter-spacing: 2px;
   }
 
-  .start-quiz-btn {
-    width: 100%;
-    padding: 14px 0;
+  .waiting-text {
+    font-size: 17px;
   }
 
   .player-avatar {
     width: 48px;
     height: 48px;
     font-size: 18px;
+    border-radius: 14px;
+  }
+
+  .player-avatar-wrap {
+    width: 66px;
   }
 }
