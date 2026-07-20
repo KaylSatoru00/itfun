@@ -11,12 +11,15 @@ import identImg   from '../assets/identification.png';
 import fillImg    from '../assets/fill.png';
 import mixImg     from '../assets/mix.png';
 
+// `desc` is UI copy only (not sent to the server) — it powers the short
+// sub-label on each row in the D4 list. IDs / labels are unchanged so all
+// the backend calls (moduleId, quizType) behave exactly as before.
 const quizTypes = [
-  { id: 'multiple', label: 'Multiple Choice', img: choiceImg },
-  { id: 'true-false', label: 'True or False', img: tfImg },
-  { id: 'identification', label: 'Identification', img: identImg },
-  { id: 'fill-in-blank', label: 'Fill-in-the-Blank', img: fillImg },
-  { id: 'mixed', label: 'Mixed Type', img: mixImg },
+  { id: 'multiple',       label: 'Multiple Choice',    img: choiceImg, desc: 'Pick one correct answer from four options' },
+  { id: 'true-false',     label: 'True or False',      img: tfImg,     desc: 'Decide if each statement is true or false' },
+  { id: 'identification', label: 'Identification',     img: identImg,  desc: 'Type the exact term being described' },
+  { id: 'fill-in-blank',  label: 'Fill-in-the-Blank',  img: fillImg,   desc: 'Complete the sentence with the missing word' },
+  { id: 'mixed',          label: 'Mixed Type',         img: mixImg,    desc: 'A blend of all question formats' },
 ];
 
 function SelectType() {
@@ -105,78 +108,121 @@ function SelectType() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <h2 className="st-title">Select Quiz Type</h2>
-      <p className="st-subtitle">
-        Module: <strong>{selectedModule?.label || 'Selected'}</strong>
-      </p>
+      <div className="st-body">
+        {/* ── Step timeline rail (desktop) ── */}
+        <aside className="step-rail" aria-label="Progress">
+          <div className="step-rail-item is-done">
+            <div className="step-rail-col">
+              <span className="step-rail-dot">✓</span>
+              <span className="step-rail-bar" />
+            </div>
+            <div className="step-rail-text">
+              <span className="step-rail-t1">Module</span>
+              <span className="step-rail-t2">Pick a topic</span>
+            </div>
+          </div>
+          <div className="step-rail-item is-active">
+            <div className="step-rail-col">
+              <span className="step-rail-dot">2</span>
+              <span className="step-rail-bar" />
+            </div>
+            <div className="step-rail-text">
+              <span className="step-rail-t1">Quiz Type</span>
+              <span className="step-rail-t2">Choose format</span>
+            </div>
+          </div>
+          <div className="step-rail-item">
+            <div className="step-rail-col">
+              <span className="step-rail-dot">3</span>
+            </div>
+            <div className="step-rail-text">
+              <span className="step-rail-t1">Start</span>
+              <span className="step-rail-t2">Create room</span>
+            </div>
+          </div>
+        </aside>
 
-      <div className="st-grid">
-        {quizTypes.map((type) => {
-          const isSelected = selected?.id === type.id;
-          return (
-            <motion.div
-              key={type.id}
-              className={`st-card ${isSelected ? 'st-card-selected' : ''} ${type.id === 'mixed' ? 'st-card-wide' : ''}`}
-              onClick={() => {
-                setSelected(type);
-                setError('');
-              }}
-              animate={{ scale: isSelected ? 1.05 : 1, y: isSelected ? -3 : 0 }}
-              whileHover={{ y: -3, boxShadow: '0 8px 20px rgba(0,0,0,0.2)' }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+        <section className="step-content">
+          {/* ── Mobile top progress bars — step 2 active ── */}
+          <div className="step-mdots" aria-hidden="true">
+            <span className="step-mdot is-active" />
+            <span className="step-mdot is-active" />
+            <span className="step-mdot" />
+          </div>
+
+          <h2 className="st-title">Select Quiz Type</h2>
+          <p className="st-subtitle">
+            Module: <strong>{selectedModule?.label || 'Selected'}</strong>
+          </p>
+
+          <ul className="st-list">
+            {quizTypes.map((type) => {
+              const isSelected = selected?.id === type.id;
+              return (
+                <motion.li
+                  key={type.id}
+                  className={`st-row ${isSelected ? 'is-selected' : ''}`}
+                  onClick={() => {
+                    setSelected(type);
+                    setError('');
+                  }}
+                  whileTap={{ scale: 0.99 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                >
+                  <img src={type.img} alt={type.label} className="st-row-thumb" />
+                  <div className="st-row-meta">
+                    <div className="st-row-name">{type.label}</div>
+                    <div className="st-row-sub">{type.desc}</div>
+                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={isSelected ? 'on' : 'off'}
+                      className="st-row-radio"
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                      aria-hidden="true"
+                    >
+                      {isSelected ? '✓' : ''}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.li>
+              );
+            })}
+          </ul>
+
+          {error && (
+            <motion.p
+              className="st-error"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              <img src={type.img} alt={type.label} className="st-card-img" />
-              <span className="st-card-label">{type.label}</span>
+              ❌ {error}
+            </motion.p>
+          )}
 
-              <AnimatePresence>
-                {isSelected && (
-                  <motion.div
-                    className="st-card-check"
-                    initial={{ scale: 0, opacity: 0, rotate: -90 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  >
-                    ✓
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {error && (
-        <motion.p 
-          className="st-error"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          ❌ {error}
-        </motion.p>
-      )}
-
-      {remainingGenerates !== null && (
-        <p className="st-quota-indicator">
-          {remainingGenerates > 0
-            ? `${remainingGenerates} generate${remainingGenerates === 1 ? '' : 's'} left today`
-            : 'No generates left today — try again tomorrow'}
-        </p>
-      )}
-
-      <div className="st-bottom">
-        <button className="st-btn st-btn-back" onClick={() => navigate('/select-module')}>
-          <span>«</span> BACK
-        </button>
-        <button
-          className={`st-btn st-btn-generate ${!selected || loading || remainingGenerates === 0 ? 'st-btn-disabled' : ''}`}
-          onClick={handleGenerate}
-          disabled={!selected || loading || remainingGenerates === 0}
-        >
-          {loading ? '⏳ Generating...' : 'GENERATE QUIZ'}
-          {!loading && <span>»</span>}
-        </button>
+          <div className="st-actions">
+            {remainingGenerates !== null && (
+              <span className="st-quota-indicator">
+                {remainingGenerates > 0
+                  ? `${remainingGenerates} generate${remainingGenerates === 1 ? '' : 's'} left today`
+                  : 'No generates left today — try again tomorrow'}
+              </span>
+            )}
+            <button className="st-btn st-btn-back" onClick={() => navigate('/select-module')}>
+              <span>«</span> BACK
+            </button>
+            <button
+              className={`st-btn st-btn-generate ${!selected || loading || remainingGenerates === 0 ? 'st-btn-disabled' : ''}`}
+              onClick={handleGenerate}
+              disabled={!selected || loading || remainingGenerates === 0}
+            >
+              {loading ? '⏳ Generating...' : 'GENERATE QUIZ'}
+              {!loading && <span>»</span>}
+            </button>
+          </div>
+        </section>
       </div>
     </motion.div>
   );
