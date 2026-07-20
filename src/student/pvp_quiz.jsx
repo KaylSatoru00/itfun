@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
@@ -13,8 +13,9 @@ function PvpQuiz() {
   const socket = useSocket();
   const [joinPin, setJoinPin] = useState('');
   const [joinError, setJoinError] = useState('');
-  const [showJoinModal, setShowJoinModal] = useState(false);
   const [checkingJoin, setCheckingJoin] = useState(false);
+  const [pinFocused, setPinFocused] = useState(false);
+  const pinInputRef = useRef(null);
 
   // Kung may saved session tayo (host man o joiner) galing sa localStorage,
   // ibig sabihin may room pa siyang binalikan — kaya bago pa man ipakita
@@ -155,72 +156,71 @@ function PvpQuiz() {
         <p className="pvp-header-subtitle">Challenge your classmates in real-time quiz battles!</p>
       </div>
 
-      {/* Cards */}
+      {/* Create / Join panels */}
       <div className="pvp-cards">
-        <div className="pvp-card" onClick={handleCreateRoom}>
-          <div className="pvp-icon-box light">
-            <span className="pvp-icon">🏠</span>
+        {/* Create Room */}
+        <div className="pvp-panel-card create">
+          <div className="pvp-panel-head">
+            <div className="pvp-panel-titles">
+              <h3 className="pvp-panel-title">Create Room</h3>
+              <p className="pvp-panel-sub">Host a quiz battle and invite players</p>
+            </div>
+            <div className="pvp-panel-badge"><LuSwords /></div>
           </div>
-          <div className="pvp-card-text">
-            <h3 className="pvp-card-title">Create Room</h3>
-            <p className="pvp-card-subtitle">Host a quiz battle and invite players</p>
-          </div>
+          <button className="pvp-panel-btn" onClick={handleCreateRoom}>Create Room</button>
         </div>
 
-        <div className="pvp-card" onClick={() => setShowJoinModal(true)}>
-          <div className="pvp-icon-box dark">
-            <span className="pvp-icon">👥</span>
+        {/* Join Room */}
+        <div className="pvp-panel-card join">
+          <div className="pvp-panel-head">
+            <div className="pvp-panel-titles">
+              <h3 className="pvp-panel-title">Join Room</h3>
+              <p className="pvp-panel-sub">Enter a room code to join others</p>
+            </div>
           </div>
-          <div className="pvp-card-text">
-            <h3 className="pvp-card-title">Join Room</h3>
-            <p className="pvp-card-subtitle">Enter a PIN to join others</p>
+
+          <div className="pvp-pin-boxes" onClick={() => pinInputRef.current?.focus()}>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className={
+                  'pvp-pin-box' +
+                  (joinPin[i] ? ' filled' : '') +
+                  (pinFocused && i === joinPin.length ? ' focus' : '')
+                }
+              >
+                {joinPin[i] || ''}
+              </div>
+            ))}
+            <input
+              ref={pinInputRef}
+              type="text"
+              inputMode="numeric"
+              className="pvp-pin-hidden"
+              value={joinPin}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                setJoinPin(val);
+                setJoinError('');
+              }}
+              onFocus={() => setPinFocused(true)}
+              onBlur={() => setPinFocused(false)}
+              maxLength={6}
+              autoComplete="off"
+            />
           </div>
+
+          {joinError && <p className="pvp-pin-error">{joinError}</p>}
+
+          <button
+            className="pvp-panel-btn"
+            onClick={handleJoinRoom}
+            disabled={joinPin.length !== 6 || checkingJoin}
+          >
+            {checkingJoin ? 'Checking...' : 'Join Room'}
+          </button>
         </div>
       </div>
-
-      {/* Join Modal */}
-      {showJoinModal && (
-        <div className="modal-overlay" onClick={() => setShowJoinModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Join Room</h3>
-              <button className="modal-close" onClick={() => setShowJoinModal(false)}>✕</button>
-            </div>
-            <div className="modal-body" style={{ flexDirection: 'column', gap: '16px' }}>
-              <div style={{ width: '100%' }}>
-                <label className="modal-label">Room PIN</label>
-                <input
-                  type="text"
-                  className="modal-input"
-                  placeholder="Enter 6-digit PIN"
-                  value={joinPin}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setJoinPin(val);
-                    setJoinError('');
-                  }}
-                  style={{ width: '100%', textAlign: 'center', fontSize: '20px', letterSpacing: '4px' }}
-                  maxLength={6}
-                  autoFocus
-                />
-                {joinError && (
-                  <p style={{ color: '#c8102e', fontSize: '12px', marginTop: '4px' }}>{joinError}</p>
-                )}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="modal-join-btn"
-                onClick={handleJoinRoom}
-                disabled={joinPin.length !== 6 || checkingJoin}
-              >
-                {checkingJoin ? 'Checking...' : 'Join'}
-              </button>
-              <button className="modal-cancel-btn" onClick={() => setShowJoinModal(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Bottom Navigation — Sliding Pill */}
       <div className="bottom-nav">
