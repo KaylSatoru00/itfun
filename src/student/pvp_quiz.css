@@ -118,50 +118,70 @@
   font-style: italic;
 }
 
-/* Bottom Navigation */
+/* ═══════════ BOTTOM NAV — Sliding Pill ═══════════ */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 56px;
+  height: 62px;
   display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
   z-index: 20;
+  overflow: hidden;
 }
-
+.bottom-nav-pill {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: #C8102E;
+  border-radius: 999px;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
+  transform: translateX(calc(100% + 4px));
+}
 .bottom-nav-btn {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: #A50034;
-  color: #fff;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
+  gap: 3px;
+  height: 100%;
+  position: relative;
+  z-index: 2;
   cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0.2s ease;
-  border-top: 2px solid rgba(255, 255, 255, 0.15);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+  background: none;
+  padding: 0;
 }
-
-.bottom-nav-btn:hover {
-  background: #c8102e;
-}
-
-.bottom-nav-btn.active {
-  background: #7a0025;
-}
-
+.bottom-nav-btn:hover { background: none; }
 .bottom-nav-icon {
   font-size: 20px;
+  display: flex;
+  transition: color 0.25s ease;
+  color: #111;
 }
-
+.bottom-nav-btn.active .bottom-nav-icon { color: #fff; }
 .bottom-nav-label {
-  font-size: clamp(11px, 2vw, 15px);
-  font-weight: bold;
-  letter-spacing: 1px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  transition: color 0.25s ease;
+  color: #111;
 }
+.bottom-nav-btn.active .bottom-nav-label { color: #fff; }
 
 /* ─── Responsive: Tablet (≤ 768px) ─── */
 @media (max-width: 768px) {
@@ -213,16 +233,8 @@
     border-radius: 12px;
   }
 
-  .bottom-nav {
-    height: 52px;
-  }
-
   .bottom-nav-label {
-    display: none;
-  }
-
-  .bottom-nav-icon {
-    font-size: 22px;
+    font-size: 0.5rem;
   }
 }
 

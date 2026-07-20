@@ -756,15 +756,16 @@ function LearningModules() {
         </AnimatePresence>
       </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation — Sliding Pill */}
       <div className="bottom-nav">
+        <div className="bottom-nav-pill" />
         <div className="bottom-nav-btn active" onClick={() => navigate('/learning-modules')}>
           <span className="bottom-nav-icon"><SiBookstack /></span>
-          <span className="bottom-nav-label">LEARNING MODULES</span>
+          <span className="bottom-nav-label">Learning Modules</span>
         </div>
         <div className="bottom-nav-btn" onClick={() => navigate('/pvp-quiz')}>
           <span className="bottom-nav-icon"><LuSwords /></span>
-          <span className="bottom-nav-label">PVP QUIZ ARENA</span>
+          <span className="bottom-nav-label">PVP Quiz Arena</span>
         </div>
       </div>
 

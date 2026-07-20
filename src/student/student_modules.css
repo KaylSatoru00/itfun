@@ -627,46 +627,70 @@
 }
 .lm-panel.sm-page .lm-grid .mod-card-img { height: 140px; }
 
-/* ═══════════ BOTTOM NAV ═══════════ */
+/* ═══════════ BOTTOM NAV — Sliding Pill ═══════════ */
 .lm-panel.sm-page .bottom-nav {
-  /* pvp_quiz.css pins .bottom-nav with position:fixed — i-reset dito */
-  position: static;
+  position: relative;
   width: auto;
-  height: auto;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  z-index: 20;
-}
-.lm-panel.sm-page .bottom-nav-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: 'Montserrat', sans-serif;
-  color: rgba(0, 0, 0, 0.5);
+  padding: 0;
+  height: 62px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 20;
+  overflow: hidden;
+}
+.lm-panel.sm-page .bottom-nav-pill {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: #C8102E;
   border-radius: 999px;
-  padding: 9px 22px;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.lm-panel.sm-page .bottom-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  position: relative;
+  z-index: 2;
   cursor: pointer;
-  transition: all 0.22s ease;
-  border: 1px solid transparent;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+  background: none;
+  padding: 0;
 }
-.lm-panel.sm-page .bottom-nav-btn:hover { color: #C8102E; background: rgba(200, 16, 46, 0.06); }
-.lm-panel.sm-page .bottom-nav-btn.active {
-  color: #C8102E;
-  background: rgba(200, 16, 46, 0.08);
-  border-color: rgba(200, 16, 46, 0.55);
-  box-shadow: none;
+.lm-panel.sm-page .bottom-nav-btn:hover { background: none; }
+.lm-panel.sm-page .bottom-nav-icon {
+  font-size: 20px;
+  display: flex;
+  transition: color 0.25s ease;
+  color: #111;
 }
-.lm-panel.sm-page .bottom-nav-icon { font-size: 19px; display: flex; }
+.lm-panel.sm-page .bottom-nav-btn.active .bottom-nav-icon { color: #fff; }
 .lm-panel.sm-page .bottom-nav-label {
-  font-size: 0.72rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.06em;
+  transition: color 0.25s ease;
+  color: #111;
+}
+.lm-panel.sm-page .bottom-nav-btn.active .bottom-nav-label { color: #fff; }
+/* When the second tab (.bottom-nav-btn:nth-child(3) because pill is child 1)
+   is active, slide the pill to the right half */
+.lm-panel.sm-page .bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
+  transform: translateX(calc(100% + 4px));
 }
 
 /* ═══════════ MODALS ═══════════ */
@@ -794,11 +818,9 @@
   .lm-panel.sm-page .lm-wordmark { display: none; }
   .lm-panel.sm-page .search-bar { flex: 1 1 auto; }
   .lm-panel.sm-page .top-btn { font-size: 0.7rem; padding: 7px 12px; }
-  .lm-panel.sm-page .bottom-nav-btn { padding: 8px 14px; }
-  .lm-panel.sm-page .bottom-nav-label { font-size: 0.62rem; }
+  .lm-panel.sm-page .bottom-nav-label { font-size: 0.55rem; }
 }
 
 @media (max-width: 420px) {
-  .lm-panel.sm-page .bottom-nav-btn { flex-direction: column; gap: 3px; }
-  .lm-panel.sm-page .bottom-nav-label { font-size: 0.55rem; letter-spacing: 0.02em; }
+  .lm-panel.sm-page .bottom-nav-label { font-size: 0.5rem; letter-spacing: 0.02em; }
 }
