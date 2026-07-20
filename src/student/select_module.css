@@ -13,18 +13,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 40px;
+  padding: 32px 40px;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
 }
 
-/* ── Two-column body: rail + content — now framed as an elevated card ── */
+/* ── Two-column body: rail + content — now framed as an elevated card ──
+   Wider max-width and a viewport-relative height cap so the card is
+   short-and-wide instead of tall-and-narrow. When the module list is
+   longer than the card, .sm-list scrolls internally. */
 .sm-body {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1400px;
   display: flex;
   align-items: stretch;
-  min-height: 560px;
+  height: calc(100vh - 64px);
+  max-height: 720px;
+  min-height: 480px;
   border-radius: 30px;
   overflow: hidden;
   background: radial-gradient(760px 400px at 50% -10%, #ffffff 0%, #FDF3F4 55%, #FBEAEC 100%);
@@ -356,6 +361,8 @@
     box-shadow: none;
     background: transparent;
     min-height: 100vh;
+    height: auto;
+    max-height: none;
   }
 }
 
