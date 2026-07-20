@@ -511,18 +511,31 @@ function QuizArena() {
   const MuteButton = () => (
     <button
       type="button"
-      className="bgm-mute-btn"
+      className={`bgm-mute-btn ${bgMuted ? 'is-muted' : ''}`}
       onClick={toggleBgMute}
       aria-label={bgMuted ? 'Unmute background music' : 'Mute background music'}
       title={bgMuted ? 'Unmute background music' : 'Mute background music'}
     >
-      {bgMuted ? '🔇' : '🔊'}
+      <span className="mute-icon" aria-hidden="true">{bgMuted ? '🔇' : '🔊'}</span>
+      <span className="mute-label">{bgMuted ? 'Muted' : 'Sound'}</span>
     </button>
+  );
+
+  const Wordmark = () => (
+    <div className="arena-wordmark" aria-hidden="true">
+      ITFun <b>⚔ Arena</b>
+    </div>
   );
 
   const TimerRing = () => (
     <div className={`timer-ring-wrap ${isUrgent ? 'danger' : ''}`}>
       <svg className="timer-ring-svg" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="timer-gradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#C8102E" />
+            <stop offset="100%" stopColor="#A50034" />
+          </linearGradient>
+        </defs>
         <circle className="timer-ring-bg" cx="60" cy="60" r={RADIUS} />
         <circle
           className="timer-ring-fill"
@@ -547,6 +560,7 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
+        <Wordmark />
         <div className="results-page">
           <p className="round-label">FINAL RESULTS</p>
 
@@ -594,6 +608,7 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
+        <Wordmark />
         <MuteButton />
         <div className="results-page">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
@@ -627,6 +642,7 @@ function QuizArena() {
   if (!currentQuestion) {
     return (
       <div className="arena-panel">
+        <Wordmark />
         <MuteButton />
         <div className="arena-loading">
           <AnimatePresence mode="wait">
@@ -659,14 +675,22 @@ function QuizArena() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
+      <Wordmark />
       <TimerRing />
       <MuteButton />
 
       <div className="arena-body">
 
-        <span className="question-progress">
-          Question {questionIndex + 1} of {totalQuestions}
-        </span>
+        <div className="arena-progress">
+          <div className="progress-dots" aria-hidden="true">
+            {Array.from({ length: totalQuestions || 0 }).map((_, i) => (
+              <span key={i} className={`prog-dot ${i <= questionIndex ? 'on' : ''}`} />
+            ))}
+          </div>
+          <span className="question-progress">
+            Question {questionIndex + 1} of {totalQuestions}
+          </span>
+        </div>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -695,10 +719,13 @@ function QuizArena() {
                   className={`option-btn ${selectedAnswer === option ? 'selected' : ''} ${isCorrectOption ? 'correct' : ''} ${isWrongSelected ? 'incorrect' : ''}`}
                   onClick={() => handleAnswer(option)}
                   disabled={isAnswered}
-                  whileHover={!isAnswered ? { scale: 1.02 } : {}}
+                  whileHover={!isAnswered ? { scale: 1.01 } : {}}
                   whileTap={!isAnswered ? { scale: 0.98 } : {}}
                 >
-                  {option}
+                  <span className="option-radio" aria-hidden="true">
+                    {isCorrectOption ? '✓' : isWrongSelected ? '✕' : selectedAnswer === option ? '✓' : ''}
+                  </span>
+                  <span className="option-text">{option}</span>
                 </motion.button>
               );
             })
@@ -714,7 +741,8 @@ function QuizArena() {
                 whileHover={!isAnswered ? { scale: 1.02 } : {}}
                 whileTap={!isAnswered ? { scale: 0.98 } : {}}
               >
-                True
+                <span className="tf-icon" aria-hidden="true">✓</span>
+                <span className="tf-label">TRUE</span>
               </motion.button>
               <motion.button
                 className={`option-btn ${selectedAnswer === 'False' ? 'selected' : ''} ${revealedAnswer === 'False' ? 'correct' : ''} ${revealedAnswer && selectedAnswer === 'False' && revealedAnswer !== 'False' ? 'incorrect' : ''}`}
@@ -723,7 +751,8 @@ function QuizArena() {
                 whileHover={!isAnswered ? { scale: 1.02 } : {}}
                 whileTap={!isAnswered ? { scale: 0.98 } : {}}
               >
-                False
+                <span className="tf-icon" aria-hidden="true">✕</span>
+                <span className="tf-label">FALSE</span>
               </motion.button>
             </>
           )}
@@ -731,6 +760,7 @@ function QuizArena() {
           {/* Identification / Fill in blank */}
           {(isIdentification || isFillBlank) && (
             <div className="ident-wrap">
+              <span className="ident-label">Type your answer</span>
               <input
                 className={`ident-input ${
                   revealedAnswer
@@ -756,7 +786,7 @@ function QuizArena() {
                 autoFocus
               />
               <button
-                className="option-btn"
+                className="ident-submit"
                 onClick={() => {
                   if (identInput.trim() && !isAnswered) handleAnswer(identInput.trim());
                 }}
