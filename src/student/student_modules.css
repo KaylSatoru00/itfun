@@ -306,10 +306,10 @@
 }
 
 /* receding peeks on the right */
-.lm-panel.sm-page .stk-item.peek-1 { left: 54%; cursor: pointer; }
-.lm-panel.sm-page .stk-item.peek-2 { left: calc(54% + 325px); cursor: pointer; }
-.lm-panel.sm-page .stk-item.peek-3 { left: calc(54% + 650px); cursor: pointer; }
-.lm-panel.sm-page .stk-item.stk-hidden { left: calc(54% + 975px); opacity: 0; pointer-events: none; }
+.lm-panel.sm-page .stk-item.peek-1 { left: 64%; cursor: pointer; }
+.lm-panel.sm-page .stk-item.peek-2 { left: calc(64% + 325px); cursor: pointer; }
+.lm-panel.sm-page .stk-item.peek-3 { left: calc(64% + 650px); cursor: pointer; }
+.lm-panel.sm-page .stk-item.stk-hidden { left: calc(64% + 975px); opacity: 0; pointer-events: none; }
 .lm-panel.sm-page .stk-item.stk-under { pointer-events: none; }
 
 /* locked peek cards dimmed */
