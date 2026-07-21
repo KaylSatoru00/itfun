@@ -24,6 +24,7 @@ import img6 from '../assets/panel6.png';
 import img7 from '../assets/panel7.png';
 import img8 from '../assets/panel8.png';
 import img9 from '../assets/panel9.png';
+import itfunLogo from '../assets/LOGO_NAMEN.png';
 
 /* ─────────────────────────────────────────────
    Module metadata
@@ -554,7 +555,10 @@ function LearningModules() {
     >
       {/* ── Top Navbar ── */}
       <div className="top-navbar">
-        <div className="lm-wordmark">IT<span>Fun</span></div>
+        <div className="lm-brand">
+          <img src={itfunLogo} className="lm-logo" alt="ITFun logo" />
+          <div className="lm-wordmark">IT<span>Fun</span></div>
+        </div>
 
         {/* ── Search Bar with Dropdown ── */}
         <div className="search-bar" ref={searchRef} style={{ position: 'relative' }}>

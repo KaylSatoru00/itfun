@@ -32,6 +32,19 @@
   z-index: 20;
 }
 
+.lm-panel.sm-page .lm-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+.lm-panel.sm-page .lm-logo {
+  height: 36px;
+  width: 36px;
+  object-fit: contain;
+  display: block;
+}
+
 .lm-panel.sm-page .lm-wordmark {
   font-family: 'Poppins', sans-serif;
   font-weight: 800;
