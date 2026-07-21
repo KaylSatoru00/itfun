@@ -649,7 +649,6 @@ function LearningModules() {
           <h2>
             Welcome back{user?.firstName ? `, ${user.firstName}` : ''}! 👋
           </h2>
-          <p>Pick up where you left off — swipe through your learning modules.</p>
           <div className="lm-view-toggle">
             <button
               className={`lm-view-btn ${view === 'carousel' ? 'active' : ''}`}
@@ -731,6 +730,7 @@ function LearningModules() {
                   <button className="stk-nav stk-next" onClick={goNext} aria-label="Next module">▷</button>
                 </div>
               </div>
+              <p className="lm-caption">Pick up where you left off — swipe through your learning modules.</p>
             </motion.div>
           ) : (
             <motion.div

@@ -254,7 +254,7 @@
 .lm-panel.sm-page .stk-carousel {
   position: relative;
   width: min(1340px, 95vw);
-  height: 560px;
+  height: 620px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(10px);
@@ -480,6 +480,16 @@
   .lm-panel.sm-page .stk-item.peek-3 { left: calc(100% + 100px); opacity: 0; pointer-events: none; }
   .lm-panel.sm-page .stk-item.stk-hidden { left: calc(100% + 100px); }
   .lm-panel.sm-page .stk-item.stk-peek .stk-chip { display: none; }
+}
+
+/* caption below the carousel (moved out of the header) */
+.lm-panel.sm-page .lm-caption {
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(30, 10, 15, 0.6);
+  margin: 14px 16px 0;
 }
 
 /* ── Module card (shared: carousel + grid) ── */
