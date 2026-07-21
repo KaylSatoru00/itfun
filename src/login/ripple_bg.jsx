@@ -23,9 +23,9 @@ const RIPPLE_TTL = 3.0;      // seconds until a ring is fully settled
 const EMIT_MIN_DT = 0.045;   // s between emitted rings while dragging
 const EMIT_MIN_DIST = 0.018; // normalized distance between rings
 
-// Intensity preset "C — Pronounced"
-const AMP = 1.7;
-const TINT = 0.95;
+// Intensity preset "A — Subtle"
+const AMP = 0.5;
+const TINT = 0.35;
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
 
