@@ -21,6 +21,18 @@
   background: var(--itfun-dark, #060607);
 }
 
+/* WebGL water-ripple layer — sits behind the blobs and brand content.
+   pointer-events:none so clicks reach the logo / badges above it. */
+.as-ripple {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
 .as-blob {
   position: absolute;
   border-radius: 50%;

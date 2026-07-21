@@ -1,5 +1,6 @@
 import './auth_shell.css';
 import { motion } from 'framer-motion';
+import RippleBg from './ripple_bg.jsx';
 
 /**
  * Shared split-screen auth layout: animated dark brand panel on the left,
@@ -15,6 +16,7 @@ function AuthShell({ children }) {
       transition={{ duration: 0.3, ease: 'easeIn' }}
     >
       <div className="as-brand">
+        <RippleBg />
         <div className="as-blob as-blob-1" />
         <div className="as-blob as-blob-2" />
         <div className="as-blob as-blob-3" />
