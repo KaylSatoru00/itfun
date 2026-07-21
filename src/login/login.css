@@ -1,5 +1,12 @@
 /* login.css — role picker cards (layout shell lives in auth_shell.css) */
 
+.rp-side-logo {
+  height: 72px;
+  width: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.5rem;
+}
 .rp-side-title {
   font-family: 'Poppins', sans-serif;
   font-weight: 700;

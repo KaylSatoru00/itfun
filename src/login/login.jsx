@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
 import AuthShell from './auth_shell.jsx';
+import itfunLogo from '../assets/LOGO_NAMEN.png';
 
 const sideVariants = {
   hidden: {},
@@ -73,6 +74,12 @@ function Login() {
         initial="hidden"
         animate="show"
       >
+        <motion.img
+          src={itfunLogo}
+          className="rp-side-logo"
+          alt="ITFun logo"
+          variants={itemVariants}
+        />
         <motion.h2 className="rp-side-title" variants={itemVariants}>
           Welcome!
         </motion.h2>
