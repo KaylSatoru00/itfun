@@ -298,6 +298,13 @@
   background: linear-gradient(90deg, rgba(6, 6, 7, 0.78) 0%, rgba(6, 6, 7, 0.45) 45%, transparent 72%);
 }
 
+/* small peek cards: white halo + hairline ring so they lift off the pink page */
+.lm-panel.sm-page .stk-item.stk-peek {
+  box-shadow: 0 18px 38px rgba(80, 8, 22, 0.22),
+              0 0 0 1px rgba(255, 255, 255, 0.55),
+              0 0 26px rgba(255, 255, 255, 0.42);
+}
+
 /* receding peeks on the right */
 .lm-panel.sm-page .stk-item.peek-1 { left: 54%; cursor: pointer; }
 .lm-panel.sm-page .stk-item.peek-2 { left: calc(54% + 325px); cursor: pointer; }
