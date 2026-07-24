@@ -1,871 +1,628 @@
-/* faculty_class.css */
+/* faculty_class.css — Direction C (Card Dashboard + Progress Modal).
+   Everything scoped under .fc-panel so it never collides with the
+   student page or the faculty chapter pages' global styles. */
 
+/* ── BASE PANEL ── */
 .fc-panel {
   width: 100vw;
   height: 100vh;
-  background-color: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-}
-
-/* ── TOP NAVBAR ── */
-.top-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 12px;
-  background: #fff;
-  z-index: 10;
-  box-sizing: border-box;
-  border-bottom: 1px solid #f0d0d5;
-}
-
-/* Spacer */
-.navbar-spacer {
-  flex: 1;
-}
-
-/* Buttons */
-.top-center-btns {
-  display: flex;
-  gap: 10px;
-  flex: 0 0 auto;
-  align-items: center;
-}
-
-.top-btn {
-  padding: 0 20px;
-  height: 38px;
-  border-radius: 20px;
-  border: 2px solid #c8102e;
-  background: #fff;
-  color: #c8102e;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  white-space: nowrap;
-  box-sizing: border-box;
-}
-
-.top-btn:hover {
-  background: #c8102e;
-  color: #fff;
-}
-
-.top-btn.active-btn {
-  background: #c8102e;
-  color: #fff;
-}
-
-/* Avatar circle */
-.avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #c8102e;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
-  user-select: none;
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 2px 6px rgba(200, 16, 46, 0.35);
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  transition: box-shadow 0.2s;
-}
-
-.avatar-circle:hover {
-  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2);
-}
-
-/* ── CLASS VIEW ── */
-.class-view {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  padding: 80px 20px 20px 20px;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.class-cards-area {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  padding-top: 10px;
-  padding-left: 20px;
-}
-
-.class-card {
-  position: relative;
-  width: 400px;
-  height: 200px;
-  border: 2px solid #c8102e;
-  border-radius: 14px;
-  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(160deg, #FFFFFF 0%, #F7E4E8 42%, #EAB8C9 100%);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ══════════ TOP NAVBAR ══════════ */
+.fc-panel .top-navbar {
+  position: static;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px clamp(12px, 3vw, 26px);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  flex-shrink: 0;
+  z-index: 20;
+}
+.fc-panel .fc-brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.fc-panel .fc-logo { height: 34px; width: 34px; object-fit: contain; display: block; }
+.fc-panel .fc-wordmark { font-weight: 800; font-size: 1.3rem; color: #111; line-height: 1; user-select: none; }
+.fc-panel .fc-wordmark span { color: #c8102e; }
+.fc-panel .navbar-spacer { flex: 1; }
+
+.fc-panel .avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background: #fff;
+  color: #c8102e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'Poppins', Arial, sans-serif;
+  user-select: none;
+  border: 2px solid #c8102e;
+  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.18);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
-  box-sizing: border-box;
 }
+.fc-panel .avatar-circle:hover { box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.18); transform: translateY(-1px); }
 
-.class-card:hover {
-  box-shadow: 0 8px 20px rgba(165, 0, 52, 0.2);
-  transform: translateY(-4px);
-}
+/* ══════════ BODY: SIDEBAR + MAIN ══════════ */
+.fc-panel .fc-below { display: flex; flex: 1; min-height: 0; }
 
-.add-card {
+.fc-panel .fc-side {
+  width: 214px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-right: 1px solid rgba(200, 16, 46, 0.08);
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  padding: 20px 14px;
+  gap: 8px;
+  box-shadow: 4px 0 26px rgba(120, 20, 45, 0.05);
+}
+.fc-panel .fc-nav { display: flex; flex-direction: column; gap: 8px; }
+.fc-panel .fc-nav-item {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 2px dashed #c8102e;
+  gap: 13px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #4a3238;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  text-align: left;
+  width: 100%;
+}
+.fc-panel .fc-nav-item:hover { background: rgba(234, 184, 201, 0.32); }
+.fc-panel .fc-nav-item.active {
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.32);
+}
+.fc-panel .fc-nav-icon { display: flex; align-items: center; font-size: 1.2rem; flex-shrink: 0; }
+.fc-panel .fc-side-foot { margin-top: auto; font-size: 0.66rem; color: #9a7d84; font-weight: 600; padding: 0 8px; }
+
+.fc-panel .fc-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px clamp(16px, 3vw, 34px) 30px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.fc-panel .fc-heading {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  color: #111;
+  margin: 0 0 6px;
+}
+.fc-panel .fc-loading {
+  font-family: 'Montserrat', sans-serif;
+  color: #a08a90;
+  padding: 30px 4px;
+  font-size: 0.9rem;
+}
+
+/* ══════════ CLASS CARDS ══════════ */
+.fc-panel .fc-class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 12px;
+}
+.fc-panel .fc-class-card {
+  position: relative;
   background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(120, 20, 45, 0.08);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
 }
-
-.add-card:hover {
-  background: #fff5f7;
-  box-shadow: 0 8px 20px rgba(165, 0, 52, 0.15);
-  transform: translateY(-4px);
+.fc-panel .fc-class-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #C8102E, #A50034);
 }
-
-.add-card-icon {
-  font-size: 72px;
-  color: #c8102e;
+.fc-panel .fc-class-card:hover {
+  border-color: rgba(200, 16, 46, 0.5);
+  box-shadow: 0 20px 46px rgba(200, 16, 46, 0.2);
+}
+.fc-panel .fc-class-subj {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #C8102E;
+  letter-spacing: 0.02em;
+}
+.fc-panel .fc-class-name {
+  font-weight: 800;
+  font-size: 1.7rem;
+  color: #111;
+  margin: 6px 0 3px;
+  line-height: 1.05;
+}
+.fc-panel .fc-class-school {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  color: #8a6a70;
+}
+.fc-panel .fc-class-code {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f2e2e5;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  color: #666;
+}
+.fc-panel .fc-class-code strong {
+  font-family: 'Montserrat', monospace;
+  letter-spacing: 0.14em;
+  color: #A50034;
+  font-weight: 800;
+  margin-left: 4px;
+}
+.fc-panel .fc-class-remove {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 2;
+  border: none;
+  background: transparent;
+  color: #cba;
+  font-size: 1.3rem;
   line-height: 1;
+  cursor: pointer;
   transition: color 0.2s, transform 0.2s;
 }
+.fc-panel .fc-class-remove:hover { color: #C8102E; transform: scale(1.15); }
 
-.add-card:hover .add-card-icon {
-  transform: scale(1.1);
+.fc-panel .fc-add-card {
+  border: 2px dashed #dca7b4;
+  border-radius: 20px;
+  min-height: 172px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #C8102E;
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
 }
+.fc-panel .fc-add-card:hover { background: rgba(255, 255, 255, 0.6); border-color: #C8102E; }
+.fc-panel .fc-add-icon { font-size: 2.4rem; font-weight: 300; line-height: 1; }
+.fc-panel .fc-add-text { font-size: 0.82rem; font-weight: 700; }
 
-.class-card-remove {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #c8102e;
-  color: #fff;
+/* ══════════ INSIDE CLASS ══════════ */
+.fc-panel .fc-inside-head { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.fc-panel .fc-back {
+  border: 1px solid #e3c4cb;
+  background: #fff;
+  color: #C8102E;
+  border-radius: 22px;
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.fc-panel .fc-back:hover { background: #C8102E; color: #fff; }
+.fc-panel .fc-inside-name { font-weight: 800; font-size: 1.4rem; color: #111; }
+.fc-panel .fc-inside-meta { font-family: 'Montserrat', sans-serif; font-size: 0.76rem; color: #8a6a70; }
+.fc-panel .fc-inside-meta strong { color: #A50034; font-family: 'Montserrat', monospace; letter-spacing: 0.12em; }
+
+.fc-panel .fc-inside-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.fc-panel .fc-inside-count { font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 600; color: #7a5a60; }
+.fc-panel .fc-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 320px;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 999px;
+  padding: 6px 14px;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.fc-panel .fc-search:focus-within { border-color: rgba(200, 16, 46, 0.7); background: #fff; }
+.fc-panel .fc-search-icon { font-size: 22px; color: #c8102e; flex-shrink: 0; }
+.fc-panel .fc-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
   border: none;
-  font-size: 16px;
-  line-height: 1;
+  outline: none;
+  color: #111;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+}
+.fc-panel .fc-search-input::placeholder { color: rgba(0, 0, 0, 0.42); }
+.fc-panel .fc-search-clear { border: none; background: none; color: #b89; font-size: 1.1rem; cursor: pointer; line-height: 1; }
+
+/* student cards */
+.fc-panel .fc-student-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 18px;
+}
+.fc-panel .fc-student-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(120, 20, 45, 0.07);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.fc-panel .fc-student-card:hover {
+  border-color: rgba(200, 16, 46, 0.5);
+  box-shadow: 0 18px 40px rgba(200, 16, 46, 0.18);
+}
+.fc-panel .fc-student-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.fc-panel .fc-student-name { font-weight: 800; font-size: 0.92rem; color: #1a0a0d; line-height: 1.2; }
+.fc-panel .fc-student-mail {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.68rem;
+  color: #999;
+  margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fc-panel .fc-student-ring { display: flex; justify-content: center; }
+.fc-panel .fc-student-hint {
+  margin-top: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #C8102E;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.fc-panel .fc-student-card:hover .fc-student-hint { opacity: 1; }
+.fc-panel .fc-student-unenroll {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #cba;
+  font-size: 1.2rem;
+  line-height: 1;
   cursor: pointer;
-  padding: 0;
-  transition: background 0.2s;
-  font-family: Arial, sans-serif;
+  transition: color 0.2s, transform 0.2s;
 }
+.fc-panel .fc-student-unenroll:hover { color: #C8102E; transform: scale(1.15); }
 
-.class-card-remove:hover {
-  background: #7a0025;
+.fc-panel .fc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #b08;
+  text-align: center;
 }
+.fc-panel .fc-empty-icon { font-size: 2.6rem; }
+.fc-panel .fc-empty-text { font-family: 'Montserrat', sans-serif; font-size: 0.9rem; color: #8a6a70; max-width: 340px; }
 
-.class-card-subject {
-  font-size: 13px;
-  font-family: Arial, sans-serif;
-  color: #333;
-}
-
-.class-card-name {
-  font-size: 15px;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
-  color: #222;
-}
-
-.class-card-school {
-  font-size: 12px;
-  font-family: Arial, sans-serif;
-  color: #555;
-  margin-top: 2px;
-}
-
-.class-card-code {
-  font-size: 12px;
-  font-family: Arial, sans-serif;
-  color: #888;
-  margin-top: 4px;
-}
-
-/* ── MODAL OVERLAY ── */
-.modal-overlay {
+/* ══════════ MODAL SHELL (shared) ══════════ */
+.fc-panel .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(20, 6, 10, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 20px;
   box-sizing: border-box;
 }
 
-/* ── CREATE CLASS MODAL ── */
-.create-class-modal {
+/* ── Student Progress modal ── */
+.fc-panel .fc-progress-modal {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
   background: #fff;
-  border: 2px solid #c8102e;
-  border-radius: 10px;
-  padding: 28px 32px 24px 32px;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+}
+.fc-panel .fc-pm-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.fc-panel .fc-pm-title { font-weight: 800; font-size: 1.15rem; color: #111; }
+.fc-panel .fc-pm-close { border: none; background: none; color: #b89; font-size: 1.4rem; line-height: 1; cursor: pointer; transition: color 0.2s; }
+.fc-panel .fc-pm-close:hover { color: #C8102E; }
+.fc-panel .fc-pm-top { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #f2e2e5; }
+.fc-panel .fc-pm-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  color: #fff; font-weight: 800; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.fc-panel .fc-pm-name { font-weight: 800; font-size: 1.05rem; color: #111; }
+.fc-panel .fc-pm-mail { font-family: 'Montserrat', sans-serif; font-size: 0.74rem; color: #8a6a70; }
+.fc-panel .fc-pm-badge {
+  display: inline-block;
+  margin-top: 5px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.fc-panel .fc-pm-body {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 22px;
+  margin-top: 18px;
+  align-items: start;
+}
+.fc-panel .fc-pm-donut {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: min(420px, 100%);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
-  box-sizing: border-box;
-}
-
-.modal-label {
-  font-size: 15px;
-  font-family: Arial, sans-serif;
-  color: #222;
-  font-weight: 600;
-}
-
-/* ── SECTION PICKER GRID ── */
-.modal-section-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 4px 2px;
-}
-
-.section-btn {
-  padding: 8px 4px;
-  border-radius: 8px;
-  border: 2px solid #c8102e;
-  background: #fff;
-  color: #c8102e;
-  font-size: 11px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-  text-align: center;
-  line-height: 1.3;
-}
-
-.section-btn:hover:not(.taken):not(.selected) {
-  background: #fdecea;
-  border-color: #A50034;
-  color: #A50034;
-}
-
-.section-btn.selected {
-  background: #A50034;
-  color: #fff;
-  border-color: #A50034;
-}
-
-.section-btn.taken {
-  background: #f5f5f5;
-  color: #ccc;
-  border-color: #e8e8e8;
-  cursor: not-allowed;
-}
-
-.modal-selected-label {
-  font-size: 13px;
-  font-family: Arial, sans-serif;
-  color: #555;
-  text-align: center;
-  background: #fff5f7;
-  border-radius: 8px;
-  padding: 8px;
-}
-
-.modal-generate-btn {
-  background: #A50034;
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 0;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-  letter-spacing: 0.5px;
-}
-
-.modal-generate-btn:hover:not(:disabled) {
-  background: #c8102e;
-}
-
-.modal-generate-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.modal-code-display {
-  border: 2px solid #333;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 15px;
-  font-family: Arial, sans-serif;
-  color: #222;
-  background: #f9f9f9;
-  text-align: center;
-  font-weight: bold;
-  letter-spacing: 2px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: center;
+  align-items: center;
   gap: 10px;
-  border-top: 1px solid #ddd;
-  padding-top: 12px;
+  padding-top: 6px;
 }
+.fc-panel .fc-pm-joined {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.68rem;
+  color: #999;
+  text-align: center;
+}
+.fc-panel .fc-pm-mods { display: flex; flex-direction: column; gap: 11px; }
+.fc-panel .fc-pm-seclabel {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #b08;
+  text-transform: uppercase;
+  margin: 0 0 2px;
+}
+.fc-panel .fc-pm-note { font-family: 'Montserrat', sans-serif; font-size: 0.8rem; color: #aaa; padding: 16px 0; text-align: center; }
+.fc-panel .fc-pm-mtop { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; gap: 8px; }
+.fc-panel .fc-pm-mname { font-family: 'Montserrat', sans-serif; font-size: 0.76rem; color: #444; line-height: 1.3; }
+.fc-panel .fc-pm-mpct { font-family: 'Montserrat', sans-serif; font-size: 0.76rem; font-weight: 800; color: #777; white-space: nowrap; }
+.fc-panel .fc-pm-mtrack { height: 7px; background: #f0d0d5; border-radius: 99px; overflow: hidden; }
+.fc-panel .fc-pm-mfill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
 
-.modal-create-btn {
-  background: #A50034;
+/* ── Create Class modal ── */
+.fc-panel .create-class-modal {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+}
+.fc-panel .modal-heading { font-weight: 800; font-size: 1.2rem; color: #111; text-align: center; margin: 0; }
+.fc-panel .modal-subheading { font-family: 'Montserrat', sans-serif; font-size: 0.78rem; color: #8a6a70; text-align: center; margin: 4px 0 18px; }
+.fc-panel .modal-label { font-size: 0.74rem; font-weight: 700; color: #33333a; margin-bottom: 6px; display: block; }
+.fc-panel .modal-section-select {
+  width: 100%;
+  border: 1px solid #d9d9de;
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.88rem;
+  color: #333;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.fc-panel .modal-section-select:focus { border-color: #C8102E; }
+.fc-panel .modal-selected-label { font-family: 'Montserrat', sans-serif; font-size: 0.78rem; color: #666; margin: 10px 2px; }
+.fc-panel .modal-selected-label strong { color: #A50034; }
+.fc-panel .modal-generate-btn {
+  width: 100%;
+  margin-top: 14px;
+  border: 1.5px solid #C8102E;
+  color: #C8102E;
+  background: #fff;
+  border-radius: 12px;
+  padding: 11px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.fc-panel .modal-generate-btn:hover:not(:disabled) { background: #C8102E; color: #fff; }
+.fc-panel .modal-generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.fc-panel .modal-code-display {
+  margin-top: 16px;
+  text-align: center;
+  font-family: 'Montserrat', monospace;
+  font-size: 1.6rem;
+  letter-spacing: 0.3em;
+  font-weight: 800;
+  color: #A50034;
+  background: #fdecef;
+  border-radius: 12px;
+  padding: 14px;
+}
+.fc-panel .modal-create-row { display: flex; justify-content: center; margin-top: 18px; }
+.fc-panel .modal-create-btn {
+  background: linear-gradient(135deg, #C8102E, #A50034);
   color: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 8px 28px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
+  border-radius: 24px;
+  padding: 12px 30px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.32);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
+.fc-panel .modal-create-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(200, 16, 46, 0.45); }
+.fc-panel .modal-create-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
-.modal-create-btn:hover:not(:disabled) {
-  background: #c8102e;
-}
-
-.modal-create-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* ── LOGOUT MODAL ── */
-.modal-box {
+/* ── Confirm remove modal ── */
+.fc-panel .confirm-remove-modal {
+  width: min(360px, 100%);
   background: #fff;
-  border-radius: 8px;
+  border-radius: 20px;
+  padding: 28px 24px 22px;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+}
+.fc-panel .confirm-icon { font-size: 2.4rem; margin-bottom: 10px; }
+.fc-panel .confirm-message { font-family: 'Montserrat', sans-serif; font-size: 0.92rem; color: #333; font-weight: 600; margin: 0 0 20px; line-height: 1.4; }
+.fc-panel .confirm-footer { display: flex; justify-content: center; gap: 10px; }
+.fc-panel .confirm-cancel-btn {
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #333;
+  border-radius: 22px;
+  padding: 9px 22px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.fc-panel .confirm-cancel-btn:hover { background: #eee; }
+.fc-panel .confirm-remove-btn {
+  border: none;
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #fff;
+  border-radius: 22px;
+  padding: 9px 22px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(200, 16, 46, 0.3);
+  transition: transform 0.2s;
+}
+.fc-panel .confirm-remove-btn:hover { transform: translateY(-1px); }
+
+/* ── Logout modal ── */
+.fc-panel .modal-box {
+  background: #fff;
+  border-radius: 16px;
   width: min(380px, 100%);
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
 }
-
-.modal-header {
+.fc-panel .modal-header {
   background: #A50034;
   padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-
-.modal-title {
-  color: #fff;
-  font-size: 16px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-}
-
-.modal-body {
-  padding: 24px 20px 16px;
+.fc-panel .modal-title { color: #fff; font-size: 16px; font-family: Arial, sans-serif; font-weight: bold; margin: 0; }
+.fc-panel .modal-close { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; line-height: 1; padding: 0; }
+.fc-panel .modal-body { padding: 24px 20px 16px; display: flex; align-items: center; gap: 12px; }
+.fc-panel .modal-footer {
+  background: #f7f0f1;
+  padding: 12px 16px;
   display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.modal-join-btn {
-  padding: 7px 24px;
-  background: #c8102e;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.modal-join-btn:hover {
-  background: #a00d24;
-}
-
-.modal-cancel-btn {
-  padding: 7px 24px;
-  background: #fff;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.modal-cancel-btn:hover {
-  background: #e0e0e0;
-}
-
-/* ── CONFIRM REMOVE MODAL ── */
-.confirm-remove-modal {
-  background: #fff;
-  border: 2px solid #c8102e;
-  border-radius: 10px;
-  padding: 28px 32px 24px 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  min-width: 300px;
-  max-width: 360px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
-}
-
-.confirm-icon {
-  font-size: 36px;
-  line-height: 1;
-}
-
-.confirm-message {
-  font-size: 15px;
-  font-family: Arial, sans-serif;
-  color: #222;
-  text-align: center;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.confirm-footer {
-  display: flex;
-  gap: 12px;
   justify-content: center;
-  width: 100%;
-  margin-top: 4px;
+  gap: 10px;
+  border-top: 1px solid #eee;
 }
-
-.confirm-cancel-btn {
-  padding: 8px 28px;
-  background: #fff;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.confirm-cancel-btn:hover {
-  background: #f0f0f0;
-  border-color: #aaa;
-}
-
-.confirm-remove-btn {
-  padding: 8px 28px;
-  background: #A50034;
+.fc-panel .modal-join-btn {
+  padding: 8px 24px;
+  background: #c8102e;
   color: #fff;
   border: none;
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 14px;
   font-family: Arial, sans-serif;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
 }
-
-.confirm-remove-btn:hover {
-  background: #c8102e;
-}
-
-/* ── INSIDE CLASS VIEW ── */
-.inside-class-view {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  padding: 80px 20px 20px 20px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
-
-.inside-class-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.ic-back-btn {
-  background: none;
-  border: 2px solid #c8102e;
-  color: #c8102e;
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-size: 13px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-.ic-back-btn:hover { background: #c8102e; color: #fff; }
-
-.ic-class-info { display: flex; flex-direction: column; gap: 2px; }
-.ic-class-name { font-size: 18px; font-weight: bold; font-family: Arial, sans-serif; color: #222; }
-.ic-class-subject { font-size: 12px; color: #888; font-family: Arial, sans-serif; }
-
-.inside-class-body {
-  display: flex;
-  gap: 20px;
-  flex: 1;
-  overflow: hidden;
-}
-
-.ic-table-panel {
-  flex: 1;
+.fc-panel .modal-join-btn:hover { background: #a00d24; }
+.fc-panel .modal-cancel-btn {
+  padding: 8px 24px;
   background: #fff;
-  border: 1px solid #f5d6dc;
-  border-radius: 18px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(200,16,46,0.08);
-}
-
-.ic-table-title { font-size: 20px; font-weight: 800; font-family: Arial, sans-serif; color: #222; letter-spacing: 0.3px; }
-.ic-table-subtitle { font-size: 13px; color: #8a8a8a; font-family: Arial, sans-serif; margin-bottom: 16px; }
-
-/* ── FIXED: equal column spacing ── */
-.ic-table-header {
-  display: grid;
-  grid-template-columns: 1.8fr 1.8fr 120px 160px 110px;
-  column-gap: 18px;
-  padding: 10px 8px 8px;
-  font-size: 12px;
-  font-weight: bold;
-  color: #aaa;
-  font-family: Arial, sans-serif;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #f0f0f0;
-  align-items: center;
-}
-
-.ic-table-body { overflow-y: auto; flex: 1; }
-
-.ic-table-row {
-  display: grid;
-  grid-template-columns: 1.8fr 1.8fr 120px 160px 110px;
-  column-gap: 18px;
-  align-items: center;
-  min-height: 64px;
-  padding: 10px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-  border-bottom: 1px solid #fafafa;
-}
-
-.ic-table-row:hover {
-  background: #fff5f7;
-}
-
-.ic-table-row.selected {
-  background: #fdecea;
-}
-
-.ic-student-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.ic-student-text {
-  min-width: 0;
-}
-
-.ic-avatar {
-  width: 38px; height: 38px; border-radius: 50%;
-  color: #fff; font-size: 14px; font-weight: bold;
-  font-family: Arial, sans-serif;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-
-.ic-student-name { font-size: 14px; font-weight: bold; font-family: Arial, sans-serif; color: #222; }
-.ic-student-id { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; }
-.ic-section-cell { font-size: 13px; font-family: Arial, sans-serif; color: #555; }
-
-.ic-email-cell { font-size: 13px; color: #666; }
-
-.ic-delete-btn { background: none; border: none; cursor: pointer; font-size: 17px; padding: 4px; opacity: 0.5; transition: opacity 0.2s; }
-.ic-delete-btn:hover { opacity: 1; }
-
-.ic-unenroll-btn {
-  background: #fde6ea;
-  border: 1px solid #f7c2cb;
-  color: #c8102e;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: Arial, sans-serif;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s, transform 0.2s;
-  white-space: nowrap;
-  padding: 6px 12px;
-  border-radius: 999px;
-}
-.ic-unenroll-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-
-.ic-profile-panel {
-  width: 300px; flex-shrink: 0; background: #fff;
-  border: 1px solid #f0d0d5; border-radius: 14px; padding: 20px;
-  display: flex; flex-direction: column; gap: 14px;
-  overflow-y: auto; box-shadow: 0 2px 12px rgba(200,16,46,0.07);
-}
-
-.ic-profile-panel.ic-profile-empty { align-items: center; justify-content: center; gap: 12px; }
-.ic-empty-icon { font-size: 48px; opacity: 0.3; }
-.ic-empty-text { font-size: 14px; color: #bbb; font-family: Arial, sans-serif; text-align: center; }
-
-.ic-profile-header { display: flex; justify-content: space-between; align-items: center; }
-.ic-profile-title { font-size: 15px; font-weight: bold; font-family: Arial, sans-serif; color: #222; }
-.ic-live-badge { font-size: 12px; color: #2e7d32; font-family: Arial, sans-serif; background: #e8f5e9; padding: 3px 10px; border-radius: 10px; font-weight: bold; }
-
-.ic-profile-top { display: flex; align-items: center; gap: 12px; }
-.ic-profile-avatar {
-  width: 52px; height: 52px; border-radius: 12px;
-  color: #fff; font-size: 20px; font-weight: bold;
-  font-family: Arial, sans-serif;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.ic-profile-name { font-size: 16px; font-weight: bold; font-family: Arial, sans-serif; color: #222; }
-.ic-profile-meta { font-size: 12px; color: #888; font-family: Arial, sans-serif; margin-bottom: 4px; }
-.ic-status-badge { display: inline-block; font-size: 12px; font-weight: bold; font-family: Arial, sans-serif; padding: 3px 10px; border-radius: 10px; }
-
-/* ── INSIDE CLASS SEARCH BAR ── */
-.ic-search-bar {
-  display: flex;
-  align-items: center;
-  border: 2px solid #c8102e;
-  border-radius: 20px;
-  padding: 5px 12px 5px 8px;
-  gap: 6px;
-  margin-bottom: 12px;
-  background: #fff;
-}
-
-.ic-search-icon {
-  font-size: 22px;
-  color: #c8102e;
-  flex-shrink: 0;
-}
-
-.ic-search-input {
-  background: transparent;
-  border: none;
-  outline: none;
   color: #333;
-  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
   font-family: Arial, sans-serif;
-  flex: 1;
-}
-
-.ic-search-input::placeholder {
-  color: #c8102e;
-  opacity: 0.7;
-}
-
-.ic-search-clear {
-  background: none;
-  border: none;
-  color: #c8102e;
-  font-size: 18px;
   cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  font-family: Arial, sans-serif;
+  transition: background 0.2s;
 }
+.fc-panel .modal-cancel-btn:hover { background: #e0e0e0; }
 
-/* ── Progress bar in student table ── */
-.ic-progress-cell {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.ic-progress-bar-track {
-  flex: 1;
-  height: 11px;
-  background: #f0d0d5;
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.ic-progress-bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.5s ease;
-}
-
-.ic-progress-label {
-  font-size: 12px;
-  font-family: Arial, sans-serif;
-  color: #888;
-  white-space: nowrap;
-  min-width: 30px;
-  text-align: right;
-}
-
-/* ── RESPONSIVE ── */
-@media (max-width: 1280px) {
-  .top-btn { padding: 8px 14px; font-size: 13px; }
-}
-
-@media (max-width: 768px) {
-  .top-center-btns { gap: 6px; }
-  .top-btn { padding: 6px 12px; font-size: 12px; }
-  .class-cards-area { justify-content: center; padding-left: 0; }
-  .class-card { width: 100%; max-width: 100%; }
-  .ic-profile-panel { display: none; }
-  .modal-section-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 480px) {
-  .top-navbar { padding: 0 10px; gap: 8px; }
-  .top-center-btns { gap: 4px; }
-  .top-btn { padding: 5px 10px; font-size: 11px; }
-  .modal-section-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ── Mobile fix: table + profile ── */
-@media (max-width: 768px) {
-  .inside-class-body {
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
-  .inside-class-view {
-    overflow-y: auto;
-  }
-
-  .ic-table-panel {
-    overflow: visible;
-  }
-
-  .ic-table-body {
-    overflow-x: auto;
-  }
-
-  .ic-table-header,
-  .ic-table-row {
-    grid-template-columns: minmax(120px, 1.5fr) minmax(120px, 1.5fr) 90px 120px 90px;
-    font-size: 11px;
-    column-gap: 8px;
-  }
-
-  .ic-profile-panel {
-    display: flex !important;
-    width: 100%;
-    box-sizing: border-box;
-  }
-}
-
-@media (max-width: 480px) {
-  .ic-table-header,
-  .ic-table-row {
-    grid-template-columns: minmax(100px, 1.5fr) minmax(100px, 1.5fr) 80px 100px 80px;
-    font-size: 10px;
-    column-gap: 6px;
-    padding: 8px 4px;
-  }
-
-  .ic-avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 11px;
-  }
-
-  .ic-student-name { font-size: 12px; }
-  .ic-student-id { font-size: 10px; }
-  .ic-unenroll-btn { font-size: 11px; padding: 4px 8px; }
-}
-
-/* ── Mobile: card layout para sa students ── */
-@media (max-width: 768px) {
-  .ic-table-header {
-    display: none;
-  }
-
-  .ic-table-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 12px;
-    border: 1px solid #f0d0d5;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    grid-template-columns: unset;
-  }
-
-  .ic-student-cell {
+/* ══════════ RESPONSIVE ══════════ */
+@media (max-width: 900px) {
+  .fc-panel { height: auto; min-height: 100vh; overflow: visible; }
+  .fc-panel .fc-below { flex-direction: column; }
+  .fc-panel .fc-side {
+    width: auto;
     flex-direction: row;
     align-items: center;
+    border-right: none;
+    border-bottom: 1px solid rgba(200, 16, 46, 0.1);
+    padding: 10px 14px;
+    gap: 8px;
+    overflow-x: auto;
   }
+  .fc-panel .fc-nav { flex-direction: row; gap: 8px; }
+  .fc-panel .fc-nav-item { width: auto; padding: 9px 16px; }
+  .fc-panel .fc-side-foot { display: none; }
+  .fc-panel .fc-main { overflow: visible; }
+  .fc-panel .fc-pm-body { grid-template-columns: 1fr; }
+  .fc-panel .fc-pm-donut { padding-bottom: 6px; border-bottom: 1px solid #f2e2e5; }
+}
 
-  .ic-email-cell {
-    font-size: 12px;
-    color: #888;
-  }
-
-  .ic-section-cell {
-    font-size: 12px;
-  }
-
-  .ic-progress-cell {
-    width: 100%;
-  }
-
-  .ic-unenroll-btn {
-    align-self: flex-start;
-    margin-top: 4px;
-  }
+@media (max-width: 560px) {
+  .fc-panel .fc-inside-toolbar { flex-direction: column; align-items: stretch; }
+  .fc-panel .fc-search { flex: 1 1 auto; }
 }
