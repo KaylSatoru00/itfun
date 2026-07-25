@@ -168,6 +168,20 @@ function FacultyClass() {
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [endDate, setEndDate] = useState('');
+  const [confirmFinishId, setConfirmFinishId] = useState(null);
+
+  // ── Local "today" (not UTC) for the date picker min + end-of-class check ──
+  const _now = new Date();
+  const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+  const todayLabel = _now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  // A class has ended once today is strictly past its endDate (string compare is safe for YYYY-MM-DD).
+  const isEnded = (cls) => cls.endDate && todayStr > cls.endDate;
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
@@ -331,7 +345,7 @@ function FacultyClass() {
   const handleGenerateCode = () => setGeneratedCode(generateClassCode());
 
   const handleCreateClass = async () => {
-    if (!selectedSection || !generatedCode || !user) return;
+    if (!selectedSection || !generatedCode || !endDate || !user) return;
     setCreating(true);
     try {
       await addDoc(collection(db, 'classes'), {
@@ -341,15 +355,36 @@ function FacultyClass() {
         accessCode: generatedCode,
         facultyId: user.uid,
         facultyName: `${user.firstName} ${user.lastName}`,
+        startDate: todayStr,   // auto: the day the class is created
+        endDate,               // faculty-picked; class auto-ends on this date
         createdAt: serverTimestamp(),
       });
       setSelectedSection('');
       setGeneratedCode('');
+      setEndDate('');
       setShowCreateModal(false);
     } catch (err) {
       console.error('Error creating class:', err);
     }
     setCreating(false);
+  };
+
+  // ── Finish an ended class: delete it (and its enrollments) so the section
+  //    frees up again in the Create Class dropdown. ──
+  const handleFinishClass = (id) => setConfirmFinishId(id);
+
+  const handleConfirmFinish = async () => {
+    const cls = classes.find(c => c.firestoreId === confirmFinishId);
+    if (!cls) { setConfirmFinishId(null); return; }
+    try {
+      await deleteDoc(doc(db, 'classes', cls.firestoreId));
+      const q = query(collection(db, 'enrollments'), where('classId', '==', cls.firestoreId));
+      const snap = await getDocs(q);
+      await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'enrollments', d.id))));
+    } catch (err) {
+      console.error('Error finishing class:', err);
+    }
+    setConfirmFinishId(null);
   };
 
   const handleRemoveClass = (id) => setConfirmRemoveId(id);
@@ -488,6 +523,21 @@ function FacultyClass() {
                         <div className="fc-class-name">{cls.name}</div>
                         <div className="fc-class-school">{cls.school}</div>
                         <div className="fc-class-code">Access Code <strong>{cls.accessCode}</strong></div>
+                        {cls.endDate && (
+                          <div className={`fc-class-duration ${isEnded(cls) ? 'ended' : ''}`}>
+                            {isEnded(cls)
+                              ? <>Ended {fmtDate(cls.endDate)}</>
+                              : <>Ends {fmtDate(cls.endDate)}</>}
+                          </div>
+                        )}
+                        {isEnded(cls) && (
+                          <button
+                            className="fc-class-finish"
+                            onClick={e => { e.stopPropagation(); handleFinishClass(cls.firestoreId); }}
+                          >
+                            ✓ Finish Class
+                          </button>
+                        )}
                       </motion.div>
                     ))}
 
@@ -708,7 +758,7 @@ function FacultyClass() {
           <motion.div
             className="modal-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => { setShowCreateModal(false); setSelectedSection(''); setGeneratedCode(''); }}
+            onClick={() => { setShowCreateModal(false); setSelectedSection(''); setGeneratedCode(''); setEndDate(''); }}
           >
             <motion.div
               className="create-class-modal"
@@ -742,6 +792,28 @@ function FacultyClass() {
                 </div>
               )}
 
+              <label className="modal-label" style={{ marginTop: '16px' }}>Class Duration</label>
+              <div className="modal-date-row">
+                <span className="modal-date-tag">Start</span>
+                <div className="modal-date-field locked">
+                  <span>{todayLabel}</span>
+                  <span className="modal-date-ico" aria-hidden="true">🔒</span>
+                </div>
+              </div>
+              <div className="modal-date-row">
+                <span className="modal-date-tag">End</span>
+                <div className={`modal-date-field end ${endDate ? 'filled' : ''}`}>
+                  <input
+                    type="date"
+                    className="modal-date-input"
+                    min={todayStr}
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className="modal-date-help">Class auto-ends on this date. Dates before today are disabled.</p>
+
               <button
                 className="modal-generate-btn"
                 onClick={handleGenerateCode}
@@ -767,7 +839,7 @@ function FacultyClass() {
                 <button
                   className="modal-create-btn"
                   onClick={handleCreateClass}
-                  disabled={creating || !selectedSection || !generatedCode}
+                  disabled={creating || !selectedSection || !generatedCode || !endDate}
                 >
                   {creating ? 'Creating...' : 'Create Class'}
                 </button>
@@ -796,6 +868,31 @@ function FacultyClass() {
               <div className="confirm-footer">
                 <button className="confirm-cancel-btn" onClick={() => setConfirmRemoveId(null)}>Cancel</button>
                 <button className="confirm-remove-btn" onClick={handleConfirmRemove}>Remove</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── CONFIRM FINISH CLASS MODAL ── */}
+      <AnimatePresence>
+        {confirmFinishId !== null && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setConfirmFinishId(null)}
+          >
+            <motion.div
+              className="confirm-remove-modal"
+              initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="confirm-icon">🎓</div>
+              <p className="confirm-message">Finish this class? It will be closed and removed, and its section becomes available again. Enrolled students will be unenrolled.</p>
+              <div className="confirm-footer">
+                <button className="confirm-cancel-btn" onClick={() => setConfirmFinishId(null)}>Cancel</button>
+                <button className="confirm-remove-btn" onClick={handleConfirmFinish}>Finish Class</button>
               </div>
             </motion.div>
           </motion.div>
