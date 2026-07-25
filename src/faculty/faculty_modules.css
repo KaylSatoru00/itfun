@@ -10,7 +10,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background: linear-gradient(160deg, #FFFFFF 0%, #F7E4E8 42%, #EAB8C9 100%);
+  background: radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%);
   font-family: 'Poppins', sans-serif;
 }
 
