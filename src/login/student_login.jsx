@@ -70,8 +70,12 @@ function StudentLogin() {
         setLoading(false);
         return;
       }
+      // Require a real student account: the doc must exist AND carry
+      // role: 'student'. A stray students/{uid} doc (e.g. an activeSessionId
+      // merge-write left by a faculty user reaching a student page) has no
+      // role, so it is correctly rejected here.
       const snap = await getDoc(doc(db, 'students', uid));
-      if (!snap.exists()) {
+      if (!snap.exists() || snap.data().role !== 'student') {
         await auth.signOut();
         setError('No student account found. Are you faculty?');
         setLoading(false);

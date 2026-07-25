@@ -68,8 +68,13 @@ function FacultyLogin() {
         setLoading(false);
         return;
       }
+      // Require a real faculty account: the doc must exist AND carry
+      // role: 'faculty'. A student who reached a faculty page can leave a
+      // stray faculty/{uid} doc (an activeSessionId merge-write with no
+      // role) — checking the role field rejects those instead of letting a
+      // student in through the faculty portal.
       const snap = await getDoc(doc(db, 'faculty', uid));
-      if (!snap.exists()) {
+      if (!snap.exists() || snap.data().role !== 'faculty') {
         await auth.signOut();
         setError('No faculty account found. Are you a student?');
         setLoading(false);
