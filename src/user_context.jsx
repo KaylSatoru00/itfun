@@ -281,13 +281,24 @@ export function UserProvider({ children }) {
       // na-sync, kung sobrang bilis ng spam-refresh). Mas mabagal ito nang
       // konti (totoong network round-trip palagi), pero garantisadong
       // buo at tumpak ang makukuhang data.
+      // Role-authoritative restore: only accept a doc whose `role` actually
+      // matches its collection. A student can carry a STRAY faculty/{uid}
+      // doc (an activeSessionId merge-write with no role) from reaching a
+      // faculty page — if we blindly used the faculty doc here, its stale
+      // activeSessionId would fail the session-match below and log the
+      // student out on every refresh. Skipping role-less/mismatched docs
+      // makes us fall through to the real students doc.
+      let userData = null;
       let snap = await getDocFromServer(doc(db, 'faculty', fbUser.uid));
-      if (!snap.exists()) {
+      if (snap.exists() && snap.data().role === 'faculty') {
+        userData = { uid: fbUser.uid, ...snap.data() };
+      } else {
         snap = await getDocFromServer(doc(db, 'students', fbUser.uid));
+        if (snap.exists() && snap.data().role === 'student') {
+          userData = { uid: fbUser.uid, ...snap.data() };
+        }
       }
-      if (snap.exists()) {
-        const userData = { uid: fbUser.uid, ...snap.data() };
-
+      if (userData) {
         // ── Session-match gate ──
         // Bago natin ipakita ang tab na ito bilang "naka-login", tignan
         // muna natin kung ITO nga ang opisyal/kumpirmadong may-hawak ng
