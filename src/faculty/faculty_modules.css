@@ -609,10 +609,13 @@
   .fm-panel .fm-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Tablet / mobile: collapse the sidebar into a horizontal top strip */
+/* Tablet / mobile: collapse the sidebar into a horizontal top strip.
+   Keep the panel pinned to the viewport and let .fm-main scroll inside
+   it — the global #root is position:fixed, so the page can't scroll on
+   the body; the internal scroll container is what makes it work. */
 @media (max-width: 900px) {
-  .fm-panel { height: auto; min-height: 100vh; overflow: visible; }
-  .fm-panel .fm-below { flex-direction: column; }
+  .fm-panel { height: 100dvh; }
+  .fm-panel .fm-below { flex-direction: column; min-height: 0; }
   .fm-panel .fm-side {
     width: auto;
     flex-direction: row;
@@ -626,7 +629,8 @@
   .fm-panel .fm-nav { flex-direction: row; gap: 8px; }
   .fm-panel .fm-nav-item { width: auto; padding: 9px 16px; }
   .fm-panel .fm-side-foot { display: none; }
-  .fm-panel .fm-main { overflow: visible; }
+  .fm-panel .fm-side { flex-shrink: 0; }
+  .fm-panel .fm-main { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .fm-panel .stk-carousel { height: 440px; }
   .fm-panel .stk-content { left: 20px; width: calc(100% - 40px); max-width: none; }
   .fm-panel .stk-item.stk-under::before,
