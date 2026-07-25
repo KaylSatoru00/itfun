@@ -1,7 +1,7 @@
 // select_type.jsx - COMPLETE FILE
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { auth } from '../firebase';
 import './select_type.css';
 
@@ -21,6 +21,109 @@ const quizTypes = [
   { id: 'fill-in-blank',  label: 'Fill-in-the-Blank',  img: fillImg,   desc: 'Complete the sentence with the missing word' },
   { id: 'mixed',          label: 'Mixed Type',         img: mixImg,    desc: 'A blend of all question formats' },
 ];
+
+// Rotating status lines shown while the quiz is generating.
+const LOADER_MESSAGES = [
+  'Shuffling questions…',
+  'Mixing in the answers…',
+  'Balancing the difficulty…',
+  'Almost ready…',
+];
+
+// ── Quiz-Card Shuffle loader (shown while generating) ──
+// A little deck of quiz cards that gently shuffles; the front card flips
+// through the five quiz-type icons while a status line and a shimmer bar
+// convey progress. Respects prefers-reduced-motion.
+function QuizLoader() {
+  const reduce = useReducedMotion();
+  const [iconIdx, setIconIdx] = useState(0);
+  const [msgIdx, setMsgIdx] = useState(0);
+
+  useEffect(() => {
+    const t1 = setInterval(() => setIconIdx(i => (i + 1) % quizTypes.length), 850);
+    const t2 = setInterval(() => setMsgIdx(i => (i + 1) % LOADER_MESSAGES.length), 1600);
+    return () => { clearInterval(t1); clearInterval(t2); };
+  }, []);
+
+  return (
+    <motion.div
+      className="ql-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <motion.div
+        className="ql-card"
+        initial={{ scale: 0.9, y: 12, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+      >
+        <div className="ql-deck" aria-hidden="true">
+          <motion.div
+            className="ql-qc ql-back"
+            animate={reduce ? { x: -30, rotate: -13 } : { x: -30, rotate: [-14, -11, -14] }}
+            transition={reduce ? {} : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="ql-qc ql-back"
+            animate={reduce ? { x: 28, rotate: 10 } : { x: 28, rotate: [9, 12, 9] }}
+            transition={reduce ? {} : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="ql-qc ql-front"
+            animate={reduce ? {} : { y: [0, -10, 0], rotate: [-2, 2, -2] }}
+            transition={reduce ? {} : { duration: 1.7, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={iconIdx}
+                src={quizTypes[iconIdx].img}
+                alt=""
+                className="ql-icon"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+              />
+            </AnimatePresence>
+          </motion.div>
+        </div>
+
+        <div className="ql-title">Building your quiz…</div>
+        <div className="ql-sub-wrap">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={msgIdx}
+              className="ql-sub"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.3 }}
+            >
+              {LOADER_MESSAGES[msgIdx]}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="ql-bar">
+          {reduce ? (
+            <span className="ql-bar-fill ql-bar-static" />
+          ) : (
+            <motion.span
+              className="ql-bar-fill"
+              animate={{ x: ['-130%', '270%'] }}
+              transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 function SelectType() {
   const navigate = useNavigate();
@@ -223,6 +326,11 @@ function SelectType() {
             </button>
           </div>
         </section>
+
+        {/* Quiz-generating loader — frosted overlay over the whole card */}
+        <AnimatePresence>
+          {loading && <QuizLoader />}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

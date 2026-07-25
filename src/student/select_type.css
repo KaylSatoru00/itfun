@@ -20,6 +20,7 @@
    viewport-relative height cap keep the card short-and-wide on desktop;
    the list scrolls internally when content overflows. */
 .st-body {
+  position: relative;
   width: 100%;
   max-width: 1580px;
   display: flex;
@@ -388,4 +389,113 @@
     overflow: auto !important;
     height: auto !important;
   }
+}
+
+/* ══════════ QUIZ-GENERATING LOADER (Quiz-Card Shuffle) ══════════ */
+.st-body .ql-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(255, 244, 246, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.st-body .ql-card {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 26px;
+  padding: 38px 52px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 26px 60px rgba(120, 20, 45, 0.22);
+}
+.st-body .ql-deck {
+  position: relative;
+  width: 210px;
+  height: 158px;
+  margin-bottom: 6px;
+}
+.st-body .ql-qc {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  width: 124px;
+  height: 124px;
+  margin-left: -62px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2px solid #f4dbe1;
+  box-shadow: 0 12px 26px rgba(120, 20, 45, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.st-body .ql-qc.ql-front {
+  border-color: #C8102E;
+  box-shadow: 0 20px 42px rgba(200, 16, 46, 0.28);
+  z-index: 2;
+  perspective: 600px;
+}
+.st-body .ql-icon {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+  display: block;
+}
+.st-body .ql-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #1a0a0d;
+  margin-top: 10px;
+}
+.st-body .ql-sub-wrap {
+  height: 20px;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.st-body .ql-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #8a6a70;
+}
+.st-body .ql-bar {
+  position: relative;
+  margin-top: 18px;
+  width: 280px;
+  height: 9px;
+  border-radius: 99px;
+  background: #f0d8dd;
+  overflow: hidden;
+}
+.st-body .ql-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 46%;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #C8102E, #ff5a76);
+  box-shadow: 0 0 12px rgba(200, 16, 46, 0.5);
+}
+.st-body .ql-bar-fill.ql-bar-static {
+  width: 100%;
+  background: linear-gradient(90deg, #C8102E, #A50034);
+}
+
+@media (max-width: 640px) {
+  .st-body .ql-card { padding: 30px 30px 26px; }
+  .st-body .ql-deck { width: 180px; height: 140px; }
+  .st-body .ql-qc { width: 104px; height: 104px; margin-left: -52px; }
+  .st-body .ql-icon { width: 60px; height: 60px; }
+  .st-body .ql-bar { width: 220px; }
 }
