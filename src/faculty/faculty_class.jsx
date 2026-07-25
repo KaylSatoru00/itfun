@@ -787,6 +787,8 @@ function FacultyClass() {
                     min={todayStr}
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
+                    onKeyDown={e => { if (e.key !== 'Tab') e.preventDefault(); }}
+                    onClick={e => e.currentTarget.showPicker?.()}
                   />
                 </div>
               </div>
