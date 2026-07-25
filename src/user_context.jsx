@@ -14,6 +14,19 @@ const UserContext = createContext(null);
 // isang naka-claim nang session.
 const HEARTBEAT_INTERVAL_MS = 30 * 1000;
 
+// ── Modules UI-state keys (tab-scoped, sessionStorage) ──
+// Persisted per role so the Modules page keeps the user's selected module +
+// layout (Carousel/View All) across refresh, Back/Forward, and opening a
+// chapter and returning. Cleared when a NEW session starts (login) or on
+// logout — so "Module 1" is the default only on the first visit after login.
+const MODULES_UI_KEYS = [
+  'itfun_ui_student_view', 'itfun_ui_student_module',
+  'itfun_ui_faculty_view', 'itfun_ui_faculty_module',
+];
+function clearModulesUiState() {
+  try { MODULES_UI_KEYS.forEach(k => sessionStorage.removeItem(k)); } catch { /* ignore */ }
+}
+
 export function UserProvider({ children }) {
   const [user, setUser] = useState(() => {
     // ── Optimistic restore (tab-scoped) ──
@@ -111,6 +124,7 @@ export function UserProvider({ children }) {
     }
 
     sessionStorage.removeItem('itfun_sessionId');
+    clearModulesUiState();
     try {
       await auth.signOut();
     } catch (err) {
@@ -185,6 +199,9 @@ export function UserProvider({ children }) {
   const loginInProgressRef = useRef(false);
   const beginLogin = () => {
     loginInProgressRef.current = true;
+    // Fresh session starting → drop any leftover Modules UI state so the
+    // first visit after login defaults to Module 1 / Carousel.
+    clearModulesUiState();
     // KRITIKAL FIX: i-reset dito ang isSessionConfirmedRef sa false sa
     // simula pa lang ng ANUMANG bagong login attempt (successful man o
     // hindi). Dahil ang onAuthStateChanged restore path ay naka-SKIP
@@ -255,6 +272,7 @@ export function UserProvider({ children }) {
       // na 'to.
       isLoggingOutRef.current = false;
       isSessionConfirmedRef.current = false;
+      try {
       // KRITIKAL: gamitin ang `getDocFromServer()` dito, HINDI ang plain
       // `getDoc()` — sinisigurado nitong direkta tayong bumabasa mula sa
       // server (hindi sa local/offline cache), kaya hindi na tayo
@@ -308,13 +326,21 @@ export function UserProvider({ children }) {
           sessionStorage.removeItem('user');
         }
       }
-
-      // Tapos na tayong mag-attempt mag-getDoc() (buo man o hindi
-      // nag-exist ang doc) — ligtas na ngayon para tumakbo ang heartbeat
-      // effect sa ibaba nang walang katakot-takot na makipag-race pa sa
-      // atin.
-      setDataReady(true);
-      setAuthLoading(false);
+      } catch (err) {
+        // Transient Firestore/network failure during the restore read (e.g.
+        // a flaky refresh). Do NOT log the user out here — keep the
+        // optimistic (sessionStorage) user so a valid session survives; the
+        // next auth event / refresh will re-validate. Only a genuinely
+        // signed-out Firebase user (the `else` branch below) clears state.
+        console.error('Session restore read failed (keeping optimistic user):', err);
+      } finally {
+        // Tapos na tayong mag-attempt mag-getDoc() (buo man o hindi
+        // nag-exist ang doc) — ligtas na ngayon para tumakbo ang heartbeat
+        // effect sa ibaba nang walang katakot-takot na makipag-race pa sa
+        // atin.
+        setDataReady(true);
+        setAuthLoading(false);
+      }
     } else {
       setUser(null);
       sessionStorage.removeItem('user');

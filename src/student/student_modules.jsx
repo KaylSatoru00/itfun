@@ -170,7 +170,7 @@ function LearningModules() {
   const [progressLoading, setProgressLoading] = useState(true);
 
   // ── Carousel vs grid view toggle ──
-  const [view, setView] = useState('carousel');
+  const [view, setView] = useState(() => sessionStorage.getItem('itfun_ui_student_view') || 'carousel');
 
   // ── Stacked carousel order ──
   // `order` = array of MODULES indices. Ang naka-ACTIVE (full-size + text)
@@ -178,8 +178,26 @@ function LearningModules() {
   // din pero nakatago sa likod) — ito ang eksaktong 2-card na istraktura ng
   // reference (MDJAmin) na nagbibigay ng grow-into-place animation. Next =
   // ilipat ang unang item sa dulo; Prev = kabaligtaran.
-  const [order, setOrder] = useState(() => MODULES.map((_, i) => i));
-  const orderInitRef = useRef(false);
+  // Initialize so the ACTIVE card (position 1) is the module the user last
+  // had selected this session (persisted in sessionStorage), or Module 1 on
+  // the first visit after login. This keeps the selected module across
+  // refresh, Back/Forward, and opening a chapter and returning.
+  const [order, setOrder] = useState(() => {
+    const n = MODULES.length;
+    const savedId = sessionStorage.getItem('itfun_ui_student_module');
+    const savedIdx = savedId ? MODULES.findIndex(m => m.id === savedId) : -1;
+    const activeIdx = savedIdx >= 0 ? savedIdx : 0; // Module 1 default
+    const start = (activeIdx - 1 + n) % n;           // the "under" card sits one before
+    return Array.from({ length: n }, (_, i) => (start + i) % n);
+  });
+
+  // Persist layout (Carousel/View All) and the selected module so they
+  // survive refresh / Back-Forward / chapter round-trips.
+  useEffect(() => { sessionStorage.setItem('itfun_ui_student_view', view); }, [view]);
+  useEffect(() => {
+    const activeModule = MODULES[order[1]];
+    if (activeModule) sessionStorage.setItem('itfun_ui_student_module', activeModule.id);
+  }, [order]);
 
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -507,27 +525,6 @@ function LearningModules() {
       </div>
     );
   };
-
-  // Pagsimula ng carousel sa "current" module ng student: ang pinakahuling
-  // naka-unlock.
-  const currentModuleIndex = (() => {
-    let idx = 0;
-    MODULES.forEach((m, i) => {
-      if (moduleStates[m.id]?.unlocked) idx = i;
-    });
-    return idx;
-  })();
-
-  // Kapag na-confirm na ang progress mula sa server, i-rotate ang order para
-  // ang current module ang mapunta sa ACTIVE slot (position 1). Isang beses
-  // lang — pagkatapos, kontrolado na ng prev/next/tap ang order.
-  useEffect(() => {
-    if (progressLoading || orderInitRef.current) return;
-    orderInitRef.current = true;
-    const n = MODULES.length;
-    const start = (currentModuleIndex - 1 + n) % n; // isang card bago ang active
-    setOrder(Array.from({ length: n }, (_, i) => (start + i) % n));
-  }, [progressLoading, currentModuleIndex]);
 
   const goNext = () => setOrder(o => [...o.slice(1), o[0]]);
   const goPrev = () => setOrder(o => [o[o.length - 1], ...o.slice(0, -1)]);

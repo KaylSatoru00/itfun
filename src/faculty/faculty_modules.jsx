@@ -123,19 +123,30 @@ function FacultyModules() {
   const [showDropdown, setShowDropdown]       = useState(false);
   const searchRef                             = useRef(null);
 
-  // ── Carousel vs grid view toggle ──
-  const [view, setView] = useState('carousel');
+  // ── Carousel vs grid view toggle (persisted per session) ──
+  const [view, setView] = useState(() => sessionStorage.getItem('itfun_ui_faculty_view') || 'carousel');
 
   // ── Stacked carousel order (adapted from student_modules.jsx) ──
   // `order` = MODULES indices; position 1 is the ACTIVE (full-size + text)
   // card, position 0 is the "under" card behind it, 2..4 are the receding
-  // peek cards on the right.
-  // Start with Module 1 in the ACTIVE slot (position 1): the "under" card at
-  // position 0 is the wrap-around last module, then 0,1,2… follow.
+  // peek cards on the right. Initialize to the module the user last had
+  // selected this session, or Module 1 on the first visit after login.
   const [order, setOrder] = useState(() => {
     const n = MODULES.length;
-    return [n - 1, ...Array.from({ length: n - 1 }, (_, i) => i)];
+    const savedNum = Number(sessionStorage.getItem('itfun_ui_faculty_module'));
+    const savedIdx = MODULES.findIndex(m => m.num === savedNum);
+    const activeIdx = savedIdx >= 0 ? savedIdx : 0; // Module 1 default
+    const start = (activeIdx - 1 + n) % n;           // "under" card sits one before
+    return Array.from({ length: n }, (_, i) => (start + i) % n);
   });
+
+  // Persist layout + selected module so they survive refresh / Back-Forward /
+  // opening a module and returning.
+  useEffect(() => { sessionStorage.setItem('itfun_ui_faculty_view', view); }, [view]);
+  useEffect(() => {
+    const activeModule = MODULES[order[1]];
+    if (activeModule) sessionStorage.setItem('itfun_ui_faculty_module', String(activeModule.num));
+  }, [order]);
 
   const navigate = useNavigate();
   const { user, setUser, beginLogout } = useUser();
