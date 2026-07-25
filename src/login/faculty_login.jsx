@@ -106,15 +106,14 @@ function FacultyLogin() {
 
       const userData = { uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'faculty' };
       setUser(userData);
-      // KRITIKAL: i-set din agad ang localStorage dito (hindi lang umasa sa
-      // async onAuthStateChanged restore path sa user_context.jsx) — kasi
+      // KRITIKAL: i-set din agad ang optimistic user dito (hindi lang umasa
+      // sa async onAuthStateChanged restore path sa user_context.jsx) — kasi
       // naka-skip yun habang naka-loginInProgressRef, at hindi na ito
-      // maa-abutan ulit hangga't walang bagong auth state transition. Kung
-      // wala nito, mag-refresh lang agad pagkatapos mag-login, makikita ng
-      // ProtectedRoute (walang loading gate) na `null` pa ang localStorage
-      // restore sa unang render — agad ka nitong ibabalik sa /faculty-login
-      // kahit legit at aktibo naman ang session.
-      localStorage.setItem('user', JSON.stringify(userData));
+      // maa-abutan ulit hangga't walang bagong auth state transition. Dapat
+      // `sessionStorage` ito (HINDI localStorage) — iyon ang eksaktong key na
+      // binabasa ng user_context.jsx optimistic restore; kung localStorage,
+      // hindi ito nakikita sa refresh kaya babalik sa /faculty-login.
+      sessionStorage.setItem('user', JSON.stringify(userData));
       navigate('/faculty-modules', { replace: true });
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {

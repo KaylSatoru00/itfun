@@ -199,7 +199,7 @@ function FacultyModules() {
       console.error('Sign out failed:', err);
     }
     setUser(null);
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     navigate('/');
   };
 

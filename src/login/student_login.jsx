@@ -105,7 +105,12 @@ function StudentLogin() {
       // sumulat ng "online" ang presence effect sa user_context.jsx.
       confirmSession();
 
-      setUser({ uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'student' });
+      const userData = { uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'student' };
+      setUser(userData);
+      // Persist the optimistic user in sessionStorage (the same key
+      // user_context.jsx restores from) so a refresh keeps us logged in even
+      // if the onAuthStateChanged getDocFromServer read hiccups.
+      sessionStorage.setItem('user', JSON.stringify(userData));
       navigate('/learning-modules', { replace: true });
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
