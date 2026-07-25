@@ -159,7 +159,6 @@ function FacultyClass() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [classes, setClasses] = useState([]);
   const [myClasses, setMyClasses] = useState([]);
-  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [activeClass, setActiveClass] = useState(null);
   const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -387,22 +386,6 @@ function FacultyClass() {
     setConfirmFinishId(null);
   };
 
-  const handleRemoveClass = (id) => setConfirmRemoveId(id);
-
-  const handleConfirmRemove = async () => {
-    const cls = classes.find(c => c.firestoreId === confirmRemoveId);
-    if (!cls) { setConfirmRemoveId(null); return; }
-    try {
-      await deleteDoc(doc(db, 'classes', cls.firestoreId));
-      const q = query(collection(db, 'enrollments'), where('classId', '==', cls.firestoreId));
-      const snap = await getDocs(q);
-      await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'enrollments', d.id))));
-    } catch (err) {
-      console.error('Error removing class:', err);
-    }
-    setConfirmRemoveId(null);
-  };
-
   const handleRemoveStudent = (enrollmentDocId) => setConfirmRemoveStudentId(enrollmentDocId);
 
   const handleConfirmRemoveStudent = async () => {
@@ -514,11 +497,6 @@ function FacultyClass() {
                         whileHover={{ y: -5 }}
                         onClick={() => { setActiveClass(cls); setStudentSearch(''); navigate(`/faculty-class?classId=${cls.firestoreId}`); }}
                       >
-                        <button
-                          className="fc-class-remove"
-                          onClick={e => { e.stopPropagation(); handleRemoveClass(cls.firestoreId); }}
-                          title="Remove class"
-                        >×</button>
                         <span className="fc-class-subj">{cls.subject}</span>
                         <div className="fc-class-name">{cls.name}</div>
                         <div className="fc-class-school">{cls.school}</div>
@@ -843,31 +821,6 @@ function FacultyClass() {
                 >
                   {creating ? 'Creating...' : 'Create Class'}
                 </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── CONFIRM REMOVE CLASS MODAL ── */}
-      <AnimatePresence>
-        {confirmRemoveId !== null && (
-          <motion.div
-            className="modal-overlay"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setConfirmRemoveId(null)}
-          >
-            <motion.div
-              className="confirm-remove-modal"
-              initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="confirm-icon">🗑️</div>
-              <p className="confirm-message">Remove this class? All enrolled students will also be removed.</p>
-              <div className="confirm-footer">
-                <button className="confirm-cancel-btn" onClick={() => setConfirmRemoveId(null)}>Cancel</button>
-                <button className="confirm-remove-btn" onClick={handleConfirmRemove}>Remove</button>
               </div>
             </motion.div>
           </motion.div>

@@ -210,21 +210,6 @@
 }
 .fc-panel .fc-class-finish:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(200, 16, 46, 0.45); }
 
-.fc-panel .fc-class-remove {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  z-index: 2;
-  border: none;
-  background: transparent;
-  color: #cba;
-  font-size: 1.3rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: color 0.2s, transform 0.2s;
-}
-.fc-panel .fc-class-remove:hover { color: #C8102E; transform: scale(1.15); }
-
 .fc-panel .fc-add-card {
   border: 2px dashed #dca7b4;
   border-radius: 20px;
