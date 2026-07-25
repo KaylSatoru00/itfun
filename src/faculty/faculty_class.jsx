@@ -170,17 +170,21 @@ function FacultyClass() {
   const [endDate, setEndDate] = useState('');
   const [confirmFinishId, setConfirmFinishId] = useState(null);
 
-  // ── Local "today" (not UTC) for the date picker min + end-of-class check ──
+  // ── Local dates (not UTC) for the date picker min + end-of-class check ──
   const _now = new Date();
-  const todayStr = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}-${String(_now.getDate()).padStart(2, '0')}`;
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayStr = ymd(_now);
+  const _tomorrow = new Date(_now); _tomorrow.setDate(_tomorrow.getDate() + 1);
+  const tomorrowStr = ymd(_tomorrow); // earliest selectable end date (class must run at least today)
   const todayLabel = _now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const fmtDate = (iso) => {
     if (!iso) return '—';
     const [y, m, d] = iso.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
-  // A class has ended once today is strictly past its endDate (string compare is safe for YYYY-MM-DD).
-  const isEnded = (cls) => cls.endDate && todayStr > cls.endDate;
+  // A class ends ON its endDate: once today has reached that day, it's over
+  // (string compare is safe for YYYY-MM-DD).
+  const isEnded = (cls) => cls.endDate && todayStr >= cls.endDate;
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
@@ -784,7 +788,7 @@ function FacultyClass() {
                   <input
                     type="date"
                     className="modal-date-input"
-                    min={todayStr}
+                    min={tomorrowStr}
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
                     onKeyDown={e => { if (e.key !== 'Tab') e.preventDefault(); }}
@@ -792,7 +796,7 @@ function FacultyClass() {
                   />
                 </div>
               </div>
-              <p className="modal-date-help">Class auto-ends on this date. Dates before today are disabled.</p>
+              <p className="modal-date-help">The class ends on this date. The earliest end date is tomorrow.</p>
 
               <button
                 className="modal-generate-btn"
