@@ -161,19 +161,19 @@
   font-family: 'Montserrat', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
-  border: none;
+  color: #a50034;
+  background: #F2D7D5;
+  border: 1px solid rgba(200, 16, 46, 0.25);
   border-radius: 999px;
   padding: 8px 18px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(200, 16, 46, 0.4);
+  box-shadow: 0 4px 14px rgba(165, 0, 52, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
 .lm-panel.sm-page .top-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(200, 16, 46, 0.55);
+  box-shadow: 0 8px 22px rgba(165, 0, 52, 0.3);
 }
 .lm-panel.sm-page .avatar-circle {
   width: 38px;
