@@ -513,12 +513,11 @@
   font-weight: 700;
   font-style: italic;
   color: #FFFFFF;
-  /* Subtle white glow so the caption shines gently and lifts clear of the
-     carousel's drop-shadow haze; a faint dark edge keeps it crisp on pink. */
+  /* Just a whisper of white glow — mostly a soft dark edge for legibility on
+     the pink bg, with a faint sheen so it lifts off the shadow without shining. */
   text-shadow:
     0 1px 2px rgba(60, 10, 20, 0.5),
-    0 0 6px rgba(255, 255, 255, 0.65),
-    0 0 12px rgba(255, 255, 255, 0.35);
+    0 0 3px rgba(255, 255, 255, 0.3);
   margin: 26px 16px 0;
 }
 
