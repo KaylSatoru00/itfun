@@ -505,13 +505,21 @@
 
 /* caption below the carousel (moved out of the header) */
 .lm-panel.sm-page .lm-caption {
+  position: relative;
+  z-index: 5;
   text-align: center;
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: #FFFFFF;
-  text-shadow: 0 1px 3px rgba(90, 10, 25, 0.55), 0 0 1px rgba(90, 10, 25, 0.6);
-  margin: 14px 16px 0;
+  /* Soft white glow so the caption shines and lifts clear of the carousel's
+     drop-shadow haze; a faint dark edge keeps it crisp on the pink bg. */
+  text-shadow:
+    0 1px 2px rgba(60, 10, 20, 0.55),
+    0 0 10px rgba(255, 255, 255, 0.95),
+    0 0 20px rgba(255, 255, 255, 0.6),
+    0 0 32px rgba(255, 255, 255, 0.35);
+  margin: 26px 16px 0;
 }
 
 /* ── Module card (shared: carousel + grid) ── */
