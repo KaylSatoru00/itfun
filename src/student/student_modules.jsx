@@ -146,6 +146,8 @@ function LearningModules() {
   const [showLogoutModal, setShowLogoutModal]   = useState(false);
   const [showMyCourse, setShowMyCourse]         = useState(false);
   const [myCourses, setMyCourses]               = useState([]);
+  const [justJoined, setJustJoined]             = useState(false);
+  const prevHasCoursesRef = useRef(null);
 
   // ── Search state ──
   const [searchQuery, setSearchQuery]     = useState('');
@@ -296,6 +298,20 @@ function LearningModules() {
     });
     return () => unsub();
   }, [user]);
+
+  /* ── Celebrate the moment the student joins (empty → has a class) ──
+     Watch for the false→true transition only, so an existing enrollment
+     loading on page refresh does NOT fire the pop animation. */
+  useEffect(() => {
+    const hasCourses = myCourses.length > 0;
+    const prev = prevHasCoursesRef.current;
+    prevHasCoursesRef.current = hasCourses;
+    if (prev === false && hasCourses) {
+      setJustJoined(true);
+      const t = setTimeout(() => setJustJoined(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [myCourses.length]);
 
   /* ── Real-time listener for module progress ── */
   useEffect(() => {
@@ -620,7 +636,7 @@ function LearningModules() {
 
         <div className="navbar-spacer" />
         <div className="top-center-btns">
-          <button
+          <motion.button
             className="top-btn"
             onClick={() => {
               if (myCourses.length > 0) {
@@ -630,9 +646,28 @@ function LearningModules() {
                 setJoinStep('input');
               }
             }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            animate={justJoined
+              ? { scale: [1, 1.18, 0.94, 1.06, 1] }
+              : { scale: 1 }}
+            transition={justJoined
+              ? { duration: 0.7, ease: 'easeInOut', times: [0, 0.3, 0.55, 0.8, 1] }
+              : { type: 'spring', stiffness: 300, damping: 20 }}
           >
-            {myCourses.length > 0 ? 'My Instructor' : 'Join Instructor'}
-          </button>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={myCourses.length > 0 ? 'my' : 'join'}
+                initial={{ y: 12, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -12, opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                style={{ display: 'inline-block' }}
+              >
+                {myCourses.length > 0 ? 'My Instructor' : 'Join Instructor'}
+              </motion.span>
+            </AnimatePresence>
+          </motion.button>
           <div
             className="avatar-circle"
             onClick={() => setShowLogoutModal(true)}
