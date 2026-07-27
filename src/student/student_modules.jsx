@@ -766,7 +766,7 @@ function LearningModules() {
                   <button className="stk-nav stk-next" onClick={goNext} aria-label="Next module">▷</button>
                 </div>
               </div>
-              <p className="lm-caption">Pick up where you left off — swipe through your learning modules.</p>
+              <p className="lm-caption">Swipe through your learning modules to learn, review, and strengthen your knowledge.</p>
             </motion.div>
           ) : (
             <motion.div
