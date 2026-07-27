@@ -681,6 +681,63 @@
 }
 .fc-panel .modal-cancel-btn:hover { background: #e0e0e0; }
 
+/* Logout modal only — mirror the student learning-modules modal (clean white
+   header, pill buttons) so logout looks the same across portals. Scoped to
+   .lo-modal so the Create Class / Finish / Student Progress modals keep their
+   existing red-header styling. */
+.fc-panel .lo-modal { border-radius: 18px; }
+.fc-panel .lo-modal .modal-header {
+  background: #fff;
+  border-bottom: 1px solid #f0eef1;
+  position: relative;
+  justify-content: center;
+}
+.fc-panel .lo-modal .modal-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1a1e;
+}
+.fc-panel .lo-modal .modal-close {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9a9aa2;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+.fc-panel .lo-modal .modal-close:hover { background: #fdecea; color: #c8102e; }
+.fc-panel .lo-modal .modal-footer {
+  background: #fff;
+  justify-content: flex-end;
+  border-top: 1px solid #f0eef1;
+}
+.fc-panel .lo-modal .modal-join-btn {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+  box-shadow: 0 4px 14px rgba(200, 16, 46, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fc-panel .lo-modal .modal-join-btn:hover {
+  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.5);
+}
+.fc-panel .lo-modal .modal-cancel-btn {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #55555c;
+  background: #f1eff2;
+  border: none;
+  border-radius: 999px;
+}
+.fc-panel .lo-modal .modal-cancel-btn:hover { background: #e4e1e6; }
+
 /* ══════════ RESPONSIVE ══════════ */
 /* Keep the panel pinned to the viewport and scroll inside .fc-main —
    the global #root is position:fixed, so body-level scrolling doesn't
