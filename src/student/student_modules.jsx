@@ -268,7 +268,7 @@ function LearningModules() {
   /* ── Body background ──
      Dark brand background sa redesign (dating puti/#F2D7D5 depende sa
      join state — ang join state ay makikita pa rin sa navbar button na
-     "Join Instructor" vs "My Instructor"). */
+     "Join Class" vs "My Class"). */
   useEffect(() => {
     document.body.style.backgroundImage  = 'none';
     document.body.style.backgroundColor = '#F2D7D5';
@@ -664,7 +664,7 @@ function LearningModules() {
                 transition={{ duration: 0.22, ease: 'easeOut' }}
                 style={{ display: 'inline-block' }}
               >
-                {myCourses.length > 0 ? 'My Instructor' : 'Join Instructor'}
+                {myCourses.length > 0 ? 'My Class' : 'Join Class'}
               </motion.span>
             </AnimatePresence>
           </motion.button>
@@ -864,7 +864,7 @@ function LearningModules() {
               onClick={e => e.stopPropagation()}
             >
               <div className="modal-header" style={{ justifyContent: 'center', position: 'relative' }}>
-                <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>My Instructor</h3>
+                <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>My Class</h3>
                 <button
                   className="modal-close"
                   style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}
@@ -884,7 +884,7 @@ function LearningModules() {
                       style={{ marginTop: '8px' }}
                       onClick={() => { setShowMyCourse(false); setShowJoinModal(true); setJoinStep('input'); }}
                     >
-                      Join Instructor
+                      Join Class
                     </button>
                   </div>
                 ) : (
@@ -950,7 +950,7 @@ function LearningModules() {
               {joinStep === 'input' && (
                 <>
                   <div className="modal-header">
-                    <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>Join Instructor</h3>
+                    <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>Join Class</h3>
                     <button className="modal-close" onClick={handleCloseModal}>✕</button>
                   </div>
                   <div className="modal-body" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
