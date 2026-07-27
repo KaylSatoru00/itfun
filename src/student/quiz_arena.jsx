@@ -1,15 +1,69 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSocket } from '../socket_context';
 import { useUser } from '../user_context';
 import './quiz_arena.css';
+
+// Owl mascot perched on the chalkboard. Alternates its idle animation by
+// round: odd rounds it blinks, even rounds it does a little hop. Both are
+// disabled under prefers-reduced-motion.
+function OwlMascot({ mode, reduce }) {
+  const isJump = mode === 'jump' && !reduce;
+  const isBlink = mode === 'blink' && !reduce;
+  const eyeAnim = isBlink ? { scaleY: [1, 1, 0.12, 1] } : { scaleY: 1 };
+  const eyeTrans = isBlink
+    ? { duration: 3.4, repeat: Infinity, times: [0, 0.9, 0.95, 1], ease: 'easeInOut' }
+    : { duration: 0 };
+  const eyeStyle = { transformBox: 'fill-box', transformOrigin: 'center' };
+  return (
+    <motion.div
+      className="arena-owl"
+      aria-hidden="true"
+      animate={isJump ? { y: [0, -15, 0] } : { y: 0 }}
+      transition={isJump ? { duration: 1.4, repeat: Infinity, ease: 'easeInOut', times: [0, 0.4, 1] } : { duration: 0 }}
+    >
+      <span className="arena-owl-bubble">Go for it! 💪</span>
+      <svg viewBox="0 0 64 74" className="arena-owl-svg">
+        <path d="M14 16 L24 8 L26 24 Z" fill="#7a5030" />
+        <path d="M50 16 L40 8 L38 24 Z" fill="#7a5030" />
+        <ellipse cx="32" cy="42" rx="24" ry="26" fill="#a4703f" />
+        <ellipse cx="32" cy="49" rx="15.5" ry="17" fill="#e7c49b" />
+        <motion.g style={eyeStyle} animate={eyeAnim} transition={eyeTrans}>
+          <circle cx="24" cy="35" r="9" fill="#fff" stroke="#c98a4a" strokeWidth="2" />
+          <circle cx="25" cy="36" r="4.4" fill="#241009" />
+          <circle cx="26.6" cy="34.4" r="1.3" fill="#fff" />
+        </motion.g>
+        <motion.g style={eyeStyle} animate={eyeAnim} transition={eyeTrans}>
+          <circle cx="40" cy="35" r="9" fill="#fff" stroke="#c98a4a" strokeWidth="2" />
+          <circle cx="39" cy="36" r="4.4" fill="#241009" />
+          <circle cx="40.6" cy="34.4" r="1.3" fill="#fff" />
+        </motion.g>
+        <path d="M32 41 L28 47 L36 47 Z" fill="#f0a12e" />
+      </svg>
+    </motion.div>
+  );
+}
+
+// Room decor behind the question — a window, a wooden desk/floor strip,
+// and a couple of props. Purely decorative.
+function RoomDecor() {
+  return (
+    <>
+      <div className="arena-room-window" aria-hidden="true" />
+      <span className="arena-room-plant" aria-hidden="true">🪴</span>
+      <span className="arena-room-books" aria-hidden="true">📚</span>
+      <div className="arena-room-desk" aria-hidden="true" />
+    </>
+  );
+}
 
 function QuizArena() {
   const navigate = useNavigate();
   const location = useLocation();
   const socket = useSocket();
   const { user } = useUser();
+  const reduce = useReducedMotion();
 
   const params = new URLSearchParams(location.search);
   const pin = params.get('pin');
@@ -453,6 +507,17 @@ function QuizArena() {
   const timerPercent = (timer / maxTimer) * 100;
   const isUrgent = timer <= 5;
 
+  // Live "points if you answer now" — mirrors the backend stepped scoring
+  // (scoring.service.js): full marks in the first bucket, then −10 per bucket.
+  // Shown inside the timer ring so it ticks 100 → 10 alongside the countdown.
+  const livePoints = (() => {
+    const mt = maxTimer || 30;
+    const t = Math.min(Math.max(mt - timer, 0), mt);
+    const stepSec = mt / 10;
+    const p = 100 - 10 * Math.max(0, Math.ceil((t - stepSec) / stepSec));
+    return Math.max(0, Math.min(100, p));
+  })();
+
   // Loose/defensive type matching — hindi lang exact `=== 'fill-in-blank'`.
   // Kahit na-normalize na natin ang type sa backend (gemini.service.js),
   // extra safety net ito kung sakaling may room pa ring gumagamit ng hindi
@@ -548,7 +613,10 @@ function QuizArena() {
           }}
         />
       </svg>
-      <span className="timer-ring-label">{timer}</span>
+      <span className="timer-ring-label">
+        <span className="timer-ring-sec">{timer}</span>
+        <span className="timer-ring-pts">{livePoints} PTS</span>
+      </span>
     </div>
   );
 
@@ -678,6 +746,7 @@ function QuizArena() {
       <Wordmark />
       <TimerRing />
       <MuteButton />
+      <RoomDecor />
 
       <div className="arena-body">
 
@@ -692,18 +761,21 @@ function QuizArena() {
           </span>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={questionIndex}
-            className="question-box"
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <p className="question-text">{displayQuestionText}</p>
-          </motion.div>
-        </AnimatePresence>
+        <div className="question-stage">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={questionIndex}
+              className="question-box"
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <p className="question-text">{displayQuestionText}</p>
+            </motion.div>
+          </AnimatePresence>
+          <OwlMascot mode={currentRound % 2 === 1 ? 'blink' : 'jump'} reduce={reduce} />
+        </div>
 
         <div className={`options-grid ${isTrueFalse ? 'two-col' : 'one-col'}`}>
 
@@ -723,7 +795,7 @@ function QuizArena() {
                   whileTap={!isAnswered ? { scale: 0.98 } : {}}
                 >
                   <span className="option-radio" aria-hidden="true">
-                    {isCorrectOption ? '✓' : isWrongSelected ? '✕' : selectedAnswer === option ? '✓' : ''}
+                    {isCorrectOption ? '✓' : isWrongSelected ? '✕' : String.fromCharCode(65 + index)}
                   </span>
                   <span className="option-text">{option}</span>
                 </motion.button>
