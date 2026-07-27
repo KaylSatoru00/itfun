@@ -859,6 +859,107 @@
 }
 .lm-panel.sm-page .modal-cancel-btn:hover { background: #e4e1e6; }
 
+/* ═══════════ ENROLLMENT PASS (ticket) — My Instructor + Join flow ═══════════ */
+.lm-panel.sm-page .pass-card {
+  position: relative;
+  background: #F2D7D5;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgba(122, 36, 56, 0.14);
+}
+.lm-panel.sm-page .pass-top {
+  padding: 18px 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.lm-panel.sm-page .pass-av {
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+.lm-panel.sm-page .pass-idn { flex: 1; min-width: 0; }
+.lm-panel.sm-page .pass-name {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #3a1a22;
+  line-height: 1.15;
+}
+.lm-panel.sm-page .pass-subj {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.74rem;
+  color: #8a5a64;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.lm-panel.sm-page .pass-stamp {
+  margin-left: auto;
+  align-self: flex-start;
+  flex-shrink: 0;
+  border: 2px solid rgba(165, 0, 52, 0.5);
+  color: #a50034;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  padding: 5px 9px;
+  border-radius: 8px;
+  transform: rotate(6deg);
+  white-space: nowrap;
+}
+/* perforated seam with punched notches on both edges */
+.lm-panel.sm-page .pass-perf {
+  position: relative;
+  height: 0;
+  border-top: 2px dashed #d9b9bf;
+}
+.lm-panel.sm-page .pass-perf::before,
+.lm-panel.sm-page .pass-perf::after {
+  content: '';
+  position: absolute;
+  top: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+}
+.lm-panel.sm-page .pass-perf::before { left: -11px; }
+.lm-panel.sm-page .pass-perf::after  { right: -11px; }
+.lm-panel.sm-page .pass-stub {
+  padding: 14px 18px 16px;
+  display: flex;
+  gap: 10px;
+}
+.lm-panel.sm-page .pass-cell { flex: 1; min-width: 0; }
+.lm-panel.sm-page .pass-cl {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #9c6a74;
+  text-transform: uppercase;
+}
+.lm-panel.sm-page .pass-cv {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #3a1a22;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 700px) {
   .lm-panel.sm-page .lm-wordmark { display: none; }

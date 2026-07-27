@@ -889,39 +889,30 @@ function LearningModules() {
                   </div>
                 ) : (
                   myCourses.map(course => (
-                    <div key={course.enrollmentDocId} style={{
-                      border: '1px solid #f0d0d5', borderRadius: '10px', padding: '14px 16px',
-                      display: 'flex', alignItems: 'center', gap: '14px',
-                      background: '#fff', boxShadow: '0 2px 8px rgba(200,16,46,0.06)',
-                    }}>
-                      <div style={{
-                        width: '46px', height: '46px', borderRadius: '12px', flexShrink: 0,
-                        background: avatarColor(course.facultyId),
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 'bold', fontSize: '16px', fontFamily: 'Arial, sans-serif',
-                      }}>
-                        {(course.facultyName || 'F').charAt(0).toUpperCase()}
+                    <div key={course.enrollmentDocId} className="pass-card">
+                      <div className="pass-top">
+                        <div className="pass-av" style={{ background: avatarColor(course.facultyId) }}>
+                          {(course.facultyName || 'F').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="pass-idn">
+                          <div className="pass-name">{toPascalCase(course.className || '')}</div>
+                          <div className="pass-subj">{course.subject}</div>
+                        </div>
+                        <span className="pass-stamp">ENROLLED</span>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'Arial, sans-serif', fontWeight: 'bold', fontSize: '14px', color: '#222', marginBottom: '2px' }}>
-                          {toPascalCase(course.className || '')}
+                      <div className="pass-perf" />
+                      <div className="pass-stub">
+                        <div className="pass-cell">
+                          <div className="pass-cl">Instructor</div>
+                          <div className="pass-cv">👩‍🏫 {toPascalCase(course.facultyName || '')}</div>
                         </div>
-                        <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888', marginBottom: '4px' }}>
-                          {course.subject}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '13px' }}>👩‍🏫</span>
-                          <span style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#555' }}>
-                            {toPascalCase(course.facultyName || '')}
-                          </span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'left', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#aaa', marginBottom: '2px' }}>Joined</div>
-                        <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#555', textAlign: 'right' }}>
-                          {course.joinedAt?.toDate
-                            ? course.joinedAt.toDate().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : '—'}
+                        <div className="pass-cell">
+                          <div className="pass-cl">Joined</div>
+                          <div className="pass-cv">
+                            {course.joinedAt?.toDate
+                              ? course.joinedAt.toDate().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+                              : '—'}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -998,30 +989,26 @@ function LearningModules() {
                     <h3 className="modal-title">Confirm Join</h3>
                     <button className="modal-close" onClick={handleCloseModal}>✕</button>
                   </div>
-                  <div className="modal-body" style={{ flexDirection: 'column', gap: '16px' }}>
-                    <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#555', margin: 0 }}>
+                  <div className="modal-body" style={{ flexDirection: 'column', gap: '14px' }}>
+                    <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: '#555', margin: 0, fontWeight: 600 }}>
                       You are about to join:
                     </p>
-                    <div style={{
-                      background: '#fdecea', border: '1px solid #f0d0d5',
-                      borderRadius: '8px', padding: '14px 16px',
-                      display: 'flex', flexDirection: 'column', gap: '6px',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '28px' }}>🏫</span>
-                        <div>
-                          <div style={{ fontFamily: 'Arial, sans-serif', fontWeight: 'bold', fontSize: '15px', color: '#222' }}>
-                            {foundClass.name}
-                          </div>
-                          <div style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888' }}>
-                            {foundClass.subject}
-                          </div>
+                    <div className="pass-card">
+                      <div className="pass-top">
+                        <div className="pass-av" style={{ background: avatarColor(foundClass.facultyId) }}>
+                          {(foundClass.facultyName || 'F').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="pass-idn">
+                          <div className="pass-name">{foundClass.name}</div>
+                          <div className="pass-subj">{foundClass.subject}</div>
                         </div>
                       </div>
-                      <div style={{ borderTop: '1px solid #f0d0d5', paddingTop: '8px', marginTop: '4px' }}>
-                        <span style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#555' }}>
-                          👩‍🏫 Faculty: <strong>{foundClass.facultyName}</strong>
-                        </span>
+                      <div className="pass-perf" />
+                      <div className="pass-stub">
+                        <div className="pass-cell">
+                          <div className="pass-cl">Instructor</div>
+                          <div className="pass-cv">👩‍🏫 {toPascalCase(foundClass.facultyName || '')}</div>
+                        </div>
                       </div>
                     </div>
                     {joinError && (
@@ -1046,18 +1033,35 @@ function LearningModules() {
                     <h3 className="modal-title">Joined Successfully!</h3>
                     <button className="modal-close" onClick={handleCloseModal}>✕</button>
                   </div>
-                  <div className="modal-body" style={{ flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '28px 20px 20px' }}>
-                    <div style={{
-                      width: '64px', height: '64px', borderRadius: '50%',
-                      background: '#e8f5e9', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', fontSize: '32px',
-                    }}>✅</div>
-                    <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '14px', color: '#333', margin: 0, textAlign: 'center' }}>
-                      You have successfully joined <strong>{foundClass.name}</strong>
+                  <div className="modal-body" style={{ flexDirection: 'column', gap: '14px' }}>
+                    <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: '#333', margin: 0, textAlign: 'center', fontWeight: 700 }}>
+                      🎉 You&rsquo;re in! Here&rsquo;s your class pass:
                     </p>
-                    <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888', margin: 0, textAlign: 'center' }}>
-                      Faculty: {foundClass.facultyName}
-                    </p>
+                    <div className="pass-card">
+                      <div className="pass-top">
+                        <div className="pass-av" style={{ background: avatarColor(foundClass.facultyId) }}>
+                          {(foundClass.facultyName || 'F').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="pass-idn">
+                          <div className="pass-name">{foundClass.name}</div>
+                          <div className="pass-subj">{foundClass.subject}</div>
+                        </div>
+                        <span className="pass-stamp">ENROLLED</span>
+                      </div>
+                      <div className="pass-perf" />
+                      <div className="pass-stub">
+                        <div className="pass-cell">
+                          <div className="pass-cl">Instructor</div>
+                          <div className="pass-cv">👩‍🏫 {toPascalCase(foundClass.facultyName || '')}</div>
+                        </div>
+                        <div className="pass-cell">
+                          <div className="pass-cl">Joined</div>
+                          <div className="pass-cv">
+                            {new Date().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="modal-footer">
                     <button className="modal-join-btn" onClick={handleCloseModal}>Done</button>
