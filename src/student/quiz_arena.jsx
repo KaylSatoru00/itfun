@@ -641,7 +641,7 @@ function QuizArena() {
         animate={{ opacity: 1 }}
       >
         <Wordmark />
-        <div className="results-page">
+        <div className="results-page results-final">
           <p className="round-label">FINAL RESULTS</p>
 
           {/* Podium: gold #1 (centre, crowned), silver #2, bronze #3 */}
