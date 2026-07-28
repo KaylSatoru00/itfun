@@ -31,9 +31,9 @@ import itfunLogo from '../assets/LOGO_NAMEN.png';
 ──────────────────────────────────────────────*/
 const MODULES = [
   { id: 'module1', num: 1, route: '/student-chapter-1', label: 'Introduction to Computers and History of Computers', img: img1,
-    desc: 'Meet the machine: what a computer is, its four basic operations, and the inventors who started it all.' },
+    desc: 'Meet the machine: what a computer is, and the inventors who started it all.' },
   { id: 'module2', num: 2, route: '/student-chapter-2', label: 'Language & Types of Computers with Their Uses',       img: img2,
-    desc: 'From pocket-size PCs to room-size supercomputers — the language of computers and their many forms.' },
+    desc: 'From pocket-size to room-size — the language of computers and their many forms.' },
   { id: 'module3', num: 3, route: '/student-chapter-3', label: 'Number System & Conversions',                         img: img3,
     desc: 'Binary, decimal, and the conversions between them — the math computers actually speak.' },
   { id: 'module4', num: 4, route: '/student-chapter-4', label: 'Hardware Components, Input and Output Devices & Basic PC-Building', img: img4,
