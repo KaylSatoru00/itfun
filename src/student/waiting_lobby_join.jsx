@@ -16,7 +16,7 @@ const getAvatarColor = (id = '') => {
 function WaitingLobbyJoin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
+  const { user, authLoading } = useUser();
   const socket = useSocket();
 
   const [players, setPlayers] = useState([]);
@@ -30,7 +30,14 @@ function WaitingLobbyJoin() {
   const pin = params.get('pin') || '';
 
   useEffect(() => {
-    if (!socket) return;
+    // KRITIKAL: same guard as sa host lobby — hintayin munang matapos ang
+    // Firebase auth restore (`authLoading`) bago mag-emit ng `join-room`/
+    // `rejoin-room` na may `uid`. Kung hindi, posibleng mauna ang socket
+    // connection kaysa sa async auth restore pagkatapos ng hard refresh,
+    // kaya mapapadala ang `uid: undefined` at ma-reject tayo ng backend
+    // ng "Missing uid — please log in again." kahit hindi naman totoong
+    // naka-logout.
+    if (!socket || authLoading) return;
 
     roomPinRef.current = pin;
 
@@ -160,7 +167,17 @@ function WaitingLobbyJoin() {
       socket.off('quiz-started');
       socket.off('room-closed');
     };
-  }, [socket]);
+  }, [socket, authLoading]);
+
+  if (authLoading) {
+    return (
+      <div className="waiting-lobby-panel">
+        <div className="error-container">
+          <p className="error-text">Restoring your session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

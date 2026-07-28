@@ -446,6 +446,7 @@ function StudentLogin() {
             <p className="af-sub">Create your account to start playing and learning</p>
             {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
+            <p className="af-section-heading">Personal information</p>
             <div className="row g-2">
               <div className="col-sm-6 af-field">
                 <RequiredLabel label="First Name" touched={signupTouched.firstName} value={firstName} />
@@ -483,6 +484,7 @@ function StudentLogin() {
               />
             </div>
 
+            <p className="af-section-heading">Create password</p>
             <div className="row g-2">
               <div className="col-sm-6 af-field d-flex flex-column">
                 <RequiredLabel label="Password" touched={signupTouched.password} value={signupPassword} />
