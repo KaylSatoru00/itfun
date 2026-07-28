@@ -641,7 +641,7 @@ function QuizArena() {
         animate={{ opacity: 1 }}
       >
         <Wordmark />
-        <div className="results-page results-final">
+        <div className="results-page results-big">
           <p className="round-label">FINAL RESULTS</p>
 
           {/* Podium: gold #1 (centre, crowned), silver #2, bronze #3 */}
@@ -724,7 +724,7 @@ function QuizArena() {
       >
         <Wordmark />
         <MuteButton />
-        <div className="results-page">
+        <div className="results-page results-big">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
 
           <div className="rankings-list medal-rows">
@@ -739,9 +739,10 @@ function QuizArena() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.08 }}
                 >
+                  <span className="rank-pos">{getOrdinal(index + 1)}</span>
                   {tier
                     ? <span className="rank-medal" aria-hidden="true">{medal}</span>
-                    : <span className="rank-pos">{index + 1}</span>}
+                    : <span className="rank-medal-spacer" aria-hidden="true" />}
                   <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
                     {initials(player.name)}
                   </span>
