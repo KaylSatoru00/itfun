@@ -49,6 +49,8 @@ function AccordionItem({ title, description, isOpen, onToggle, itemId, onInterac
   );
 }
 
+// Slide/push reveal (fx-slide): ang photo ay dumudulas palabas pa-kaliwa
+// habang ang description ay pumapasok mula sa kanan.
 function FlipCard({ image, title, backText, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const handleClick = () => {
@@ -56,22 +58,20 @@ function FlipCard({ image, title, backText, itemId, onInteract }) {
     setFlipped(f => !f);
   };
   return (
-    <div className={`chap-flip-card ${flipped ? 'flipped' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {image ? <img src={image} alt={title} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🖥️</span>
-              <span>{title}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
-        </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">💡</span>
-          <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+    <div className={`fx-card fx-slide ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <div className="fx-face fx-front">
+        {image ? <img src={image} alt={title} /> : (
+          <div className="fx-placeholder">
+            <span style={{ fontSize: 48 }}>🖥️</span>
+            <span>{title}</span>
+          </div>
+        )}
+        <div className="fx-strip"><span>Tap for description</span><span>↪</span></div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">💡</span>
+        <p>{backText}</p>
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );
@@ -128,15 +128,27 @@ function Chapter2() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#F2D7D5';
+    // index.css locks body/#root sa fixed viewport — i-unlock para
+    // maka-scroll nang normal ang accordion-outline layout.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    document.body.style.width = '100%';
+    const rootEl = document.getElementById('root');
+    if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.width = '';
+      const rootReset = document.getElementById('root');
+      if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
     };
   }, []);
 
   return (
-    <motion.div className="chap-panel" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
+    <motion.div className="chap-panel cp-page" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
 
       <div className="chap-header">
         <button className="chap-back-btn" onClick={() => navigate('/learning-modules')}>← Back</button>
@@ -144,30 +156,27 @@ function Chapter2() {
           <span className="chap-chapter-label">LEARNING MODULE 2</span>
           <h1 className="chap-title">Language & Types of Computers with Their Uses</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.language + progress.personal + progress.workstation + progress.minicomputer) / 4)}%` }} />
+        </div>
       </div>
 
-      <div className="chap-layout">
 
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {navItems.map(({ key, label }) => (
-                <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => setActiveSection(key)}>
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-2')}>START GAME</button>
-          )}
-        </div>
-
-        <div className="chap-card-main">
+      <div className="ao-body">
 
           {/* ── Language of Computer ── */}
+          <div className={`ao-lesson ${activeSection === 'language' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('language')}>
+              <span className="ao-caret">{activeSection === 'language' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Language of Computer</span>
+              <span className="ao-pct">{Math.round(progress.language)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'language' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Language of Computer</h2>
@@ -189,10 +198,24 @@ function Chapter2() {
                 ))}
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
+
 
           {/* ── Personal Computers ── */}
+          <div className={`ao-lesson ${activeSection === 'personal' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('personal')}>
+              <span className="ao-caret">{activeSection === 'personal' ? '▼' : '▶'}</span>
+              <span className="ao-num">02</span>
+              <span className="ao-label">Personal Computers (PC)</span>
+              <span className="ao-pct">{Math.round(progress.personal)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'personal' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Personal Computer</h2>
@@ -206,10 +229,24 @@ function Chapter2() {
                 <p className="s2-body-text">Businesses use personal computers for word processing, accounting, desktop publishing, and for running spreadsheet and database management applications.</p>
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
+
 
           {/* ── Workstation ── */}
+          <div className={`ao-lesson ${activeSection === 'workstation' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('workstation')}>
+              <span className="ao-caret">{activeSection === 'workstation' ? '▼' : '▶'}</span>
+              <span className="ao-num">03</span>
+              <span className="ao-label">Workstation</span>
+              <span className="ao-pct">{Math.round(progress.workstation)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'workstation' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Work Stations</h2>
@@ -221,10 +258,24 @@ function Chapter2() {
                 <AccordionItem title="WorkStation" description="It is also a single user computer system which is similar to personal computer but have more powerful microprocessor." isOpen={wsOpenIndex === 0} onToggle={() => setWsOpenIndex(wsOpenIndex === 0 ? null : 0)} itemId="ws_acc" onInteract={wsT.trackInteraction} />
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
+
 
           {/* ── Minicomputer, Mainframe & Supercomputer ── */}
+          <div className={`ao-lesson ${activeSection === 'minicomputer' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('minicomputer')}>
+              <span className="ao-caret">{activeSection === 'minicomputer' ? '▼' : '▶'}</span>
+              <span className="ao-num">04</span>
+              <span className="ao-label">Minicomputer, Mainframe & Supercomputer</span>
+              <span className="ao-pct">{Math.round(progress.minicomputer)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'minicomputer' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Mini Computers</h2>
@@ -269,13 +320,22 @@ function Chapter2() {
                 <AccordionItem title="Supercomputer" description="It is an extremely fast computer which can execute hundreds of millions of instructions per second." isOpen={miniOpenIndex === 2} onToggle={() => setMiniOpenIndex(miniOpenIndex === 2 ? null : 2)} itemId="mini_acc_super" onInteract={miniT.trackInteraction} />
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-        </div>
 
-        {allLessonsComplete && (
-          <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-2')}>START GAME</button>
-        )}
+
+          {allLessonsComplete ? (
+            <div className="cp-banner">
+              <h3>🎉 Module 2 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-2')}>START GAME</button>
+            </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
+          )}
       </div>
     </motion.div>
   );

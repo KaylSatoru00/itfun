@@ -1,0 +1,111 @@
+/* ══════════════════════════════════════════════════════════════
+   ITFun brand theme — Bootstrap 5.3 variable overrides
+   Palette: dark #060607 · red #c8102e · deep red #A50034
+            beige #F2D7D5 · pink #EAB8C9
+   Fonts:   Poppins (headings) · Montserrat/Roboto (body)
+   ══════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap');
+
+:root {
+  /* Brand tokens */
+  --itfun-dark: #060607;
+  --itfun-red: #c8102e;
+  --itfun-red-deep: #a50034;
+  --itfun-red-dark: #8b0a20;
+  --itfun-beige: #f2d7d5;
+  --itfun-pink: #eab8c9;
+  --itfun-surface: #101014;
+  --itfun-surface-2: #17171d;
+  --itfun-border: rgba(255, 255, 255, 0.08);
+  --itfun-glass: rgba(255, 255, 255, 0.06);
+  --itfun-red-gradient: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+
+  /* Bootstrap overrides */
+  --bs-primary: #c8102e;
+  --bs-primary-rgb: 200, 16, 46;
+  --bs-dark: #060607;
+  --bs-dark-rgb: 6, 6, 7;
+  --bs-body-font-family: 'Montserrat', 'Roboto', system-ui, sans-serif;
+  --bs-border-radius: 0.75rem;
+  --bs-border-radius-lg: 1rem;
+  --bs-link-color: #c8102e;
+  --bs-link-hover-color: #a50034;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ── Buttons ── */
+.btn-itfun {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #c8102e;
+  --bs-btn-border-color: #c8102e;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #a50034;
+  --bs-btn-hover-border-color: #a50034;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #8b0a20;
+  --bs-btn-active-border-color: #8b0a20;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #c8102e;
+  --bs-btn-disabled-border-color: #c8102e;
+  --bs-btn-font-weight: 600;
+  background-image: var(--itfun-red-gradient);
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.btn-itfun:hover {
+  background-image: var(--itfun-red-gradient);
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.35);
+}
+.btn-itfun:active {
+  transform: translateY(0);
+}
+
+.btn-itfun-outline {
+  --bs-btn-color: #c8102e;
+  --bs-btn-border-color: #c8102e;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #c8102e;
+  --bs-btn-hover-border-color: #c8102e;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #a50034;
+  --bs-btn-active-border-color: #a50034;
+  --bs-btn-font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-itfun-outline:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.25);
+}
+
+/* ── Form controls (light card context) ── */
+.itfun-form .form-control:focus,
+.itfun-form .form-select:focus {
+  border-color: #c8102e;
+  box-shadow: 0 0 0 0.25rem rgba(200, 16, 46, 0.15);
+}
+.itfun-form .form-control.is-invalid:focus {
+  box-shadow: 0 0 0 0.25rem rgba(200, 16, 46, 0.2);
+}
+
+/* ── Glass card (dark context) ── */
+.itfun-glass-card {
+  background: var(--itfun-glass);
+  border: 1px solid var(--itfun-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Reusable focus-visible ring ── */
+.btn-itfun:focus-visible,
+.btn-itfun-outline:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(200, 16, 46, 0.35);
+}

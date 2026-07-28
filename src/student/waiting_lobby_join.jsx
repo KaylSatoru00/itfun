@@ -202,7 +202,10 @@ function WaitingLobbyJoin() {
 
         {/* Right area: players list + waiting message */}
         <div className="lobby-main">
-          <p className="waiting-text">Waiting for players...</p>
+          <div className="lobby-main-head">
+            <p className="waiting-text">Waiting for players...</p>
+            <span className="player-count-pill">{players.length} joined</span>
+          </div>
 
           <div className="players-grid">
             {players.map((player, index) => (

@@ -76,7 +76,13 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
   const [flipped, setFlipped] = useState(false);
   const [counted, setCounted] = useState(false);
 
-  const handleClick = useCallback(() => {
+  // Circle-wipe reveal (fx-wipe): bumubukas mula sa puntong tinapik —
+  // fixed ang laki, kaya hindi nagagalaw ang side-by-side pair.
+  const handleClick = useCallback((e) => {
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--cx', `${((e.clientX - r.left) / r.width) * 100}%`);
+    el.style.setProperty('--cy', `${((e.clientY - r.top) / r.height) * 100}%`);
     const next = !flipped;
     setFlipped(next);
     if (next && !counted) {
@@ -87,30 +93,28 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
 
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-wipe ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {frontImage
-            ? <img src={frontImage} alt={frontLabel} />
-            : (
-              <div className="chap-flip-card-front-placeholder">
-                <span style={{ fontSize: 48 }}>💾</span>
-                <span>{frontLabel}</span>
-              </div>
-            )
-          }
-          <div className="chap-flip-card-front-overlay">
-            <span>Flip for description</span>
-            <span>↩</span>
-          </div>
+      <div className="fx-face fx-front">
+        {frontImage
+          ? <img src={frontImage} alt={frontLabel} />
+          : (
+            <div className="fx-placeholder">
+              <span style={{ fontSize: 48 }}>💾</span>
+              <span>{frontLabel}</span>
+            </div>
+          )
+        }
+        <div className="fx-strip">
+          <span>Tap for description</span>
+          <span>↪</span>
         </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
-          <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">{backIcon}</span>
+        <p>{backText}</p>
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );
@@ -171,10 +175,22 @@ function Chapter5() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#F2D7D5';
+    // index.css locks body/#root sa fixed viewport — i-unlock para
+    // maka-scroll nang normal ang accordion-outline layout.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    document.body.style.width = '100%';
+    const rootEl = document.getElementById('root');
+    if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.width = '';
+      const rootReset = document.getElementById('root');
+      if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
     };
   }, []);
 
@@ -211,7 +227,7 @@ function Chapter5() {
 
   return (
     <motion.div
-      className="chap-panel"
+      className="chap-panel cp-page"
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
@@ -226,39 +242,26 @@ function Chapter5() {
           <span className="chap-chapter-label">LEARNING MODULE 5</span>
           <h1 className="chap-title">Types of Software</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round(progress.software)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="chap-layout">
 
-        {/* ── Left Nav Card ── */}
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {navItems.map(({ key, label }) => (
-                <button
-                  key={key}
-                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                  onClick={() => setActiveSection(key)}
-                >
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
+      <div className="ao-body">
 
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-5')}>
-              START GAME
+          <div className={`ao-lesson ${activeSection === 'software' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('software')}>
+              <span className="ao-caret">{activeSection === 'software' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Types of Software (System, Application and Operating System)</span>
+              <span className="ao-pct">{Math.round(progress.software)}%</span>
             </button>
-          )}
-        </div>
-
-        {/* ── Main Right Card ── */}
-        <div className="chap-card-main">
-
+          <AnimatePresence initial={false}>
           {activeSection === 'software' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               {/* ── Title ── */}
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
@@ -515,16 +518,23 @@ function Chapter5() {
                 )}
               </AnimatePresence>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-        </div>
+
+
+          {allLessonsComplete ? (
+            <div className="cp-banner">
+              <h3>🎉 Module 5 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-5')}>START GAME</button>
+            </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
+          )}
       </div>
-
-      {allLessonsComplete && (
-        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-5')}>
-          START GAME
-        </button>
-      )}
     </motion.div>
   );
 }

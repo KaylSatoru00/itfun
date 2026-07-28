@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITFun — Flip Card Transition Samples</title>
+<!--
+  STANDALONE DEMO — not part of the app build.
+  One sample card per transition group proposed for the s1–s8 flip cards.
+  Open this file directly in a browser and click each card.
+-->
+<style>
+  :root {
+    --dark: #060607;
+    --red: #c8102e;
+    --maroon: #a50034;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(900px 400px at 90% -10%, rgba(200,16,46,.16), transparent 60%),
+      radial-gradient(700px 400px at -10% 110%, rgba(165,0,52,.12), transparent 60%),
+      var(--dark);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #fff;
+    padding: 40px 20px 80px;
+  }
+  h1 { text-align: center; font-size: 1.6rem; margin: 0 0 6px; }
+  h1 span { color: var(--red); }
+  .sub { text-align: center; color: rgba(255,255,255,.55); font-size: .9rem; margin: 0 0 40px; }
+  .demo-row {
+    max-width: 900px;
+    margin: 0 auto 56px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 18px;
+    padding: 26px;
+  }
+  .demo-row h2 { color: var(--red); font-size: 1.05rem; margin: 0 0 4px; }
+  .demo-row .where { color: rgba(255,255,255,.5); font-size: .78rem; margin: 0 0 20px; }
+  .stage { display: flex; justify-content: center; }
+
+  /* shared card base */
+  .card-box {
+    width: 300px; height: 310px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: #17151a;
+    box-shadow: 0 12px 34px rgba(0,0,0,.4);
+    user-select: none;
+  }
+  .face {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; padding: 20px; text-align: center;
+  }
+  .face .ph {
+    width: 100%; height: 100%;
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 84px;
+    background: linear-gradient(160deg, #2b2930, #131116);
+  }
+  .face .strip {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, transparent, rgba(120,8,26,.95) 65%);
+    font-size: .8rem; font-weight: 700;
+    display: flex; justify-content: space-between;
+  }
+  .back-face {
+    background: linear-gradient(160deg, #8c0b22, #5c0716);
+    font-size: .86rem; line-height: 1.7;
+  }
+  .back-face .icon { font-size: 30px; }
+
+  /* ── 1. CROSSFADE (s1 intro pair) ── */
+  .fx-fade .face { transition: opacity .45s ease; }
+  .fx-fade .back-face { opacity: 0; }
+  .fx-fade.open .front-face { opacity: 0; }
+  .fx-fade.open .back-face { opacity: 1; }
+
+  /* ── 2. SLIDE / PUSH (s2) ── */
+  .fx-slide .face { transition: transform .45s cubic-bezier(.65,0,.35,1); }
+  .fx-slide .back-face { transform: translateX(100%); }
+  .fx-slide.open .front-face { transform: translateX(-100%); }
+  .fx-slide.open .back-face { transform: translateX(0); }
+
+  /* ── 3. EXPAND / MORPH (s3 math cards, s4 infographic + device cards) ── */
+  .fx-expand {
+    width: 300px; height: 310px;
+    transition: width .5s cubic-bezier(.35,0,.25,1), height .5s cubic-bezier(.35,0,.25,1);
+  }
+  .fx-expand.open { width: 100%; height: 340px; }
+  .fx-expand .front-face { transition: opacity .3s ease .1s; }
+  .fx-expand.open .front-face { opacity: 0; pointer-events: none; }
+  .fx-expand .detail {
+    position: absolute; inset: 0;
+    display: flex; opacity: 0;
+    transition: opacity .35s ease .2s;
+    background: #fff; color: #222;
+  }
+  .fx-expand.open .detail { opacity: 1; }
+  .fx-expand .detail .img-col {
+    flex: 0 0 38%;
+    background: linear-gradient(160deg, #2b2930, #131116);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 70px;
+  }
+  .fx-expand .detail .txt-col { flex: 1; padding: 22px 26px; overflow: auto; }
+  .fx-expand .detail .txt-col h3 { color: var(--red); margin: 0 0 8px; font-size: 1.05rem; }
+  .fx-expand .detail .txt-col p { margin: 0; font-size: .88rem; line-height: 1.75; color: #333; }
+  .fx-expand .stage-note { position: absolute; top: 10px; right: 14px; font-size: .7rem; color: #999; }
+
+  /* ── 4. CLIP-PATH CIRCLE WIPE (s5 pair) ── */
+  .fx-wipe .back-face {
+    clip-path: circle(0% at var(--cx,50%) var(--cy,50%));
+    transition: clip-path .55s cubic-bezier(.4,0,.2,1);
+  }
+  .fx-wipe.open .back-face { clip-path: circle(150% at var(--cx,50%) var(--cy,50%)); }
+
+  /* ── 5. 3D TILT-THEN-SWAP (s6) ── */
+  .fx-tilt { perspective: 900px; background: transparent; overflow: visible; }
+  .fx-tilt .inner {
+    position: absolute; inset: 0;
+    border-radius: 16px; overflow: hidden;
+    background: #17151a;
+    transition: transform .5s cubic-bezier(.34,1.4,.64,1);
+    transform-style: preserve-3d;
+    box-shadow: 0 12px 34px rgba(0,0,0,.4);
+  }
+  .fx-tilt.open .inner { transform: rotateY(14deg) rotateX(4deg); }
+  .fx-tilt .face { transition: opacity .4s ease .08s; }
+  .fx-tilt .back-face { opacity: 0; }
+  .fx-tilt.open .front-face { opacity: 0; }
+  .fx-tilt.open .back-face { opacity: 1; }
+
+  /* ── 6. STAGGERED REVEAL (s7 lists) ── */
+  .fx-stagger .front-face { transition: opacity .3s ease; }
+  .fx-stagger.open .front-face { opacity: 0; }
+  .fx-stagger .back-face { opacity: 0; transition: opacity .25s ease; align-items: flex-start; text-align: left; justify-content: flex-start; padding-top: 26px; }
+  .fx-stagger.open .back-face { opacity: 1; }
+  .fx-stagger .back-face li {
+    list-style: none; font-size: .84rem; padding: 5px 0;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .fx-stagger .back-face ul { margin: 6px 0 0; padding: 0; }
+  .fx-stagger.open li:nth-child(1) { transition-delay: .15s; }
+  .fx-stagger.open li:nth-child(2) { transition-delay: .27s; }
+  .fx-stagger.open li:nth-child(3) { transition-delay: .39s; }
+  .fx-stagger.open li:nth-child(4) { transition-delay: .51s; }
+  .fx-stagger.open li:nth-child(5) { transition-delay: .63s; }
+  .fx-stagger.open li { opacity: 1; transform: translateY(0); }
+
+  /* ── 7. ZOOM REVEAL (s8) ── */
+  .fx-zoom .front-face { transition: transform .5s ease, opacity .45s ease, filter .45s ease; }
+  .fx-zoom.open .front-face { transform: scale(1.35); opacity: 0; filter: blur(6px); }
+  .fx-zoom .back-face { opacity: 0; transform: scale(.92); transition: transform .45s ease .12s, opacity .45s ease .12s; }
+  .fx-zoom.open .back-face { opacity: 1; transform: scale(1); }
+</style>
+</head>
+<body>
+
+<h1>IT<span>Fun</span> — Flip Card Transition Samples</h1>
+<p class="sub">Click each card to preview. Click again to reverse. Each maps to a group from the Step-1 inventory.</p>
+
+<div class="demo-row">
+  <h2>1 · Crossfade dissolve</h2>
+  <p class="where">Proposed for: s1 intro pair ("What is a Computer", "What is Data?") — fixed box beside a text column</p>
+  <div class="stage">
+    <div class="card-box fx-fade" onclick="this.classList.toggle('open')">
+      <div class="face front-face"><div class="ph">🖥️</div><div class="strip"><span>What is a Computer</span><span>↪</span></div></div>
+      <div class="face back-face"><span class="icon">💡</span><p>A computer is an electronic device that accepts data, processes it, stores it, and produces meaningful output.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-row">
+  <h2>2 · Slide / push</h2>
+  <p class="where">Proposed for: s2 "PC" &amp; "Workstation" — centered singles, short backs</p>
+  <div class="stage">
+    <div class="card-box fx-slide" onclick="this.classList.toggle('open')">
+      <div class="face front-face"><div class="ph">💻</div><div class="strip"><span>PC (Personal Computer)</span><span>↪</span></div></div>
+      <div class="face back-face"><span class="icon">💡</span><p>A single-user computer system having a moderately powerful microprocessor.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-row">
+  <h2>3 · Expand / morph into wide panel</h2>
+  <p class="where">Proposed for: s3 math-example cards &amp; s4 infographic + device cards — back content needs room</p>
+  <div class="stage" style="width:100%">
+    <div class="card-box fx-expand" onclick="this.classList.toggle('open')">
+      <div class="face front-face"><div class="ph">⌨️</div><div class="strip"><span>Keyboard</span><span>⤢</span></div></div>
+      <div class="detail">
+        <div class="img-col">⌨️</div>
+        <div class="txt-col">
+          <h3>Keyboard</h3>
+          <p>Keyboard is the most common and very popular input device which helps to input data to the computer. The layout is like that of a traditional typewriter, although there are additional keys provided for performing extra functions — function keys, navigation keys, and a numeric keypad. For the s3 math cards, this text column would instead hold the worked conversion image at full readable width.</p>
+        </div>
+        <span class="stage-note">tap anywhere to close</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-row">
+  <h2>4 · Clip-path circle wipe</h2>
+  <p class="where">Proposed for: s5 "System" + "Application Software" pair — must keep identical size side-by-side</p>
+  <div class="stage">
+    <div class="card-box fx-wipe" id="wipeCard">
+      <div class="face front-face"><div class="ph">🧩</div><div class="strip"><span>System Software</span><span>↪</span></div></div>
+      <div class="face back-face"><span class="icon">💡</span><p>System software manages and controls the computer's hardware so that application software can perform its tasks.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-row">
+  <h2>5 · 3D tilt-then-swap</h2>
+  <p class="where">Proposed for: s6 network cards — subtle, sits above continuing bullet lists</p>
+  <div class="stage">
+    <div class="card-box fx-tilt" onclick="this.classList.toggle('open')">
+      <div class="inner">
+        <div class="face front-face"><div class="ph">🌐</div><div class="strip"><span>Computer Network</span><span>↪</span></div></div>
+        <div class="face back-face"><span class="icon">💡</span><p>A system in which multiple computers are connected to each other to share information and resources.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-row">
+  <h2>6 · Staggered list reveal</h2>
+  <p class="where">Proposed for: s7 MS Office cards — backs are enumerations</p>
+  <div class="stage">
+    <div class="card-box fx-stagger" onclick="this.classList.toggle('open')">
+      <div class="face front-face"><div class="ph">📊</div><div class="strip"><span>MS Office Applications</span><span>↪</span></div></div>
+      <div class="face back-face">
+        <span class="icon">💡</span>
+        <strong>Microsoft Office includes:</strong>
+        <ul>
+          <li>📝 Word — word processing</li>
+          <li>📊 Excel — spreadsheets</li>
+          <li>📽️ PowerPoint — presentations</li>
+          <li>🗂️ Access — databases</li>
+          <li>✉️ Outlook — email</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-row">
+  <h2>7 · Zoom reveal</h2>
+  <p class="where">Proposed for: s8 field cards (Business, Banking, Education, …) — photo is the identity, 6 cards down a page</p>
+  <div class="stage">
+    <div class="card-box fx-zoom" onclick="this.classList.toggle('open')">
+      <div class="face front-face"><div class="ph">💼</div><div class="strip"><span>In Business</span><span>↪</span></div></div>
+      <div class="face back-face"><span class="icon">💼</span><p>Computers are widely used in businesses to manage daily operations and records — fast, accurate, and reliable.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Circle wipe: capture the click point so the reveal radiates from the tap
+  const wipe = document.getElementById('wipeCard');
+  wipe.addEventListener('click', (e) => {
+    const r = wipe.getBoundingClientRect();
+    wipe.style.setProperty('--cx', ((e.clientX - r.left) / r.width * 100) + '%');
+    wipe.style.setProperty('--cy', ((e.clientY - r.top) / r.height * 100) + '%');
+    wipe.classList.toggle('open');
+  });
+</script>
+</body>
+</html>

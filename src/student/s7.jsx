@@ -83,14 +83,17 @@ function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }
 /* ────────────────────────────────────────────
    Flip Card — calls onInteract(id) once on first flip
 ─────────────────────────────────────────────*/
-function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId, onInteract }) {
+// Staggered list reveal (fx-stagger): nag-fade out ang photo, tapos ang
+// bawat list item ay sunud-sunod na pumapasok. `backItems` (array) ang
+// nagre-render bilang staggered list; fallback ang `backText` paragraph.
+function FlipCard({ frontImage, frontLabel, backTitle, backItems, backText, backIcon = '💡', itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const handleClick = useCallback(() => {
     const nextFlipped = !flipped;
     setFlipped(nextFlipped);
-    
+
     if (nextFlipped && !hasInteracted) {
       setHasInteracted(true);
       if (onInteract) {
@@ -101,30 +104,37 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = '💡', itemId,
 
   return (
     <div
-      className={`chap-flip-card ${flipped ? 'flipped' : ''}`}
+      className={`fx-card fx-stagger ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {frontImage
-            ? <img src={frontImage} alt={frontLabel} />
-            : (
-              <div className="chap-flip-card-front-placeholder">
-                <span style={{ fontSize: 48 }}>📄</span>
-                <span>{frontLabel}</span>
-              </div>
-            )
-          }
-          <div className="chap-flip-card-front-overlay">
-            <span>Flip for description</span>
-            <span>↩</span>
-          </div>
+      <div className="fx-face fx-front">
+        {frontImage
+          ? <img src={frontImage} alt={frontLabel} />
+          : (
+            <div className="fx-placeholder">
+              <span style={{ fontSize: 48 }}>📄</span>
+              <span>{frontLabel}</span>
+            </div>
+          )
+        }
+        <div className="fx-strip">
+          <span>Tap for description</span>
+          <span>↪</span>
         </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">{backIcon}</span>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">{backIcon}</span>
+        {backItems ? (
+          <>
+            <strong>{backTitle || frontLabel}</strong>
+            <ul>
+              {backItems.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          </>
+        ) : (
           <p>{backText}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+        )}
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );
@@ -210,10 +220,22 @@ function Chapter7() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#F2D7D5';
+    // index.css locks body/#root sa fixed viewport — i-unlock para
+    // maka-scroll nang normal ang accordion-outline layout.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    document.body.style.width = '100%';
+    const rootEl = document.getElementById('root');
+    if (rootEl) { rootEl.style.position = 'static'; rootEl.style.display = 'block'; }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.width = '';
+      const rootReset = document.getElementById('root');
+      if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
     };
   }, []);
 
@@ -242,7 +264,7 @@ function Chapter7() {
 
   return (
     <motion.div
-      className="chap-panel"
+      className="chap-panel cp-page"
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
@@ -257,40 +279,27 @@ function Chapter7() {
           <span className="chap-chapter-label">LEARNING MODULE 7</span>
           <h1 className="chap-title">Microsoft Office Applications</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.intro + progress.apps) / 2)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="chap-layout">
 
-        {/* ── Left Nav Card ── */}
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {navItems.map(({ key, label }) => (
-                <button
-                  key={key}
-                  className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`}
-                  onClick={() => setActiveSection(key)}
-                >
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-7')}>
-              START GAME
-            </button>
-          )}
-        </div>
-
-        {/* ── Main Right Card ── */}
-        <div className="chap-card-main">
+      <div className="ao-body">
 
           {/* ══ INTRODUCTION TO MS OFFICE ══ */}
+          <div className={`ao-lesson ${activeSection === 'intro' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('intro')}>
+              <span className="ao-caret">{activeSection === 'intro' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Introduction to MS Office</span>
+              <span className="ao-pct">{Math.round(progress.intro)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'intro' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
                 <h2 className="chap-section-main-title">Introduction to MS Office</h2>
@@ -336,7 +345,15 @@ function Chapter7() {
                   frontImage={msofficeImg}
                   frontLabel="MS Office Applications"
                   backIcon="📱"
-                  backText="Microsoft Office includes Word (word processing), Excel (spreadsheets), PowerPoint (presentations), Outlook (email), Access (databases), Publisher (desktop publishing), and more."
+                  backTitle="Microsoft Office includes:"
+                  backItems={[
+                    '📝 Word — word processing',
+                    '📊 Excel — spreadsheets',
+                    '📽️ PowerPoint — presentations',
+                    '✉️ Outlook — email',
+                    '🗂️ Access — databases',
+                    '📰 Publisher — desktop publishing',
+                  ]}
                   itemId="s7-fc-apps"
                   onInteract={introTracker.trackInteraction}
                 />
@@ -354,16 +371,37 @@ function Chapter7() {
                   frontImage={versionsImg}
                   frontLabel="MS Office Versions"
                   backIcon="📅"
-                  backText="Major versions include Office 95, 97, 2000, XP, 2003, 2007, 2010, 2013, 2016, 2019, and Microsoft 365 (subscription-based). Each version introduced new features and improved user interface."
+                  backTitle="Major versions:"
+                  backItems={[
+                    'Office 95 · 97 · 2000 · XP',
+                    'Office 2003 · 2007 · 2010',
+                    'Office 2013 · 2016 · 2019',
+                    'Microsoft 365 — subscription-based',
+                    'Each version improved features and UI',
+                  ]}
                   itemId="s7-fc-versions"
                   onInteract={introTracker.trackInteraction}
                 />
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
+
 
           {/* ══ MS POWERPOINT, WORD, & EXCEL (CONSOLIDATED) ══ */}
+          <div className={`ao-lesson ${activeSection === 'apps' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => setActiveSection('apps')}>
+              <span className="ao-caret">{activeSection === 'apps' ? '▼' : '▶'}</span>
+              <span className="ao-num">02</span>
+              <span className="ao-label">MS PowerPoint, Word, & Excel</span>
+              <span className="ao-pct">{Math.round(progress.apps)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'apps' && (
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner"><div className="cp-block">
             <>
               {/* ══ POWERPOINT ══ */}
               <div className="chap-section-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
@@ -515,16 +553,23 @@ function Chapter7() {
                 </p>
               </div>
             </>
+            </div></div></motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-        </div>
+
+
+          {allLessonsComplete ? (
+            <div className="cp-banner">
+              <h3>🎉 Module 7 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-7')}>START GAME</button>
+            </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
+          )}
       </div>
-
-      {allLessonsComplete && (
-        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-7')}>
-          START GAME
-        </button>
-      )}
     </motion.div>
   );
 }

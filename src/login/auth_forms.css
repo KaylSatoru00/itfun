@@ -1,0 +1,190 @@
+/* auth_forms.css — shared styles for the student & faculty auth forms
+   (login / signup / OTP / forgot). Layout shell lives in auth_shell.css. */
+
+.af-card {
+  width: min(440px, 100%);
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+.af-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  color: #1a1a1e;
+  margin: 0;
+  text-align: center;
+}
+
+.af-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  color: #6c6c72;
+  margin: 0.25rem 0 0;
+  text-align: center;
+}
+
+.af-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #55555c;
+  margin-bottom: 0.3rem;
+}
+.af-label.af-missing {
+  color: #c8102e;
+}
+
+.af-field .form-control {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+}
+
+/* password eye toggle */
+.af-pass {
+  position: relative;
+  width: 100%;
+}
+.af-pass .form-control {
+  padding-right: 2.6rem;
+}
+.af-eye {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.af-eye:hover {
+  color: #c8102e;
+}
+
+.af-forgot {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #c8102e;
+  align-self: flex-end;
+  cursor: pointer;
+  margin: 0;
+}
+.af-forgot:hover {
+  text-decoration: underline;
+}
+
+.af-toggle-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #6c6c72;
+  margin: 0;
+  text-align: center;
+}
+.af-toggle-text span {
+  color: #c8102e;
+  cursor: pointer;
+  font-weight: 700;
+}
+.af-toggle-text span:hover {
+  text-decoration: underline;
+}
+
+.af-back-btn {
+  background: none;
+  border: none;
+  color: #9a9aa2;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: center;
+}
+.af-back-btn:hover {
+  color: #c8102e;
+}
+
+/* password requirements checklist */
+.af-checklist {
+  width: 100%;
+  background: #fdf3f4;
+  border: 1px solid #f2d7d5;
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+.af-checklist-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #55555c;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.af-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  margin-bottom: 0.15rem;
+}
+.af-check-item .af-check-mark {
+  font-weight: 700;
+}
+.af-check-item.ok  { color: #2e7d32; }
+.af-check-item.bad { color: #8a8a90; }
+.af-check-item.bad .af-check-mark { color: #c8102e; }
+
+.af-hint {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  margin: -0.35rem 0 0;
+  align-self: flex-start;
+}
+.af-hint.ok  { color: #2e7d32; }
+.af-hint.bad { color: #c8102e; }
+
+/* OTP / email icon bubble */
+.af-mail-bubble {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #fdeaea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  margin: 0 auto;
+}
+
+.af-otp-input {
+  text-align: center;
+  font-size: 1.5rem !important;
+  letter-spacing: 0.5em;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
+
+.af-note {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #55555c;
+  text-align: center;
+  margin: 0;
+}
+.af-note strong {
+  color: #c8102e;
+}
+.af-note.af-note-muted {
+  font-size: 0.8rem;
+  color: #77777e;
+}

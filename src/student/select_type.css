@@ -1,332 +1,384 @@
+/* select_type.css — Direction 4: List Rows + Step Timeline
+   Sibling of select_module.css. Step 2 (Quiz Type) is active on the rail.
+   Rows show the type icon, name, short description, and a radio state. */
+
 .st-panel {
   width: 100%;
   min-height: 100vh;
-  background-color: #f9e4e8;
+  /* Outer page: deeper pink gradient behind the elevated card. */
+  background: radial-gradient(1200px 600px at 50% -6%, #FFFFFF 0%, #F7E4E8 50%, #EAB8C9 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 48px 20px 120px;
+  justify-content: center;
+  padding: 24px;
   box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* Title */
-.st-title {
-  font-size: clamp(20px, 3.5vw, 28px);
-  font-weight: bold;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-  font-family: Arial, sans-serif;
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-
-.st-subtitle {
-  font-size: 16px;
-  color: #888;
-  text-align: center;
-  margin: 0 0 28px 0;
-  font-family: Arial, sans-serif;
-}
-
-/* 1-column grid */
-.st-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  width: 100%;
-  max-width: 460px;
-}
-
-/* Mixed Type — same as all other cards */
-.st-card-wide {
-  grid-column: unset;
-  max-width: unset;
-  justify-self: unset;
-}
-
-/* Each card */
-.st-card {
+/* Two-column body — framed as an elevated card. Wider max-width and a
+   viewport-relative height cap keep the card short-and-wide on desktop;
+   the list scrolls internally when content overflows. */
+.st-body {
   position: relative;
+  width: 100%;
+  max-width: 1580px;
   display: flex;
-  align-items: center;
-  gap: 18px;
-  background: #A50034;
-  border-radius: 16px;
-  padding: 20px 22px;
-  cursor: pointer;
-  transition: box-shadow 0.2s ease;
-  min-height: 90px;
+  align-items: stretch;
+  height: calc(100vh - 48px);
+  max-height: 820px;
+  min-height: 520px;
+  border-radius: 30px;
+  overflow: hidden;
+  background: radial-gradient(760px 400px at 50% -10%, #ffffff 0%, #FDF3F4 55%, #FBEAEC 100%);
+  box-shadow: 0 30px 70px rgba(120, 20, 45, 0.22), 0 0 0 1px rgba(200, 16, 46, 0.06);
 }
 
-.st-card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Icon image */
-.st-card-img {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
+/* Rail — reuses the .step-rail-* classes emitted by the shared <StepRail>
+   render (see JSX). Duplicated to keep this stylesheet standalone. */
+.st-body .step-rail {
+  width: 210px;
   flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(165deg, #A50034 0%, #7d0027 100%);
+  padding: 40px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #fff;
 }
 
-/* Label */
-.st-card-label {
-  font-size: clamp(14px, 2.5vw, 16px);
-  font-weight: bold;
-  color: #ffffff;
-  font-family: Arial, sans-serif;
-  line-height: 1.4;
+.st-body .step-rail-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  list-style: none;
 }
 
-/* Selected highlight */
-.st-card-selected {
-  outline: 4px solid #ffffff;
-  box-shadow: 0 0 0 4px #ffffff, 0 0 24px rgba(165, 0, 52, 0.6);
+.st-body .step-rail-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-/* Checkmark badge */
-.st-card-check {
-  position: absolute;
-  top: -10px;
-  right: -10px;
+.st-body .step-rail-dot {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #ffffff;
-  color: #A50034;
+  background: rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  font-weight: bold;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
 }
 
-/* Error message */
-.st-error {
-  color: #c8102e;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  margin: 10px 0 0 0;
-  text-align: center;
-  background: #fde8e8;
-  padding: 10px 20px;
-  border-radius: 8px;
-  max-width: 460px;
-  width: 100%;
+.st-body .step-rail-item.is-active .step-rail-dot {
+  background: #ffffff;
+  color: #A50034;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
-/* Bottom nav */
-.st-bottom {
-  position: fixed;
-  bottom: 24px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 40px;
-  box-sizing: border-box;
-  pointer-events: none;
+.st-body .step-rail-item.is-done .step-rail-dot {
+  background: #EAB8C9;
+  color: #A50034;
 }
 
-.st-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #A50034;
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
-  border: none;
-  border-radius: 30px;
-  padding: 12px 28px;
-  cursor: pointer;
-  letter-spacing: 1px;
-  pointer-events: all;
-  transition: background 0.2s ease, transform 0.15s ease;
+.st-body .step-rail-bar {
+  width: 2px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.22);
+  margin: 3px 0;
 }
 
-.st-btn:hover {
-  background: #c8102e;
-  transform: scale(1.04);
-}
-
-.st-btn span {
-  font-size: 18px;
-  line-height: 1;
-}
-
-/* Disabled Generate button */
-.st-btn-disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.st-btn-disabled:hover {
-  background: #A50034;
-  transform: none;
-}
-
-/* Wraps the quota indicator + Generate button together, stacked, so the
-   indicator sits directly above the button instead of floating in the
-   center of the page. Fixed max-width + wrapping keeps long indicator
-   text from stretching the layout or shifting the button around. */
-.st-generate-wrap {
+.st-body .step-rail-text {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  pointer-events: none;
+  padding-top: 4px;
+  gap: 2px;
+}
+
+.st-body .step-rail-t1 {
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.02em;
+  font-family: 'Poppins', sans-serif;
+}
+
+.st-body .step-rail-item.is-active .step-rail-t1 {
+  color: #ffffff;
+}
+
+.st-body .step-rail-t2 {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Mobile top dots — reuse .step-mdots emitted by shared JSX */
+.st-body .step-mdots {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 22px 0 14px;
+}
+
+.st-body .step-mdot {
+  width: 34px;
+  height: 6px;
+  border-radius: 4px;
+  background: #e6d5d8;
+}
+
+.st-body .step-mdot.is-active {
+  background: linear-gradient(90deg, #C8102E, #A50034);
+}
+
+/* Content */
+.st-body .step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 44px 24px;
+  min-width: 0;
+}
+
+.st-title {
+  font-size: clamp(22px, 3.6vw, 30px);
+  font-weight: 800;
+  color: #1c1114;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+
+.st-subtitle {
+  font-size: 14px;
+  color: #8a7f80;
+  margin: 0 0 24px 0;
+  font-family: 'Montserrat', sans-serif;
+  text-align: left;
+}
+
+.st-subtitle strong {
+  color: #A50034;
+  font-weight: 800;
+}
+
+/* Type list rows */
+.st-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.st-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1.5px solid #efe0e3;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.st-row:hover {
+  border-color: #EAB8C9;
+  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.08);
+}
+
+.st-row.is-selected {
+  border-color: #C8102E;
+  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.18);
+}
+
+.st-row-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(200, 16, 46, 0.08);
+  background: #f2d7d5;
+}
+
+.st-row-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.st-row-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #2a2224;
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1.2;
+}
+
+.st-row-sub {
+  font-size: 11px;
+  color: #a0908f;
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1.35;
+}
+
+.st-row-radio {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #d9c3c7;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 11px;
+  font-weight: 900;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.st-row.is-selected .st-row-radio {
+  border-color: #C8102E;
+  background: #C8102E;
+  color: #ffffff;
+}
+
+/* Error banner — inline above actions instead of a floating pill */
+.st-error {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  background: #fde8e8;
+  border: 1px solid rgba(200, 16, 46, 0.18);
+  border-radius: 10px;
+  color: #c8102e;
+  font-size: 13px;
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+}
+
+/* Actions row: quota left, back+generate right */
+.st-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 20px;
+  padding-bottom: 8px;
+  border-top: 1px solid rgba(200, 16, 46, 0.06);
+  margin-top: 18px;
 }
 
 .st-quota-indicator {
-  position: fixed;
-  bottom: 78px;
-  left: 0;
-  width: 100%;
+  font-size: 12px;
+  color: #A50034;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  margin: 0 auto 0 0;
+}
+
+.st-btn {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 22px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
   font-size: 13px;
-  color: #7a4a55;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  text-align: center;
-  pointer-events: none;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-/* ─── Responsive: Laptop (≥ 1024px) ─── */
-@media (min-width: 1024px) {
-  .st-grid {
-    grid-template-columns: 1fr 1fr;
-    max-width: 900px;
-    gap: 20px;
-  }
-
-  .st-card {
-    min-height: 100px;
-  }
+.st-btn-back {
+  background: #f1e6e8;
+  color: #8a6f74;
 }
 
-/* ─── Responsive: Large Desktop (≥ 1440px) ─── */
-@media (min-width: 1440px) {
-  .st-grid {
-    max-width: 1100px;
-    gap: 24px;
-  }
-
-  .st-card {
-    padding: 24px 28px;
-    min-height: 110px;
-  }
-
-  .st-card-img {
-    width: 80px;
-    height: 80px;
-  }
+.st-btn-back:hover {
+  background: #e9d8db;
 }
 
-/* ─── Responsive: Tablet (≤ 768px) ─── */
-@media (max-width: 768px) {
+.st-btn-generate {
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.28);
+}
+
+.st-btn-generate:hover:not(.st-btn-disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(200, 16, 46, 0.4);
+}
+
+.st-btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.st-btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 860px) {
   .st-panel {
-    padding: 36px 16px 110px;
+    /* Strip the card frame on phones — go back to full-bleed. */
+    padding: 0;
+    background: radial-gradient(760px 400px at 50% -10%, #ffffff 0%, #FDF3F4 55%, #FBEAEC 100%);
+    justify-content: flex-start;
+  }
+  .st-body .step-rail { display: none; }
+  .st-body .step-mdots { display: flex; }
+
+  .st-body .step-content {
+    padding: 6px 20px 24px;
   }
 
-  .st-grid {
+  .st-body {
     max-width: 100%;
-    gap: 14px;
-  }
-
-  .st-card {
-    padding: 16px 18px;
-    gap: 14px;
-    min-height: 80px;
-  }
-
-  .st-card-img {
-    width: 60px;
-    height: 60px;
-  }
-
-  .st-bottom {
-    padding: 0 20px;
-    bottom: 18px;
-  }
-
-  .st-btn {
-    font-size: 13px;
-    padding: 10px 20px;
-  }
-
-  .st-quota-indicator {
-    font-size: 12px;
-    bottom: 62px;
+    flex-direction: column;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    min-height: 100vh;
+    height: auto;
+    max-height: none;
   }
 }
 
-/* ─── Responsive: Mobile (≤ 480px) ─── */
-@media (max-width: 480px) {
-  .st-panel {
-    padding: 28px 14px 110px;
+@media (max-width: 520px) {
+  .st-body .step-content {
+    padding: 4px 14px 20px;
   }
 
-  .st-grid {
-    gap: 12px;
-  }
-
-  .st-card {
-    padding: 14px 14px;
-    gap: 12px;
-    min-height: 70px;
-    border-radius: 12px;
-  }
-
-  .st-card-img {
-    width: 52px;
-    height: 52px;
-  }
-
-  .st-card-label {
-    font-size: 13px;
-  }
-
-  .st-card-check {
-    width: 22px;
-    height: 22px;
-    font-size: 12px;
-    top: -7px;
-    right: -7px;
-  }
-
-  .st-error {
-    font-size: 12px;
-    padding: 8px 14px;
-  }
-
-  .st-bottom {
-    padding: 0 14px;
-    bottom: 14px;
-  }
-
-  .st-btn {
-    font-size: 12px;
-    padding: 10px 16px;
-    letter-spacing: 0.5px;
-  }
-
-  .st-btn span {
-    font-size: 15px;
-  }
-
-  .st-quota-indicator {
-    font-size: 11px;
-    bottom: 56px;
-  }
+  .st-title { font-size: 20px; }
+  .st-subtitle { font-size: 12.5px; margin-bottom: 18px; }
+  .st-row { padding: 12px 14px; }
+  .st-row-thumb { width: 42px; height: 42px; }
+  .st-row-name { font-size: 13px; }
+  .st-row-sub { font-size: 10.5px; }
+  .st-btn { font-size: 12px; padding: 11px 16px; }
+  .st-quota-indicator { font-size: 11px; }
 }
 
-/* ── Mobile scroll fix ── */
+/* Mobile scroll fix */
 @media (max-width: 768px) {
   body:has(.st-panel) {
     overflow: auto !important;
@@ -337,4 +389,113 @@
     overflow: auto !important;
     height: auto !important;
   }
+}
+
+/* ══════════ QUIZ-GENERATING LOADER (Quiz-Card Shuffle) ══════════ */
+.st-body .ql-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(255, 244, 246, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.st-body .ql-card {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 26px;
+  padding: 38px 52px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 26px 60px rgba(120, 20, 45, 0.22);
+}
+.st-body .ql-deck {
+  position: relative;
+  width: 210px;
+  height: 158px;
+  margin-bottom: 6px;
+}
+.st-body .ql-qc {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  width: 124px;
+  height: 124px;
+  margin-left: -62px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2px solid #f4dbe1;
+  box-shadow: 0 12px 26px rgba(120, 20, 45, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.st-body .ql-qc.ql-front {
+  border-color: #C8102E;
+  box-shadow: 0 20px 42px rgba(200, 16, 46, 0.28);
+  z-index: 2;
+  perspective: 600px;
+}
+.st-body .ql-icon {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+  display: block;
+}
+.st-body .ql-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #1a0a0d;
+  margin-top: 10px;
+}
+.st-body .ql-sub-wrap {
+  height: 20px;
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.st-body .ql-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #8a6a70;
+}
+.st-body .ql-bar {
+  position: relative;
+  margin-top: 18px;
+  width: 280px;
+  height: 9px;
+  border-radius: 99px;
+  background: #f0d8dd;
+  overflow: hidden;
+}
+.st-body .ql-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 46%;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #C8102E, #ff5a76);
+  box-shadow: 0 0 12px rgba(200, 16, 46, 0.5);
+}
+.st-body .ql-bar-fill.ql-bar-static {
+  width: 100%;
+  background: linear-gradient(90deg, #C8102E, #A50034);
+}
+
+@media (max-width: 640px) {
+  .st-body .ql-card { padding: 30px 30px 26px; }
+  .st-body .ql-deck { width: 180px; height: 140px; }
+  .st-body .ql-qc { width: 104px; height: 104px; margin-left: -52px; }
+  .st-body .ql-icon { width: 60px; height: 60px; }
+  .st-body .ql-bar { width: 220px; }
 }

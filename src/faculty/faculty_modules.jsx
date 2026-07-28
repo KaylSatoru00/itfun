@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import './faculty_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdAccountCircle } from 'react-icons/md';
+import { MdAccountCircle, MdViewCarousel, MdGridView, MdGroups } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { CiLogout } from 'react-icons/ci';
+import { SiBookstack } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { auth, db, rtdb } from '../firebase';
@@ -19,21 +20,31 @@ import img6 from '../assets/panel6.webp';
 import img7 from '../assets/panel7.webp';
 import img8 from '../assets/panel8.png';
 import img9 from '../assets/panel9.jpg';
+import itfunLogo from '../assets/LOGO_NAMEN.png';
 
 /* ─────────────────────────────────────────────
    Module + Lesson search index
    Faculty side — all modules unlocked, all searchable
 ──────────────────────────────────────────────*/
 const MODULES = [
-  { num: 1, route: '/faculty-chapter-1', label: 'Introduction to Computers and History of Computers' },
-  { num: 2, route: '/faculty-chapter-2', label: 'Language & Types of Computers with Their Uses' },
-  { num: 3, route: '/faculty-chapter-3', label: 'Number System & Conversions' },
-  { num: 4, route: '/faculty-chapter-4', label: 'Hardware Components, Input and Output Devices & Basic PC-Building' },
-  { num: 5, route: '/faculty-chapter-5', label: 'Types of Software' },
-  { num: 6, route: '/faculty-chapter-6', label: 'Networking Fundamentals' },
-  { num: 7, route: '/faculty-chapter-7', label: 'Microsoft Office Applications' },
-  { num: 8, route: '/faculty-chapter-8', label: 'Application of Computers in Different Fields' },
-  { num: 9, route: '/faculty-chapter-9', label: 'Keyboarding' },
+  { num: 1, route: '/faculty-chapter-1', img: img1, label: 'Introduction to Computers and History of Computers',
+    desc: 'Meet the machine: what a computer is, its four basic operations, and the inventors who started it all.' },
+  { num: 2, route: '/faculty-chapter-2', img: img2, label: 'Language & Types of Computers with Their Uses',
+    desc: 'From pocket-size PCs to room-size supercomputers — the language of computers and their many forms.' },
+  { num: 3, route: '/faculty-chapter-3', img: img3, label: 'Number System & Conversions',
+    desc: 'Binary, decimal, and the conversions between them — the math computers actually speak.' },
+  { num: 4, route: '/faculty-chapter-4', img: img4, label: 'Hardware Components, Input and Output Devices & Basic PC-Building',
+    desc: 'Keyboards to CPUs: the parts of a computer, how data flows in and out, and building a PC.' },
+  { num: 5, route: '/faculty-chapter-5', img: img5, label: 'Types of Software',
+    desc: 'System, application, and operating systems — the invisible half of computing.' },
+  { num: 6, route: '/faculty-chapter-6', img: img6, label: 'Networking Fundamentals',
+    desc: 'How computers talk: networks, the Internet and intranet, and everything in between.' },
+  { num: 7, route: '/faculty-chapter-7', img: img7, label: 'Microsoft Office Applications',
+    desc: 'Word, Excel, and PowerPoint — the everyday tools of the digital workplace.' },
+  { num: 8, route: '/faculty-chapter-8', img: img8, label: 'Application of Computers in Different Fields',
+    desc: 'Business, banking, healthcare, and more — how computers power the world around us.' },
+  { num: 9, route: '/faculty-chapter-9', img: img9, label: 'Keyboarding',
+    desc: 'Home-row technique and shortcut keys to type faster and work smarter.' },
 ];
 
 const MODULE_LESSONS = {
@@ -112,6 +123,31 @@ function FacultyModules() {
   const [showDropdown, setShowDropdown]       = useState(false);
   const searchRef                             = useRef(null);
 
+  // ── Carousel vs grid view toggle (persisted per session) ──
+  const [view, setView] = useState(() => sessionStorage.getItem('itfun_ui_faculty_view') || 'carousel');
+
+  // ── Stacked carousel order (adapted from student_modules.jsx) ──
+  // `order` = MODULES indices; position 1 is the ACTIVE (full-size + text)
+  // card, position 0 is the "under" card behind it, 2..4 are the receding
+  // peek cards on the right. Initialize to the module the user last had
+  // selected this session, or Module 1 on the first visit after login.
+  const [order, setOrder] = useState(() => {
+    const n = MODULES.length;
+    const savedNum = Number(sessionStorage.getItem('itfun_ui_faculty_module'));
+    const savedIdx = MODULES.findIndex(m => m.num === savedNum);
+    const activeIdx = savedIdx >= 0 ? savedIdx : 0; // Module 1 default
+    const start = (activeIdx - 1 + n) % n;           // "under" card sits one before
+    return Array.from({ length: n }, (_, i) => (start + i) % n);
+  });
+
+  // Persist layout + selected module so they survive refresh / Back-Forward /
+  // opening a module and returning.
+  useEffect(() => { sessionStorage.setItem('itfun_ui_faculty_view', view); }, [view]);
+  useEffect(() => {
+    const activeModule = MODULES[order[1]];
+    if (activeModule) sessionStorage.setItem('itfun_ui_faculty_module', String(activeModule.num));
+  }, [order]);
+
   const navigate = useNavigate();
   const { user, setUser, beginLogout } = useUser();
   // Guard: kapag may `user` na pero wala pang firstName/lastName (maikling
@@ -163,7 +199,7 @@ function FacultyModules() {
       console.error('Sign out failed:', err);
     }
     setUser(null);
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     navigate('/');
   };
 
@@ -208,17 +244,34 @@ function FacultyModules() {
     navigate(item.route);
   };
 
-  const IMAGES = [img1, img2, img3, img4, img5, img6, img7, img8, img9];
+  // ── Carousel helpers (mirrors student_modules.jsx) ──
+  const goNext = () => setOrder(o => [...o.slice(1), o[0]]);
+  const goPrev = () => setOrder(o => [o[o.length - 1], ...o.slice(0, -1)]);
+  const bringToActive = (pos) => {
+    if (pos >= 2) setOrder(o => [...o.slice(pos - 1), ...o.slice(0, pos - 1)]);
+  };
+  const stackPosClass = (pos) => {
+    if (pos === 0) return 'stk-under';
+    if (pos === 1) return 'stk-active';
+    if (pos === 2) return 'stk-peek peek-1';
+    if (pos === 3) return 'stk-peek peek-2';
+    if (pos === 4) return 'stk-peek peek-3';
+    return 'stk-hidden';
+  };
 
   return (
     <motion.div
-      className="lm-panel"
+      className="fm-panel"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* ── Top Navbar ── */}
+      {/* ── Top Navbar (full width — unchanged aside from brand) ── */}
       <div className="top-navbar">
+        <div className="fm-brand">
+          <img src={itfunLogo} className="fm-logo" alt="ITFun logo" />
+          <span className="fm-wordmark">IT<span>Fun</span></span>
+        </div>
 
         {/* ── Search Bar ── */}
         <div className="search-bar" ref={searchRef}>
@@ -271,36 +324,137 @@ function FacultyModules() {
 
         <div className="navbar-spacer" />
 
-        <div className="top-center-btns">
-          <button className="top-btn active-btn">Modules</button>
-          <button className="top-btn" onClick={() => navigate('/faculty-class')}>Class</button>
-          <div
-            className="avatar-circle"
-            onClick={() => setShowLogoutModal(true)}
-            title={hasFullName ? `${user.firstName} ${user.lastName}` : 'Account'}
-          >
-            {hasFullName ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
-          </div>
+        <div
+          className="avatar-circle"
+          onClick={() => setShowLogoutModal(true)}
+          title={hasFullName ? `${user.firstName} ${user.lastName}` : 'Account'}
+        >
+          {hasFullName ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
         </div>
       </div>
 
-      {/* ── Module panels ── */}
-      <div className="modules-grid">
-        {MODULES.map((mod) => (
-          <div
-            key={mod.num}
-            className={`sub-panel-${mod.num}`}
-            onClick={() => navigate(mod.route)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="panel-content">
-              <h3 className="panel-title">{mod.label}</h3>
-              <div className="panel-image-wrapper">
-                <img src={IMAGES[mod.num - 1]} alt={`Module ${mod.num}`} className="panel-image" />
-              </div>
+      {/* ── Body: sidebar + main ── */}
+      <div className="fm-below">
+        {/* ── Sidebar ── */}
+        <aside className="fm-side">
+          <nav className="fm-nav">
+            <button className="fm-nav-item active">
+              <span className="fm-nav-icon"><SiBookstack /></span>
+              <span className="fm-nav-label">Modules</span>
+            </button>
+            <button className="fm-nav-item" onClick={() => navigate('/faculty-class')}>
+              <span className="fm-nav-icon"><MdGroups /></span>
+              <span className="fm-nav-label">Classes</span>
+            </button>
+          </nav>
+          <div className="fm-side-foot">Faculty Dashboard</div>
+        </aside>
+
+        {/* ── Main content ── */}
+        <main className="fm-main">
+          <div className="fm-heading">
+            <h2>Learning Modules</h2>
+            <div className="fm-view-toggle">
+              <button
+                className={`fm-view-btn ${view === 'carousel' ? 'active' : ''}`}
+                onClick={() => setView('carousel')}
+              >
+                <MdViewCarousel size={16} /> Carousel
+              </button>
+              <button
+                className={`fm-view-btn ${view === 'grid' ? 'active' : ''}`}
+                onClick={() => setView('grid')}
+              >
+                <MdGridView size={16} /> View All
+              </button>
             </div>
           </div>
-        ))}
+
+          <AnimatePresence mode="wait">
+            {view === 'carousel' ? (
+              <motion.div
+                key="carousel"
+                className="fm-carousel-wrap"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="stk-carousel">
+                  <div className="stk-stage">
+                    {order.map((modIdx, pos) => {
+                      const module = MODULES[modIdx];
+                      const isActive = pos === 1;
+                      return (
+                        <div
+                          key={module.num}
+                          className={`stk-item ${stackPosClass(pos)}`}
+                          style={{ backgroundImage: `url(${module.img})` }}
+                          onClick={pos >= 2 ? () => bringToActive(pos) : undefined}
+                        >
+                          <span className="stk-chip">Module {module.num}</span>
+
+                          {isActive && (
+                            <div className="stk-content" key={module.num}>
+                              <div className="stk-name">{module.label}</div>
+                              <div className="stk-des">{module.desc}</div>
+                              <button
+                                className="stk-cta"
+                                onClick={(e) => { e.stopPropagation(); navigate(module.route); }}
+                              >
+                                OPEN MODULE ▶
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="stk-btns">
+                    <button className="stk-nav stk-prev" onClick={goPrev} aria-label="Previous module">◁</button>
+                    <button className="stk-nav stk-next" onClick={goNext} aria-label="Next module">▷</button>
+                  </div>
+                </div>
+                <p className="fm-caption">All 9 modules unlocked — swipe to browse the curriculum.</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="grid"
+                className="fm-grid"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25 }}
+              >
+                {MODULES.map((module) => {
+                  const lessonCount = (MODULE_LESSONS[module.num] || []).length;
+                  return (
+                    <motion.div
+                      key={module.num}
+                      className="mod-card"
+                      onClick={() => navigate(module.route)}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (module.num - 1) * 0.04 }}
+                    >
+                      <div className="mod-card-img">
+                        <img src={module.img} alt={`Module ${module.num}`} />
+                        <span className="mod-card-badge">Module {module.num}</span>
+                      </div>
+                      <div className="mod-card-body">
+                        <h3 className="mod-card-title">{module.label}</h3>
+                        <p className="mod-card-sub">
+                          {lessonCount} lesson{lessonCount !== 1 ? 's' : ''} · Unlocked
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
       </div>
 
       {/* ── LOGOUT MODAL ── */}

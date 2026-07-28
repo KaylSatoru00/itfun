@@ -1,125 +1,89 @@
-/* login.css — RESPONSIVE VERSION */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+/* login.css — role picker cards (layout shell lives in auth_shell.css) */
 
-html, body {
+.rp-side-logo {
+  height: 72px;
+  width: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+.rp-side-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: #1a1a1e;
   margin: 0;
-  padding: 0;
-  min-height: 100%;
+  text-align: center;
+}
+.rp-side-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  color: #6c6c72;
+  margin: 0 0 0.75rem;
+  text-align: center;
 }
 
-.login-wrapper {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+.rp-cards {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 40px 16px;
-  box-sizing: border-box;
-  background-color: #ececec;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 1440 900' preserveAspectRatio='xMidYMid slice'%3E%3Crect width='1440' height='900' fill='%23ececec'/%3E%3Cpolygon points='350,0 1440,0 1440,900 700,900' fill='%23f5f5f5'/%3E%3Cpolygon points='450,0 1440,0 1440,900 800,900' fill='%23fafafa'/%3E%3Cpolygon points='580,0 1440,0 1440,900 930,900' fill='%23f2f2f2'/%3E%3Cpolygon points='700,0 1440,0 1440,900 1050,900' fill='%23f8f8f8'/%3E%3Cpolygon points='850,0 1440,0 1440,900 1200,900' fill='%23efefef'/%3E%3Cpolygon points='0,0 220,0 100,900 0,900' fill='%23f5f5f5'/%3E%3Cpolygon points='0,0 160,0 50,900 0,900' fill='%23fafafa'/%3E%3Cpolygon points='345,0 380,0 255,900 220,900' fill='%23ffffff'/%3E%3Cpolygon points='445,0 462,0 340,900 322,900' fill='%23ffffff'/%3E%3Cpolygon points='575,0 588,0 463,900 450,900' fill='%23ffffff'/%3E%3Cpolygon points='695,0 705,0 583,900 573,900' fill='%23ffffff'/%3E%3Cpolygon points='155,0 220,0 95,900 30,900' fill='%23c8102e'/%3E%3Cpolygon points='170,0 200,0 68,900 42,900' fill='%23a00d24'/%3E%3Cpolygon points='0,400 60,400 310,900 250,900' fill='%23c8102e'/%3E%3Cpolygon points='0,420 35,420 275,900 240,900' fill='%23a00d24'/%3E%3C%2Fsvg%3E");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(400px, 100%);
 }
 
-.panel {
-  width: min(800px, 92vw);
+.rp-role-card {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  width: 100%;
+  text-align: left;
   background: #fff;
-  border-radius: 20px;
-  margin: auto;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
-  padding: 40px 24px;
-  box-sizing: border-box;
-}
-
-.title {
-  font-size: clamp(48px, 10vw, 100px);
-  color: #c8102e;
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  line-height: 1;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: #555;
-  font-family: Arial, sans-serif;
-  font-style: italic;
-  margin: 0;
-}
-
-.role-text {
-  font-size: 14px;
-  color: #555;
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-}
-
-.buttons {
-  display: flex;
-  gap: 40px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.btn1, .btn2 {
-  width: 200px;
-  height: 150px;
-  background: #c8102e;
-  border: 2px solid #ffffff;
-  border-radius: 20px;
-  font-size: 18px;
-  font-family: Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #fff;
+  border: 2px solid transparent;
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.4rem;
   cursor: pointer;
-  box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.rp-role-card:hover,
+.rp-role-card:focus-visible {
+  border-color: #c8102e;
+  box-shadow: 0 12px 32px rgba(200, 16, 46, 0.18);
+  outline: none;
 }
 
-.btn1:hover, .btn2:hover {
-  background: #000000;
-  transform: scale(0.95);
-  transition: transform 0.3s ease;
+.rp-role-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.35);
 }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 600px) {
-  .panel {
-    padding: 30px 20px;
-    border-radius: 14px;
-    margin: 24px auto;
-  }
+.rp-role-name {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #1a1a1e;
+  margin: 0;
+}
+.rp-role-desc {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #6c6c72;
+  margin: 0.15rem 0 0;
+}
 
-  .buttons {
-    gap: 20px;
-  }
-
-  .btn1, .btn2 {
-    width: 150px;
-    height: 120px;
-    font-size: 15px;
-    border-radius: 14px;
-  }
-
-    }
-
-@media (max-width: 400px) {
-  .btn1, .btn2 {
-    width: 130px;
-    height: 110px;
-    font-size: 14px;
-  }
+.rp-role-arrow {
+  margin-left: auto;
+  color: #c8102e;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+.rp-role-card:hover .rp-role-arrow {
+  transform: translateX(5px);
 }

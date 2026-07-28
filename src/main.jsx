@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import './theme.css'
 import './index.css'
 import { UserProvider } from './user_context'
 import { SocketProvider } from './socket_context'
@@ -29,6 +31,9 @@ import Chapter6 from './student/s6.jsx'
 import Chapter7 from './student/s7.jsx'
 import Chapter8 from './student/s8.jsx'
 import Chapter9 from './student/s9.jsx'
+// Shared dark-chrome theme for all chapter pages — imported AFTER the
+// s1–s9 imports so its overrides sit later in the CSS bundle.
+import './student/chapter_theme.css'
 
 // Faculty
 import FacultyModules from './faculty/faculty_modules.jsx'

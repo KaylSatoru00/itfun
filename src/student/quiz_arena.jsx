@@ -1,15 +1,81 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSocket } from '../socket_context';
 import { useUser } from '../user_context';
 import './quiz_arena.css';
+
+// Owl mascot perched on the chalkboard. Alternates its idle animation by
+// round: odd rounds it blinks, even rounds it does a little hop. Both are
+// disabled under prefers-reduced-motion.
+function OwlMascot({ mode, reduce }) {
+  const isJump = mode === 'jump' && !reduce;
+  const isBlink = mode === 'blink' && !reduce;
+  const eyeAnim = isBlink ? { scaleY: [1, 1, 0.12, 1] } : { scaleY: 1 };
+  const eyeTrans = isBlink
+    ? { duration: 3.4, repeat: Infinity, times: [0, 0.9, 0.95, 1], ease: 'easeInOut' }
+    : { duration: 0 };
+  const eyeStyle = { transformBox: 'fill-box', transformOrigin: 'center' };
+  return (
+    <motion.div
+      className="arena-owl"
+      aria-hidden="true"
+      animate={isJump ? { y: [0, -15, 0] } : { y: 0 }}
+      transition={isJump ? { duration: 1.4, repeat: Infinity, ease: 'easeInOut', times: [0, 0.4, 1] } : { duration: 0 }}
+    >
+      <span className="arena-owl-bubble">Go for it! 💪</span>
+      <svg viewBox="0 0 64 74" className="arena-owl-svg">
+        <path d="M14 16 L24 8 L26 24 Z" fill="#7a5030" />
+        <path d="M50 16 L40 8 L38 24 Z" fill="#7a5030" />
+        <ellipse cx="32" cy="42" rx="24" ry="26" fill="#a4703f" />
+        <ellipse cx="32" cy="49" rx="15.5" ry="17" fill="#e7c49b" />
+        <motion.g style={eyeStyle} animate={eyeAnim} transition={eyeTrans}>
+          <circle cx="24" cy="35" r="9" fill="#fff" stroke="#c98a4a" strokeWidth="2" />
+          <circle cx="25" cy="36" r="4.4" fill="#241009" />
+          <circle cx="26.6" cy="34.4" r="1.3" fill="#fff" />
+        </motion.g>
+        <motion.g style={eyeStyle} animate={eyeAnim} transition={eyeTrans}>
+          <circle cx="40" cy="35" r="9" fill="#fff" stroke="#c98a4a" strokeWidth="2" />
+          <circle cx="39" cy="36" r="4.4" fill="#241009" />
+          <circle cx="40.6" cy="34.4" r="1.3" fill="#fff" />
+        </motion.g>
+        <path d="M32 41 L28 47 L36 47 Z" fill="#f0a12e" />
+      </svg>
+    </motion.div>
+  );
+}
+
+// Room decor behind the question — a window, a wooden desk/floor strip,
+// and a couple of props. Purely decorative.
+function RoomDecor() {
+  return (
+    <>
+      <div className="arena-room-window" aria-hidden="true" />
+      <span className="arena-room-plant" aria-hidden="true">🪴</span>
+      <span className="arena-room-books" aria-hidden="true">📚</span>
+      <div className="arena-room-desk" aria-hidden="true" />
+    </>
+  );
+}
+
+// Deterministic avatar color + initials for leaderboard rows/podium.
+function avatarColor(str = '') {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return `hsl(${Math.abs(hash) % 360}, 58%, 46%)`;
+}
+function initials(name = '') {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const str = parts.slice(0, 2).map((w) => w[0] || '').join('');
+  return str.toUpperCase() || '?';
+}
 
 function QuizArena() {
   const navigate = useNavigate();
   const location = useLocation();
   const socket = useSocket();
   const { user } = useUser();
+  const reduce = useReducedMotion();
 
   const params = new URLSearchParams(location.search);
   const pin = params.get('pin');
@@ -453,6 +519,17 @@ function QuizArena() {
   const timerPercent = (timer / maxTimer) * 100;
   const isUrgent = timer <= 5;
 
+  // Live "points if you answer now" — mirrors the backend stepped scoring
+  // (scoring.service.js): full marks in the first bucket, then −10 per bucket.
+  // Shown inside the timer ring so it ticks 100 → 10 alongside the countdown.
+  const livePoints = (() => {
+    const mt = maxTimer || 30;
+    const t = Math.min(Math.max(mt - timer, 0), mt);
+    const stepSec = mt / 10;
+    const p = 100 - 10 * Math.max(0, Math.ceil((t - stepSec) / stepSec));
+    return Math.max(0, Math.min(100, p));
+  })();
+
   // Loose/defensive type matching — hindi lang exact `=== 'fill-in-blank'`.
   // Kahit na-normalize na natin ang type sa backend (gemini.service.js),
   // extra safety net ito kung sakaling may room pa ring gumagamit ng hindi
@@ -511,18 +588,31 @@ function QuizArena() {
   const MuteButton = () => (
     <button
       type="button"
-      className="bgm-mute-btn"
+      className={`bgm-mute-btn ${bgMuted ? 'is-muted' : ''}`}
       onClick={toggleBgMute}
       aria-label={bgMuted ? 'Unmute background music' : 'Mute background music'}
       title={bgMuted ? 'Unmute background music' : 'Mute background music'}
     >
-      {bgMuted ? '🔇' : '🔊'}
+      <span className="mute-icon" aria-hidden="true">{bgMuted ? '🔇' : '🔊'}</span>
+      <span className="mute-label">{bgMuted ? 'Muted' : 'Sound'}</span>
     </button>
+  );
+
+  const Wordmark = () => (
+    <div className="arena-wordmark" aria-hidden="true">
+      ITFun <b>⚔ Arena</b>
+    </div>
   );
 
   const TimerRing = () => (
     <div className={`timer-ring-wrap ${isUrgent ? 'danger' : ''}`}>
       <svg className="timer-ring-svg" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="timer-gradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#C8102E" />
+            <stop offset="100%" stopColor="#A50034" />
+          </linearGradient>
+        </defs>
         <circle className="timer-ring-bg" cx="60" cy="60" r={RADIUS} />
         <circle
           className="timer-ring-fill"
@@ -535,7 +625,10 @@ function QuizArena() {
           }}
         />
       </svg>
-      <span className="timer-ring-label">{timer}</span>
+      <span className="timer-ring-label">
+        <span className="timer-ring-sec">{timer}</span>
+        <span className="timer-ring-pts">{livePoints} PTS</span>
+      </span>
     </div>
   );
 
@@ -547,27 +640,62 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
+        <Wordmark />
         <div className="results-page">
           <p className="round-label">FINAL RESULTS</p>
 
-          <div className="rankings-list">
-            {finalRankings.map((player, index) => (
-              <motion.div
-                key={player.id}
-                className={`rank-row ${index === 0 ? 'first-place' : ''}`}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <span className="rank-pos">{getOrdinal(index + 1)}</span>
-                <span className="rank-name">
-                  {player.name}
-                  {player.id === socket?.id ? ' (You)' : ''}
-                </span>
-                <span className="rank-score">{player.score}</span>
-              </motion.div>
-            ))}
+          {/* Podium: gold #1 (centre, crowned), silver #2, bronze #3 */}
+          <div className="podium">
+            {[1, 0, 2].map((rankIdx) => {
+              const player = finalRankings[rankIdx];
+              if (!player) return null;
+              const tier = rankIdx === 0 ? 'gold' : rankIdx === 1 ? 'silver' : 'bronze';
+              return (
+                <motion.div
+                  key={player.id}
+                  className={`ped ped-${rankIdx + 1} ${tier}`}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: rankIdx === 0 ? 0.1 : 0.24, type: 'spring', stiffness: 220, damping: 22 }}
+                >
+                  {rankIdx === 0 && <div className="ped-crown">👑</div>}
+                  <span className="ped-av" style={{ background: avatarColor(player.id || player.name) }}>
+                    {initials(player.name)}
+                  </span>
+                  <span className="ped-name">
+                    {player.name}{player.id === socket?.id ? ' (You)' : ''}
+                  </span>
+                  <span className="ped-score">{player.score}</span>
+                  <div className="ped-block">{rankIdx + 1}</div>
+                </motion.div>
+              );
+            })}
           </div>
+
+          {/* Everyone from 4th place down */}
+          {finalRankings.length > 3 && (
+            <div className="rankings-list">
+              {finalRankings.slice(3).map((player, i) => (
+                <motion.div
+                  key={player.id}
+                  className="rank-row"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.06 }}
+                >
+                  <span className="rank-pos">{getOrdinal(i + 4)}</span>
+                  <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
+                    {initials(player.name)}
+                  </span>
+                  <span className="rank-name">
+                    {player.name}
+                    {player.id === socket?.id ? ' (You)' : ''}
+                  </span>
+                  <span className="rank-score">{player.score}</span>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           <button
             className="exit-btn"
@@ -594,27 +722,37 @@ function QuizArena() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
+        <Wordmark />
         <MuteButton />
         <div className="results-page">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
 
-          <div className="rankings-list">
-            {rankings.map((player, index) => (
-              <motion.div
-                key={player.id}
-                className={`rank-row ${index === 0 ? 'first-place' : ''}`}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <span className="rank-pos">{getOrdinal(index + 1)}</span>
-                <span className="rank-name">
-                  {player.name}
-                  {player.id === socket?.id ? ' (You)' : ''}
-                </span>
-                <span className="rank-score">{player.score}</span>
-              </motion.div>
-            ))}
+          <div className="rankings-list medal-rows">
+            {rankings.map((player, index) => {
+              const tier = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+              return (
+                <motion.div
+                  key={player.id}
+                  className={`rank-row ${tier ? `medal ${tier}` : ''}`}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.08 }}
+                >
+                  {tier
+                    ? <span className="rank-medal" aria-hidden="true">{medal}</span>
+                    : <span className="rank-pos">{index + 1}</span>}
+                  <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
+                    {initials(player.name)}
+                  </span>
+                  <span className="rank-name">
+                    {player.name}
+                    {player.id === socket?.id ? ' (You)' : ''}
+                  </span>
+                  <span className="rank-score">{player.score}</span>
+                </motion.div>
+              );
+            })}
           </div>
 
           <p className="next-hint">Next question coming up...</p>
@@ -627,6 +765,7 @@ function QuizArena() {
   if (!currentQuestion) {
     return (
       <div className="arena-panel">
+        <Wordmark />
         <MuteButton />
         <div className="arena-loading">
           <AnimatePresence mode="wait">
@@ -659,27 +798,39 @@ function QuizArena() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
+      <Wordmark />
       <TimerRing />
       <MuteButton />
+      <RoomDecor />
 
       <div className="arena-body">
 
-        <span className="question-progress">
-          Question {questionIndex + 1} of {totalQuestions}
-        </span>
+        <div className="arena-progress">
+          <div className="progress-dots" aria-hidden="true">
+            {Array.from({ length: totalQuestions || 0 }).map((_, i) => (
+              <span key={i} className={`prog-dot ${i <= questionIndex ? 'on' : ''}`} />
+            ))}
+          </div>
+          <span className="question-progress">
+            Question {questionIndex + 1} of {totalQuestions}
+          </span>
+        </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={questionIndex}
-            className="question-box"
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <p className="question-text">{displayQuestionText}</p>
-          </motion.div>
-        </AnimatePresence>
+        <div className="question-stage">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={questionIndex}
+              className="question-box"
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <p className="question-text">{displayQuestionText}</p>
+            </motion.div>
+          </AnimatePresence>
+          <OwlMascot mode={currentRound % 2 === 1 ? 'blink' : 'jump'} reduce={reduce} />
+        </div>
 
         <div className={`options-grid ${isTrueFalse ? 'two-col' : 'one-col'}`}>
 
@@ -695,10 +846,13 @@ function QuizArena() {
                   className={`option-btn ${selectedAnswer === option ? 'selected' : ''} ${isCorrectOption ? 'correct' : ''} ${isWrongSelected ? 'incorrect' : ''}`}
                   onClick={() => handleAnswer(option)}
                   disabled={isAnswered}
-                  whileHover={!isAnswered ? { scale: 1.02 } : {}}
+                  whileHover={!isAnswered ? { scale: 1.01 } : {}}
                   whileTap={!isAnswered ? { scale: 0.98 } : {}}
                 >
-                  {option}
+                  <span className="option-radio" aria-hidden="true">
+                    {isCorrectOption ? '✓' : isWrongSelected ? '✕' : String.fromCharCode(65 + index)}
+                  </span>
+                  <span className="option-text">{option}</span>
                 </motion.button>
               );
             })
@@ -714,7 +868,8 @@ function QuizArena() {
                 whileHover={!isAnswered ? { scale: 1.02 } : {}}
                 whileTap={!isAnswered ? { scale: 0.98 } : {}}
               >
-                True
+                <span className="tf-icon" aria-hidden="true">✓</span>
+                <span className="tf-label">TRUE</span>
               </motion.button>
               <motion.button
                 className={`option-btn ${selectedAnswer === 'False' ? 'selected' : ''} ${revealedAnswer === 'False' ? 'correct' : ''} ${revealedAnswer && selectedAnswer === 'False' && revealedAnswer !== 'False' ? 'incorrect' : ''}`}
@@ -723,7 +878,8 @@ function QuizArena() {
                 whileHover={!isAnswered ? { scale: 1.02 } : {}}
                 whileTap={!isAnswered ? { scale: 0.98 } : {}}
               >
-                False
+                <span className="tf-icon" aria-hidden="true">✕</span>
+                <span className="tf-label">FALSE</span>
               </motion.button>
             </>
           )}
@@ -731,6 +887,7 @@ function QuizArena() {
           {/* Identification / Fill in blank */}
           {(isIdentification || isFillBlank) && (
             <div className="ident-wrap">
+              <span className="ident-label">Type your answer</span>
               <input
                 className={`ident-input ${
                   revealedAnswer
@@ -756,7 +913,7 @@ function QuizArena() {
                 autoFocus
               />
               <button
-                className="option-btn"
+                className="ident-submit"
                 onClick={() => {
                   if (identInput.trim() && !isAnswered) handleAnswer(identInput.trim());
                 }}

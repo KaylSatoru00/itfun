@@ -112,99 +112,116 @@ function SelectModule() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <h2 className="sm-title">Select Module</h2>
-      <p className="sm-subtitle">Choose a learning module to generate quiz questions from</p>
+      <div className="sm-body">
+        {/* ── Step timeline rail (desktop) ── */}
+        <aside className="step-rail" aria-label="Progress">
+          <div className="step-rail-item is-active">
+            <div className="step-rail-col">
+              <span className="step-rail-dot">1</span>
+              <span className="step-rail-bar" />
+            </div>
+            <div className="step-rail-text">
+              <span className="step-rail-t1">Module</span>
+              <span className="step-rail-t2">Pick a topic</span>
+            </div>
+          </div>
+          <div className="step-rail-item">
+            <div className="step-rail-col">
+              <span className="step-rail-dot">2</span>
+              <span className="step-rail-bar" />
+            </div>
+            <div className="step-rail-text">
+              <span className="step-rail-t1">Quiz Type</span>
+              <span className="step-rail-t2">Choose format</span>
+            </div>
+          </div>
+          <div className="step-rail-item">
+            <div className="step-rail-col">
+              <span className="step-rail-dot">3</span>
+            </div>
+            <div className="step-rail-text">
+              <span className="step-rail-t1">Start</span>
+              <span className="step-rail-t2">Create room</span>
+            </div>
+          </div>
+        </aside>
 
-      <div className="sm-grid">
-        {MODULES.map((mod) => {
-          const isSelected = selected?.id === mod.id;
-          const isUnlocked = moduleStatus[mod.id]?.unlocked ?? (mod.id === 'module1');
-          
-          return (
-            <motion.div
-              key={mod.id}
-              className={`sm-card ${isSelected && isUnlocked ? 'sm-card-selected' : ''} ${!isUnlocked ? 'sm-card-locked' : ''}`}
-              onClick={() => {
-                if (!isUnlocked) {
-                  // Show a friendly alert when trying to select a locked module
-                  const moduleNum = parseInt(mod.id.replace('module', ''));
-                  alert(`Please complete all lessons in Module ${moduleNum - 1} to unlock "${mod.label}" in the Quiz Arena.`);
-                  return;
-                }
-                setSelected(mod);
-              }}
-              animate={{
-                scale: isSelected && isUnlocked ? 1.05 : 1,
-                y: isSelected && isUnlocked ? -3 : 0,
-              }}
-              whileHover={isUnlocked ? { y: -3, boxShadow: '0 8px 20px rgba(0,0,0,0.2)' } : {}}
-              whileTap={isUnlocked ? { scale: 0.95 } : {}}
-              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-              style={{
-                cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                opacity: isUnlocked ? 1 : 0.6,
-                filter: isUnlocked ? 'none' : 'grayscale(0.7) brightness(0.8)',
-                position: 'relative',
-              }}
+        <section className="step-content">
+          {/* ── Mobile top progress bars ── */}
+          <div className="step-mdots" aria-hidden="true">
+            <span className="step-mdot is-active" />
+            <span className="step-mdot" />
+            <span className="step-mdot" />
+          </div>
+
+          <h2 className="sm-title">Select Module</h2>
+          <p className="sm-subtitle">Choose a learning module to generate quiz questions from</p>
+
+          <ul className="sm-list">
+            {MODULES.map((mod, index) => {
+              const isSelected = selected?.id === mod.id;
+              const isUnlocked = moduleStatus[mod.id]?.unlocked ?? (mod.id === 'module1');
+              const moduleNum = index + 1;
+
+              return (
+                <motion.li
+                  key={mod.id}
+                  className={`sm-row ${isSelected && isUnlocked ? 'is-selected' : ''} ${!isUnlocked ? 'is-locked' : ''}`}
+                  onClick={() => {
+                    if (!isUnlocked) {
+                      alert(`Please complete all lessons in Module ${moduleNum - 1} to unlock "${mod.label}" in the Quiz Arena.`);
+                      return;
+                    }
+                    setSelected(mod);
+                  }}
+                  whileTap={isUnlocked ? { scale: 0.99 } : {}}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                >
+                  <img src={mod.img} alt={mod.label} className="sm-row-thumb" />
+                  <div className="sm-row-meta">
+                    <div className="sm-row-name">{mod.label}</div>
+                    <div className="sm-row-sub">
+                      {isUnlocked
+                        ? `Module ${moduleNum}`
+                        : `Module ${moduleNum} · Locked — finish Module ${moduleNum - 1}`}
+                    </div>
+                  </div>
+                  {!isUnlocked ? (
+                    <span className="sm-row-lock" aria-hidden="true">🔒</span>
+                  ) : (
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={isSelected ? 'on' : 'off'}
+                        className="sm-row-radio"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                        aria-hidden="true"
+                      >
+                        {isSelected ? '✓' : ''}
+                      </motion.span>
+                    </AnimatePresence>
+                  )}
+                </motion.li>
+              );
+            })}
+          </ul>
+
+          <div className="sm-actions">
+            <button className="sm-btn sm-btn-back" onClick={() => navigate('/pvp-quiz')}>
+              <span>«</span> BACK
+            </button>
+            <div className="sm-actions-spacer" />
+            <button
+              className={`sm-btn sm-btn-next ${!selected ? 'sm-btn-disabled' : ''}`}
+              onClick={handleNext}
+              disabled={!selected}
             >
-              <img
-                src={mod.img}
-                alt={mod.label}
-                className="sm-card-img"
-                style={{
-                  filter: !isUnlocked ? 'brightness(0.6)' : 'none',
-                }}
-              />
-              <span className="sm-card-label">{mod.label}</span>
-
-              <AnimatePresence>
-                {isSelected && isUnlocked && (
-                  <motion.div
-                    className="sm-card-check"
-                    initial={{ scale: 0, opacity: 0, rotate: -90 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  >
-                    ✓
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* ── Locked label ── */}
-              {!isUnlocked && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: '12px',
-                  right: '12px',
-                  background: 'rgba(200, 16, 46, 0.85)',
-                  color: 'white',
-                  fontSize: '10px',
-                  fontWeight: 'bold',
-                  padding: '4px 10px',
-                  borderRadius: '20px',
-                  zIndex: 3,
-                  letterSpacing: '0.5px',
-                }}>
-                  LOCKED
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
-
-      <div className="sm-bottom">
-        <button className="sm-btn sm-btn-back" onClick={() => navigate('/pvp-quiz')}>
-          <span>«</span> BACK
-        </button>
-        <button
-          className={`sm-btn sm-btn-next ${!selected ? 'sm-btn-disabled' : ''}`}
-          onClick={handleNext}
-          disabled={!selected}
-        >
-          NEXT <span>»</span>
-        </button>
+              NEXT <span>»</span>
+            </button>
+          </div>
+        </section>
       </div>
     </motion.div>
   );

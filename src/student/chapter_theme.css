@@ -1,0 +1,814 @@
+/* chapter_theme.css — shared dark-chrome redesign for ALL student chapter
+   pages (s1–s9). Each sN.css still defines the legacy chap-* styles; this
+   sheet overrides the shared chrome (page bg, header, sidebar nav, cards,
+   accordions, flip cards, buttons) with higher-specificity selectors so it
+   wins regardless of CSS bundle order. Content areas stay light for
+   readability — inline styles inside lesson bodies assume white cards. */
+
+/* ── Page shell ── */
+.chap-panel.chap-panel {
+  /* sN.css uses width:100vw which overflows by the scrollbar width once
+     the page can scroll vertically — 100% ang tama */
+  width: 100%;
+  /* Same light radial-spotlight gradient as student_modules.css
+     (Sample B: white halo → #F2D7D5 → #EAB8C9). Background only — the
+     dark sticky header/chrome and all flip-card layouts are untouched. */
+  background: radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%);
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+
+/* ── Header ── */
+.chap-panel .chap-header {
+  background: rgba(10, 9, 11, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 16, 46, 0.35);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+.chap-panel .chap-back-btn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.chap-panel .chap-back-btn:hover {
+  background: #c8102e;
+  border-color: #c8102e;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(200, 16, 46, 0.45);
+}
+.chap-panel .chap-chapter-label {
+  color: #ff4d6d;
+  letter-spacing: 3px;
+  font-family: 'Montserrat', sans-serif;
+}
+.chap-panel .chap-title {
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+}
+
+/* ── Cards (sidebar + main content) ── */
+.chap-panel .chap-card-small,
+.chap-panel .chap-card-main,
+.chap-panel .chap-card {
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* red thin scrollbar in the reading pane */
+.chap-panel .chap-card-main {
+  scrollbar-width: thin;
+  scrollbar-color: #c8102e #f1eff2;
+}
+.chap-panel .chap-card-main::-webkit-scrollbar { width: 8px; }
+.chap-panel .chap-card-main::-webkit-scrollbar-track { background: #f1eff2; border-radius: 999px; }
+.chap-panel .chap-card-main::-webkit-scrollbar-thumb { background: #c8102e; border-radius: 999px; }
+
+/* ── Sidebar lesson nav ── */
+.chap-panel .chap-nav-btn {
+  border: 2px solid #f0eef1;
+  border-radius: 14px;
+  background: #faf9fb;
+  color: #55555c;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  transition: all 0.22s ease;
+}
+.chap-panel .chap-nav-btn:hover {
+  background: #fdecea;
+  border-color: rgba(200, 16, 46, 0.55);
+  color: #c8102e;
+  transform: translateX(3px);
+}
+.chap-panel .chap-nav-btn.active {
+  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(200, 16, 46, 0.35);
+}
+
+/* ── Section headings ── */
+.chap-panel .chap-section-main-title,
+.chap-panel .chap-section-title,
+.chap-panel .chap-concepts-title,
+.chap-panel .chap-data-title,
+.chap-panel .chap-history-title,
+.chap-panel .chap-adv-subtitle,
+.chap-panel .chap-gen-title {
+  font-family: 'Poppins', sans-serif;
+  color: #c8102e;
+}
+
+/* ── Accordions ── */
+.chap-panel .chap-accordion-item {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #eceaee;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.chap-panel .chap-accordion-item:hover {
+  border-color: rgba(200, 16, 46, 0.4);
+  box-shadow: 0 8px 22px rgba(200, 16, 46, 0.12);
+}
+.chap-panel .chap-accordion-header {
+  background: #fff;
+  color: #2a2a2e;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  border: none;
+  transition: all 0.22s ease;
+}
+.chap-panel .chap-accordion-header:hover {
+  background: #fdecea;
+  color: #c8102e;
+}
+.chap-panel .chap-accordion-header.open {
+  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+  color: #fff;
+}
+.chap-panel .chap-accordion-chevron {
+  color: inherit;
+  transition: transform 0.25s ease;
+}
+
+/* ── Flip cards ── */
+.chap-panel .chap-flip-card,
+.chap-panel .chap-person-flip-card {
+  border-radius: 18px;
+}
+.chap-panel .chap-flip-card .chap-flip-card-front,
+.chap-panel .chap-flip-card .chap-flip-card-back,
+.chap-panel .chap-person-flip-card .chap-flip-card-front,
+.chap-panel .chap-person-flip-card .chap-flip-card-back {
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+.chap-panel .chap-flip-card-front-overlay {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ── START GAME button ── */
+.chap-panel .chap-start-game-btn {
+  background: linear-gradient(135deg, #c8102e 0%, #a50034 100%);
+  border-radius: 999px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+  box-shadow: 0 8px 26px rgba(200, 16, 46, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: chap-game-pulse 2.4s ease-in-out infinite;
+}
+.chap-panel .chap-start-game-btn:hover {
+  background: linear-gradient(135deg, #e01236 0%, #c8102e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(200, 16, 46, 0.6);
+}
+@keyframes chap-game-pulse {
+  0%, 100% { box-shadow: 0 8px 26px rgba(200, 16, 46, 0.45); }
+  50%      { box-shadow: 0 8px 34px rgba(200, 16, 46, 0.75); }
+}
+
+/* ── Dividers ── */
+.chap-panel .chap-history-divider {
+  background: linear-gradient(90deg, transparent, rgba(200, 16, 46, 0.4), transparent);
+  height: 2px;
+  border: none;
+}
+
+/* ═══════════ INVENTOR STAGE (center-to-left reveal) ═══════════
+   Shared layout pattern for chapter pages: portrait card centered on an
+   empty stage row; on reveal it travels to the left column while the
+   description panel takes over the center (Bootstrap horizontal-card end
+   state). The travel itself is animated by Framer Motion `layout`. */
+
+.chap-panel .chap-stage-heading {
+  text-align: center;
+}
+.chap-panel .chap-stage-heading .chap-history-title,
+.chap-panel .chap-stage-heading .chap-history-label {
+  text-align: center;
+}
+
+.chap-panel .chap-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 30px);
+  width: 100%;
+  min-height: 420px;
+}
+.chap-panel .chap-stage.revealed {
+  justify-content: flex-start;
+}
+
+.chap-panel .chap-stage-portrait {
+  position: relative;
+  width: 280px;
+  height: 400px;
+  flex-shrink: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+  background: #1c1a1f;
+  transition: width 0.35s ease, height 0.35s ease, box-shadow 0.3s ease;
+}
+.chap-panel .chap-stage-portrait.wide { width: 420px; }
+.chap-panel .chap-stage.revealed .chap-stage-portrait { width: 210px; height: 300px; }
+.chap-panel .chap-stage.revealed .chap-stage-portrait.wide { width: 300px; }
+.chap-panel .chap-stage-portrait:hover {
+  box-shadow: 0 18px 50px rgba(200, 16, 46, 0.35);
+}
+.chap-panel .chap-stage-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.chap-panel .chap-stage-portrait-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  padding: 12px;
+  text-align: center;
+}
+.chap-panel .chap-stage-portrait-overlay {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, transparent 0%, rgba(120, 8, 26, 0.92) 60%);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.chap-panel .chap-stage-panel {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #f0eef1;
+  border-left: 5px solid #c8102e;
+  border-radius: 16px;
+  padding: 24px 46px 24px 28px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+}
+.chap-panel .chap-stage-panel-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #c8102e;
+  margin: 0 0 12px;
+}
+.chap-panel .chap-stage-panel-body {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.85;
+  margin: 0;
+}
+.chap-panel .chap-stage-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: #f1eff2;
+  color: #55555c;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.chap-panel .chap-stage-close:hover {
+  background: #c8102e;
+  color: #fff;
+}
+
+/* Mobile: walang left/right na espasyo — vertical version: portrait
+   docks sa taas (lumiliit), description panel pumapasok sa ilalim. */
+@media (max-width: 768px) {
+  .chap-panel .chap-stage {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .chap-panel .chap-stage.revealed { justify-content: center; }
+  .chap-panel .chap-stage-portrait { width: min(280px, 78vw); height: 360px; }
+  .chap-panel .chap-stage-portrait.wide { width: min(420px, 88vw); }
+  .chap-panel .chap-stage.revealed .chap-stage-portrait { width: 170px; height: 230px; }
+  .chap-panel .chap-stage.revealed .chap-stage-portrait.wide { width: 240px; }
+  .chap-panel .chap-stage-panel { width: 100%; padding: 20px 38px 20px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chap-panel .chap-start-game-btn { animation: none; }
+}
+
+/* ═══════════ FX CARDS — varied reveal transitions ═══════════
+   Replacements for the old uniform 180° in-place flip (chap-flip-card).
+   Assignments (approved via flip-transition-samples.html):
+   fade = s1 intro · slide = s2 · wipe = s3 text + s5 ·
+   expand = s3 examples + s4 · tilt = s6 · stagger = s7 · zoom = s8 */
+
+.chap-panel .fx-card {
+  position: relative;
+  width: 300px;
+  height: 310px;
+  max-width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #17151a;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  user-select: none;
+  flex-shrink: 0;
+}
+.chap-panel .fx-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+}
+.chap-panel .fx-front img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.chap-panel .fx-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+}
+.chap-panel .fx-strip {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, transparent, rgba(120, 8, 26, 0.95) 65%);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  z-index: 1;
+}
+.chap-panel .fx-back {
+  background: linear-gradient(160deg, #8c0b22, #5c0716);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+.chap-panel .fx-back p { margin: 0; }
+.chap-panel .fx-back-icon { font-size: 28px; }
+.chap-panel .fx-hint {
+  position: absolute;
+  bottom: 8px; left: 0; right: 0;
+  font-size: 0.66rem;
+  opacity: 0.65;
+}
+.chap-panel .fx-front-label { background: linear-gradient(160deg, #a50034, #c8102e); }
+.chap-panel .fx-front-label > p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── 1. Crossfade (s1 intro) ── */
+.chap-panel .fx-fade .fx-face { transition: opacity 0.45s ease; }
+.chap-panel .fx-fade .fx-back { opacity: 0; pointer-events: none; }
+.chap-panel .fx-fade.open .fx-front { opacity: 0; }
+.chap-panel .fx-fade.open .fx-back { opacity: 1; pointer-events: auto; }
+
+/* ── 2. Slide / push (s2) ── */
+.chap-panel .fx-slide .fx-face { transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1); }
+.chap-panel .fx-slide .fx-back { transform: translateX(100%); }
+.chap-panel .fx-slide.open .fx-front { transform: translateX(-100%); }
+.chap-panel .fx-slide.open .fx-back { transform: translateX(0); }
+
+/* ── 3. Clip-path circle wipe (s3 text cards, s5) ── */
+.chap-panel .fx-wipe .fx-back {
+  clip-path: circle(0% at var(--cx, 50%) var(--cy, 50%));
+  transition: clip-path 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chap-panel .fx-wipe.open .fx-back { clip-path: circle(150% at var(--cx, 50%) var(--cy, 50%)); }
+
+/* ── 4. Expand / morph into wide panel (s3 examples, s4) ── */
+.chap-panel .fx-expand {
+  transition: width 0.5s cubic-bezier(0.35, 0, 0.25, 1), height 0.5s cubic-bezier(0.35, 0, 0.25, 1);
+}
+.chap-panel .fx-expand.open { width: 100%; height: 400px; }
+.chap-panel .fx-expand .fx-front { transition: opacity 0.3s ease 0.1s; }
+.chap-panel .fx-expand.open .fx-front { opacity: 0; pointer-events: none; }
+.chap-panel .fx-detail {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease 0.18s;
+}
+.chap-panel .fx-expand.open .fx-detail { opacity: 1; pointer-events: auto; }
+.chap-panel .fx-detail-img {
+  flex: 0 0 36%;
+  background: #131116;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.chap-panel .fx-detail-img img { width: 100%; height: 100%; object-fit: cover; }
+.chap-panel .fx-detail-txt { flex: 1; padding: 22px 28px; overflow: auto; }
+.chap-panel .fx-detail-txt h3 {
+  font-family: 'Poppins', sans-serif;
+  color: #c8102e;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+}
+.chap-panel .fx-detail-txt p {
+  font-family: 'Montserrat', sans-serif;
+  color: #333;
+  font-size: 0.88rem;
+  line-height: 1.75;
+  margin: 0;
+}
+.chap-panel .fx-detail-full {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+.chap-panel .fx-detail-full img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.chap-panel .fx-detail-note {
+  position: absolute;
+  top: 8px; right: 12px;
+  font-size: 0.68rem;
+  color: #999;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ── 5. 3D tilt-then-swap (s6) ── */
+.chap-panel .fx-tilt { perspective: 900px; background: transparent; overflow: visible; box-shadow: none; }
+.chap-panel .fx-tilt-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #17151a;
+  transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+.chap-panel .fx-tilt.open .fx-tilt-inner { transform: rotateY(14deg) rotateX(4deg); }
+.chap-panel .fx-tilt .fx-face { transition: opacity 0.4s ease 0.08s; }
+.chap-panel .fx-tilt .fx-back { opacity: 0; pointer-events: none; }
+.chap-panel .fx-tilt.open .fx-front { opacity: 0; }
+.chap-panel .fx-tilt.open .fx-back { opacity: 1; pointer-events: auto; }
+
+/* ── 6. Staggered list reveal (s7) ── */
+.chap-panel .fx-stagger .fx-front { transition: opacity 0.3s ease; }
+.chap-panel .fx-stagger.open .fx-front { opacity: 0; pointer-events: none; }
+.chap-panel .fx-stagger .fx-back {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  padding-top: 24px;
+}
+.chap-panel .fx-stagger.open .fx-back { opacity: 1; pointer-events: auto; }
+.chap-panel .fx-stagger .fx-back { overflow-y: auto; padding-bottom: 30px; }
+.chap-panel .fx-stagger .fx-back ul { margin: 4px 0 0; padding: 0; }
+.chap-panel .fx-stagger .fx-back li {
+  list-style: none;
+  font-size: 0.84rem;
+  padding: 4px 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.chap-panel .fx-stagger.open li:nth-child(1) { transition-delay: 0.15s; }
+.chap-panel .fx-stagger.open li:nth-child(2) { transition-delay: 0.27s; }
+.chap-panel .fx-stagger.open li:nth-child(3) { transition-delay: 0.39s; }
+.chap-panel .fx-stagger.open li:nth-child(4) { transition-delay: 0.51s; }
+.chap-panel .fx-stagger.open li:nth-child(5) { transition-delay: 0.63s; }
+.chap-panel .fx-stagger.open li:nth-child(6) { transition-delay: 0.75s; }
+.chap-panel .fx-stagger.open li { opacity: 1; transform: translateY(0); }
+
+/* ── 7. Zoom reveal (s8) ── */
+.chap-panel .fx-zoom .fx-front { transition: transform 0.5s ease, opacity 0.45s ease, filter 0.45s ease; }
+.chap-panel .fx-zoom.open .fx-front { transform: scale(1.35); opacity: 0; filter: blur(6px); pointer-events: none; }
+.chap-panel .fx-zoom .fx-back {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.92);
+  transition: transform 0.45s ease 0.12s, opacity 0.45s ease 0.12s;
+}
+.chap-panel .fx-zoom.open .fx-back { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+/* fx responsive + reduced motion */
+@media (max-width: 640px) {
+  .chap-panel .fx-card { width: 100%; height: 280px; }
+  .chap-panel .fx-expand.open { height: 440px; }
+  .chap-panel .fx-detail { flex-direction: column; }
+  .chap-panel .fx-detail-img { flex: 0 0 130px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chap-panel .fx-face,
+  .chap-panel .fx-expand,
+  .chap-panel .fx-tilt-inner,
+  .chap-panel .fx-stagger .fx-back li { transition: none !important; }
+}
+
+/* ═══════════ COURSE PLAYER LAYOUT (s1 structure redesign) ═══════════
+   Option A: sticky horizontal lesson stepper + centered column of
+   separate block cards + prev/next footer + module-complete banner.
+   Generic cp-* names so s2–s9 reuse them in later rounds. */
+
+/* header stays pinned at the top of the viewport on chapter pages */
+.chap-panel.cp-page .chap-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.chap-panel .cp-stepper {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px clamp(10px, 2vw, 20px);
+  background: rgba(10, 9, 11, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(200, 16, 46, 0.35);
+  overflow-x: auto;
+}
+.chap-panel .cp-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #55555c;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 6px 16px 6px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s ease;
+  flex-shrink: 0;
+}
+.chap-panel .cp-step:hover { border-color: rgba(200, 16, 46, 0.5); color: #c8102e; }
+.chap-panel .cp-step.active {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(200, 16, 46, 0.4);
+}
+
+.chap-panel .cp-body {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: clamp(18px, 3vh, 30px) clamp(12px, 3vw, 20px) 70px;
+  box-sizing: border-box;
+}
+.chap-panel .cp-lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.chap-panel .cp-block {
+  background: #fff;
+  border-radius: 18px;
+  padding: clamp(18px, 3.5vw, 30px);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+}
+.chap-panel .cp-block .chap-section-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.chap-panel .cp-hero {
+  text-align: center;
+  border-top: 5px solid #c8102e;
+}
+
+.chap-panel .cp-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.chap-panel .cp-footer-nav button {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: 999px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chap-panel .cp-nav-prev {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.chap-panel .cp-nav-prev:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); }
+.chap-panel .cp-nav-next {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35);
+}
+.chap-panel .cp-nav-next:hover:not(:disabled) { transform: translateY(-2px); }
+.chap-panel .cp-footer-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.chap-panel .cp-banner {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 18px 50px rgba(200, 16, 46, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.chap-panel .cp-banner h3 { font-family: 'Poppins', sans-serif; margin: 0; font-size: 1.3rem; }
+.chap-panel .cp-banner p { font-family: 'Montserrat', sans-serif; margin: 0 0 10px; font-size: 0.9rem; opacity: 0.9; }
+.chap-panel .cp-banner .chap-start-game-btn {
+  background: #fff;
+  color: #c8102e;
+  animation: none;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 640px) {
+  .chap-panel .cp-stepper { justify-content: flex-start; }
+  .chap-panel .cp-step span { font-size: 0.7rem; }
+  .chap-panel .cp-footer-nav button { max-width: none; flex: 1; }
+}
+
+/* ═══════════ ACCORDION OUTLINE LAYOUT (Option D — s1 structure) ═══════
+   Mga lesson mismo ang malalaking collapsible bars; thin module progress
+   bar sa ilalim ng header; content blocks naka-nest sa loob. */
+
+.chap-panel .ao-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.chap-panel .ao-progress > div {
+  height: 100%;
+  background: linear-gradient(90deg, #c8102e, #ff4d6d);
+  transition: width 0.5s ease;
+}
+
+.chap-panel .ao-body {
+  width: min(94%, 1400px);
+  margin: 0 auto;
+  padding: clamp(16px, 3vh, 28px) clamp(12px, 3vw, 20px) 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.chap-panel .ao-lesson {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45);
+}
+.chap-panel .ao-lesson-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 22px;
+  background: #fff;
+  color: #1a1a1e;
+  border: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: left;
+  transition: background 0.25s ease;
+}
+.chap-panel .ao-lesson-header:hover { background: #fdecea; }
+.chap-panel .ao-lesson.open .ao-lesson-header {
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  color: #fff;
+}
+.chap-panel .ao-caret { font-size: 0.8rem; flex-shrink: 0; }
+.chap-panel .ao-num {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.chap-panel .ao-label { flex: 1; min-width: 0; }
+.chap-panel .ao-pct {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #c8102e;
+  flex-shrink: 0;
+}
+.chap-panel .ao-lesson.open .ao-pct { color: #fff; }
+
+.chap-panel .ao-lesson-body { overflow: hidden; background: #f3f1f4; }
+.chap-panel .ao-lesson-inner {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+/* inner block cards: mas magaan na shadow sa loob ng light body */
+.chap-panel .ao-lesson-inner .cp-block {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9e5ea;
+}
+
+.chap-panel .ao-locked-pill {
+  align-self: center;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+  color: #fff;
+  background: rgba(200, 16, 46, 0.35);
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .chap-panel .ao-lesson-header { padding: 14px; font-size: 0.9rem; gap: 10px; }
+  .chap-panel .ao-lesson-inner { padding: 12px; }
+}
+
+/* ═══════════ MOBILE STICKY FIX ═══════════
+   Bawat sN.css ay may mobile compat rule na
+   `#root:has(.chap-panel) { overflow: auto !important }` sa ≤768px —
+   ginagawa nitong scrollport ng sticky header ang #root, pero ang BODY
+   ang totoong nag-i-scroll, kaya hindi pumipirmi ang header sa mobile.
+   Panatilihing visible ang overflow ng #root para body pa rin ang
+   scroll container na kinakapitan ng sticky header + progress bar. */
+@media (max-width: 768px) {
+  #root#root:has(.chap-panel) {
+    overflow: visible !important;
+  }
+}

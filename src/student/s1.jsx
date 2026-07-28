@@ -39,7 +39,7 @@ import './s1.css';
 // ── Lesson item totals ──
 // introduction : 4 accordion + 2 flipcards = 6
 // functionalities : 9 advantages + 3 disadvantages = 12
-// history : 8 PersonFlipCards + 9 invention accordions = 17
+// history : 8 InventorStage reveals + 9 invention accordions = 17
 const LESSON_TOTALS = {
   introduction: 6,
   functionalities: 12,
@@ -61,7 +61,7 @@ function CircleProgress({ percent = 0, active = false }) {
   );
 }
 
-// ── Tracked FlipCard ──
+// ── Tracked FlipCard — crossfade dissolve (fx-fade) ──
 function FlipCard({ image, text, title, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
   useEffect(() => { setFlipped(false); }, [title]);
@@ -72,22 +72,20 @@ function FlipCard({ image, text, title, itemId, onInteract }) {
   };
 
   return (
-    <div className={`chap-flip-card ${flipped ? 'flipped' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {image ? <img src={image} alt={title} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🖥️</span>
-              <span>{title}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
-        </div>
-        <div className="chap-flip-card-back">
-          <span className="chap-flip-card-back-icon">💡</span>
-          {Array.isArray(text) ? text.map((para, i) => <p key={i}>{para}</p>) : <p>{text}</p>}
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
+    <div className={`fx-card fx-fade ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <div className="fx-face fx-front">
+        {image ? <img src={image} alt={title} /> : (
+          <div className="fx-placeholder">
+            <span style={{ fontSize: 48 }}>🖥️</span>
+            <span>{title}</span>
+          </div>
+        )}
+        <div className="fx-strip"><span>Tap for description</span><span>↪</span></div>
+      </div>
+      <div className="fx-face fx-back">
+        <span className="fx-back-icon">💡</span>
+        {Array.isArray(text) ? text.map((para, i) => <p key={i}>{para}</p>) : <p>{text}</p>}
+        <span className="fx-hint">Tap to go back</span>
       </div>
     </div>
   );
@@ -124,31 +122,57 @@ function AccordionItem({ title, description, isOpen, onToggle, itemId, onInterac
   );
 }
 
-// ── Tracked PersonFlipCard ──
-function PersonFlipCard({ image, name, description, wide = false, itemId, onInteract }) {
-  const [flipped, setFlipped] = useState(false);
-  const handleClick = () => {
-    if (!flipped && onInteract) onInteract(itemId);
-    setFlipped(f => !f);
+// ── InventorStage — center-to-left reveal ──
+// Default: naka-CENTER ang portrait ng inventor sa isang "stage" row.
+// On click: ang portrait ay umiikot (rotateY) HABANG gumagalaw pa-kaliwa
+// (Framer Motion layout animation), at ang description panel ang pumapalit
+// sa gitna — Bootstrap horizontal-card ang end state. Click ulit (o ✕)
+// para bumalik sa center. Ang unang reveal pa rin ang nagti-trigger ng
+// progress tracking (same itemId gaya ng dating PersonFlipCard flip).
+function InventorStage({ image, name, description, wide = false, itemId, onInteract }) {
+  const [revealed, setRevealed] = useState(false);
+  const handleToggle = () => {
+    if (!revealed && onInteract) onInteract(itemId);
+    setRevealed(r => !r);
   };
   return (
-    <div className={`chap-person-flip-card ${flipped ? 'flipped' : ''} ${wide ? 'wide' : ''}`} onClick={handleClick}>
-      <div className="chap-flip-card-inner">
-        <div className="chap-flip-card-front">
-          {image ? <img src={image} alt={name} /> : (
-            <div className="chap-flip-card-front-placeholder">
-              <span style={{ fontSize: 48 }}>🧑‍💻</span>
-              <span>{name}</span>
-            </div>
-          )}
-          <div className="chap-flip-card-front-overlay"><span>Flip for description</span><span>↩</span></div>
+    <div className={`chap-stage ${revealed ? 'revealed' : ''}`}>
+      <motion.div
+        layout
+        className={`chap-stage-portrait ${wide ? 'wide' : ''}`}
+        onClick={handleToggle}
+        animate={{ rotateY: revealed ? 360 : 0 }}
+        transition={{ layout: { type: 'spring', stiffness: 220, damping: 26 }, rotateY: { duration: 0.6, ease: 'easeInOut' } }}
+        whileHover={{ scale: revealed ? 1 : 1.03 }}
+      >
+        {image ? <img src={image} alt={name} /> : (
+          <div className="chap-stage-portrait-placeholder">
+            <span style={{ fontSize: 48 }}>🧑‍💻</span>
+            <span>{name}</span>
+          </div>
+        )}
+        <div className="chap-stage-portrait-overlay">
+          <span>{revealed ? 'Tap to close' : `Meet ${name.split(' ')[0]}`}</span>
+          <span>{revealed ? '✕' : '↪'}</span>
         </div>
-        <div className="chap-flip-card-back chap-person-flip-back">
-          <span className="chap-person-flip-name">{name}</span>
-          <p>{description}</p>
-          <span className="chap-flip-card-back-hint">Tap to flip back</span>
-        </div>
-      </div>
+      </motion.div>
+
+      <AnimatePresence mode="popLayout">
+        {revealed && (
+          <motion.div
+            layout
+            className="chap-stage-panel"
+            initial={{ opacity: 0, x: 90 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 60, transition: { duration: 0.2 } }}
+            transition={{ type: 'spring', stiffness: 220, damping: 26, delay: 0.08 }}
+          >
+            <button className="chap-stage-close" onClick={handleToggle} aria-label="Close">✕</button>
+            <h3 className="chap-stage-panel-name">{name}</h3>
+            <p className="chap-stage-panel-body">{description}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -159,9 +183,14 @@ function HistoryPersonBlock({ name, label, image, description, inventions, openI
     <>
       <div className="chap-history-divider" />
       <div className="chap-history-block">
-        <h2 className="chap-history-title">{name}</h2>
-        {label && <p className="chap-history-label">{label}</p>}
-        <PersonFlipCard image={image} name={name} description={description} wide={wide} itemId={personItemId} onInteract={onInteract} />
+        {/* Structural change: dating left-aligned heading + in-place flip
+            card — ngayon centered heading sa ibabaw ng stage row, at ang
+            portrait ang naka-center hanggang i-reveal ang description. */}
+        <div className="chap-stage-heading">
+          <h2 className="chap-history-title">{name}</h2>
+          {label && <p className="chap-history-label">{label}</p>}
+        </div>
+        <InventorStage image={image} name={name} description={description} wide={wide} itemId={personItemId} onInteract={onInteract} />
         <p className="chap-pascal-invention-label">{inventions.length > 1 ? 'Inventions' : 'Invention'}</p>
         <div className="chap-accordion">
           {inventions.map((item, i) => (
@@ -240,10 +269,29 @@ function Chapter1() {
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#F2D7D5';
+    // index.css locks body sa 100vh + overflow:hidden at ang #root ay
+    // position:fixed (fixed-viewport pages). Ang accordion-outline layout
+    // ay normal page scroll, kaya i-unlock habang nasa page na ito;
+    // ibalik lahat pag-alis.
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    document.body.style.width = '100%';
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.position = 'static';
+      root.style.display = 'block';
+    }
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.width = '';
+      if (root) {
+        root.style.position = '';
+        root.style.display = '';
+      }
     };
   }, []);
 
@@ -257,7 +305,7 @@ function Chapter1() {
   const flipItem = currentItems.find(item => item.flipImage);
 
   return (
-    <motion.div className="chap-panel" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
+    <motion.div className="chap-panel cp-page" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.3 }}>
 
       {/* ── Header ── */}
       <div className="chap-header">
@@ -266,46 +314,38 @@ function Chapter1() {
           <span className="chap-chapter-label">LEARNING MODULE 1</span>
           <h1 className="chap-title">Introduction to Computers and History of Computers</h1>
         </div>
+        {/* progress bar naka-pin sa ilalim ng sticky header */}
+        <div className="ao-progress">
+          <div style={{ width: `${Math.round((progress.introduction + progress.functionalities + progress.history) / 3)}%` }} />
+        </div>
       </div>
 
-      {/* ── Layout ── */}
-      <div className="chap-layout">
 
-        {/* Left Nav */}
-        <div className="chap-left-col">
-          <div className="chap-card-small">
-            <nav className="chap-nav-buttons">
-              {[
-                { key: 'introduction', label: 'Introduction of Computer' },
-                { key: 'functionalities', label: 'Functionalities of a Computer' },
-                { key: 'history', label: 'History of Computers' },
-              ].map(({ key, label }) => (
-                <button key={key} className={`chap-nav-btn ${activeSection === key ? 'active' : ''}`} onClick={() => handleSectionChange(key)}>
-                  <CircleProgress percent={progress[key]} active={activeSection === key} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-          {allLessonsComplete && (
-            <button className="chap-start-game-btn chap-start-game-btn-desktop-only" onClick={() => navigate('/gamified-1')}>START GAME</button>
-          )}
-        </div>
+      {/* ── Accordion Outline: mga lesson mismo ang collapsible bars ── */}
+      <div className="ao-body">
 
-        {/* Main Content */}
-        <div className="chap-card-main">
-
-          {/* ── INTRODUCTION ── */}
+          {/* ── 01 · INTRODUCTION ── */}
+          <div className={`ao-lesson ${activeSection === 'introduction' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => handleSectionChange('introduction')}>
+              <span className="ao-caret">{activeSection === 'introduction' ? '▼' : '▶'}</span>
+              <span className="ao-num">01</span>
+              <span className="ao-label">Introduction of Computer</span>
+              <span className="ao-pct">{Math.round(progress.introduction)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'introduction' && (
-            <>
-              <div className="chap-section-header">
-                <h2 className="chap-section-main-title">Introduction of Computer</h2>
-                <p>The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner">
+              <div className="cp-block cp-hero">
+                <div className="chap-section-header">
+                  <h2 className="chap-section-main-title">Introduction of Computer</h2>
+                  <p>The world is an information-rich world and it has become a necessity for everyone to know about computers.</p>
+                </div>
               </div>
 
               {flipItem && (
                 <AnimatePresence mode="wait">
-                  <motion.div key="intro-flip" className="chap-flip-row" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }} style={{ marginBottom: 28 }}>
+                  <motion.div key="intro-flip" className="cp-block chap-flip-row" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
                     <FlipCard image={flipItem.flipImage} text={flipItem.flipText} title={flipItem.title} itemId="intro_flipcard_1" onInteract={intro.trackInteraction} />
                     <div className="chap-flip-side-text">
                       <p className="chap-flip-side-body">Computers are used in almost every aspect of modern life, including education, business, healthcare, banking, communication, and entertainment.</p>
@@ -320,23 +360,26 @@ function Chapter1() {
                 </AnimatePresence>
               )}
 
-              <div className="chap-concepts-header">
-                <h2 className="chap-concepts-title">Concepts of Computer</h2>
-                <p className="chap-concepts-subtitle">A Computer performs four basic operations:</p>
+              <div className="cp-block">
+                <div className="chap-concepts-header">
+                  <h2 className="chap-concepts-title">Concepts of Computer</h2>
+                  <p className="chap-concepts-subtitle">A Computer performs four basic operations:</p>
+                </div>
+
+                <div className="chap-accordion">
+                  {currentItems.map((item, i) => (
+                    <AccordionItem key={i} title={item.title} description={item.description} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} itemId={`intro_acc_${i}`} onInteract={intro.trackInteraction} />
+                  ))}
+                </div>
               </div>
 
-              <div className="chap-accordion">
-                {currentItems.map((item, i) => (
-                  <AccordionItem key={i} title={item.title} description={item.description} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} itemId={`intro_acc_${i}`} onInteract={intro.trackInteraction} />
-                ))}
-              </div>
+              <div className="cp-block">
+                <div className="chap-data-header">
+                  <h2 className="chap-data-title">What is Data?</h2>
+                  <p className="chap-data-subtitle">An information that can be interpreted and used by computers</p>
+                </div>
 
-              <div className="chap-data-header">
-                <h2 className="chap-data-title">What is Data?</h2>
-                <p className="chap-data-subtitle">An information that can be interpreted and used by computers</p>
-              </div>
-
-              <div className="chap-flip-row" style={{ marginTop: 20 }}>
+                <div className="chap-flip-row" style={{ marginTop: 20 }}>
                 <div className="chap-flip-side-text">
                   <p className="chap-flip-side-examples-label">Examples of Data</p>
                   <ul className="chap-flip-side-list">
@@ -350,17 +393,32 @@ function Chapter1() {
                     <p className="chap-data-example-row"><span className="chap-data-example-label">Information:</span> Average Grade = 87.67</p>
                   </div>
                 </div>
-                <FlipCard image={pic2} text="A collection of facts, such as numbers, words, measurements, observations or even just descriptions of things" title="What is Data?" itemId="intro_flipcard_2" onInteract={intro.trackInteraction} />
+                  <FlipCard image={pic2} text="A collection of facts, such as numbers, words, measurements, observations or even just descriptions of things" title="What is Data?" itemId="intro_flipcard_2" onInteract={intro.trackInteraction} />
+                </div>
               </div>
-            </>
+            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-          {/* ── FUNCTIONALITIES ── */}
+          {/* ── 02 · FUNCTIONALITIES ── */}
+          <div className={`ao-lesson ${activeSection === 'functionalities' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => handleSectionChange('functionalities')}>
+              <span className="ao-caret">{activeSection === 'functionalities' ? '▼' : '▶'}</span>
+              <span className="ao-num">02</span>
+              <span className="ao-label">Functionalities of a Computer</span>
+              <span className="ao-pct">{Math.round(progress.functionalities)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'functionalities' && (
-            <>
-              <div style={{ marginBottom: 28, textAlign: 'center', width: '100%' }}>
-                <h2 className="chap-section-main-title">Functionalities of a Computer</h2>
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner">
+              <div className="cp-block cp-hero">
+                <h2 className="chap-section-main-title" style={{ margin: 0 }}>Functionalities of a Computer</h2>
               </div>
+
+              <div className="cp-block">
 
               <div className="chap-func-list" style={{ width: '100%', alignItems: 'center' }}>
                 {[
@@ -379,8 +437,9 @@ function Chapter1() {
                   </div>
                 ))}
               </div>
+              </div>
 
-              <div className="chap-adv-section">
+              <div className="chap-adv-section cp-block">
                 <p className="chap-adv-subtitle">Advantages:</p>
                 <div className="chap-accordion">
                   {[
@@ -399,7 +458,7 @@ function Chapter1() {
                 </div>
               </div>
 
-              <div className="chap-adv-section">
+              <div className="chap-adv-section cp-block">
                 <p className="chap-adv-subtitle">Disadvantages:</p>
                 <div className="chap-accordion">
                   {[
@@ -411,13 +470,25 @@ function Chapter1() {
                   ))}
                 </div>
               </div>
-            </>
+            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-          {/* ── HISTORY ── */}
+          {/* ── 03 · HISTORY ── */}
+          <div className={`ao-lesson ${activeSection === 'history' ? 'open' : ''}`}>
+            <button className="ao-lesson-header" onClick={() => handleSectionChange('history')}>
+              <span className="ao-caret">{activeSection === 'history' ? '▼' : '▶'}</span>
+              <span className="ao-num">03</span>
+              <span className="ao-label">History of Computers</span>
+              <span className="ao-pct">{Math.round(progress.history)}%</span>
+            </button>
+          <AnimatePresence initial={false}>
           {activeSection === 'history' && (
-            <>
-              <div className="chap-history-section">
+            <motion.div className="ao-lesson-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="ao-lesson-inner">
+              <div className="chap-history-section cp-block">
 
                 <div className="chap-history-block">
                   <h2 className="chap-history-title chap-history-title-center">History of Computers</h2>
@@ -524,15 +595,23 @@ function Chapter1() {
                 </div>
 
               </div>
-            </>
+            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
+          </div>
 
-        </div>
+          {/* ── Module-complete banner / locked hint ── */}
+          {allLessonsComplete ? (
+            <div className="cp-banner">
+              <h3>🎉 Module 1 complete!</h3>
+              <p>You've finished all lessons. Ready to test your knowledge?</p>
+              <button className="chap-start-game-btn" onClick={() => navigate('/gamified-1')}>START GAME</button>
+            </div>
+          ) : (
+            <button className="ao-locked-pill" disabled>🔒 START GAME — unlocks at 100%</button>
+          )}
       </div>
-
-      {allLessonsComplete && (
-        <button className="chap-start-game-btn chap-start-game-btn-mobile-only" onClick={() => navigate('/gamified-1')}>START GAME</button>
-      )}
     </motion.div>
   );
 }

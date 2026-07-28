@@ -1,7 +1,10 @@
 .pvp-panel {
   width: 100vw;
   min-height: 100vh;
-  background-color: #ffffff;
+  /* Sample C — split gradient: white top → pink middle → black bottom,
+     matching the light/pink student-modules palette while giving the Join
+     panel a dark ground to sit on */
+  background: linear-gradient(180deg, #FFFFFF 0%, #F3D9DF 38%, #EAB8C9 58%, #4A3A40 80%, #000000 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -52,116 +55,233 @@
   max-width: 340px;
 }
 
-/* Cards */
+/* ═══════════ CREATE / JOIN PANELS — Sample C (Split Contrast) ═══════════ */
 .pvp-cards {
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-.pvp-card {
+.pvp-panel-card {
+  border-radius: 22px;
+  padding: 24px 24px 22px;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.pvp-panel-card.create {
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(120, 60, 75, 0.18);
+}
+
+.pvp-panel-card.join {
+  background: #0d0c0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.pvp-panel-head {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  background: #A50034;
-  border-radius: 16px;
-  padding: clamp(20px, 4vw, 36px) clamp(18px, 4vw, 30px);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.pvp-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-.pvp-icon-box {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 26px;
-}
-
-.pvp-icon-box.light {
-  background: #f2d7d5;
-}
-
-.pvp-icon-box.dark {
-  background: #1a1a1a;
-}
-
-.pvp-card-text {
+.pvp-panel-titles {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.pvp-card-title {
-  font-size: clamp(16px, 3vw, 20px);
-  font-weight: bold;
+.pvp-panel-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(20px, 4.5vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+.pvp-panel-card.create .pvp-panel-title { color: #111; }
+.pvp-panel-card.join .pvp-panel-title { color: #fff; }
+
+.pvp-panel-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(12px, 2.4vw, 13px);
+  margin: 0;
+}
+.pvp-panel-card.create .pvp-panel-sub { color: #8a7a7c; }
+.pvp-panel-card.join .pvp-panel-sub { color: rgba(255, 255, 255, 0.55); }
+
+.pvp-panel-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 24px;
   color: #fff;
-  margin: 0;
-  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  box-shadow: 0 5px 16px rgba(200, 16, 46, 0.3);
 }
 
-.pvp-card-subtitle {
-  font-size: clamp(11px, 2vw, 13px);
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0;
-  font-family: Arial, sans-serif;
-  font-style: italic;
+/* ── Inline 6-digit PIN entry ── */
+.pvp-pin-boxes {
+  display: flex;
+  gap: clamp(6px, 2vw, 9px);
+  justify-content: center;
+  margin-top: 18px;
+  position: relative;
+  cursor: text;
 }
 
-/* Bottom Navigation */
+.pvp-pin-box {
+  width: clamp(40px, 13vw, 48px);
+  height: clamp(48px, 15vw, 56px);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', monospace;
+  font-size: clamp(18px, 5vw, 22px);
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.pvp-pin-box.filled {
+  border-color: #EAB8C9;
+  color: #EAB8C9;
+  background: rgba(234, 184, 201, 0.08);
+}
+.pvp-pin-box.focus {
+  border-color: #C8102E;
+  border-width: 2px;
+  box-shadow: 0 0 12px rgba(200, 16, 46, 0.4);
+}
+
+/* transparent input laid over the boxes so typing/paste/mobile keyboard
+   all still work exactly as the old modal input did */
+.pvp-pin-hidden {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  cursor: text;
+  outline: none;
+}
+
+.pvp-pin-error {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: #ff6b81;
+  text-align: center;
+  margin: 10px 0 0;
+}
+
+/* ── Full-width action buttons ── */
+.pvp-panel-btn {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 13px;
+  padding: 14px;
+  margin-top: 20px;
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(14px, 3vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  box-shadow: 0 6px 18px rgba(200, 16, 46, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.pvp-panel-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(200, 16, 46, 0.4);
+}
+.pvp-panel-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.pvp-panel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ═══════════ BOTTOM NAV — Sliding Pill ═══════════ */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 56px;
+  height: 62px;
   display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
   z-index: 20;
+  overflow: hidden;
 }
-
+.bottom-nav-pill {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: #C8102E;
+  border-radius: 999px;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
+  transform: translateX(calc(100% + 4px));
+}
 .bottom-nav-btn {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: #A50034;
-  color: #fff;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
+  gap: 3px;
+  height: 100%;
+  position: relative;
+  z-index: 2;
   cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0.2s ease;
-  border-top: 2px solid rgba(255, 255, 255, 0.15);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+  background: none;
+  padding: 0;
 }
-
-.bottom-nav-btn:hover {
-  background: #c8102e;
-}
-
-.bottom-nav-btn.active {
-  background: #7a0025;
-}
-
+.bottom-nav-btn:hover { background: none; }
 .bottom-nav-icon {
   font-size: 20px;
+  display: flex;
+  transition: color 0.25s ease;
+  color: #111;
 }
-
+.bottom-nav-btn.active .bottom-nav-icon { color: #fff; }
 .bottom-nav-label {
-  font-size: clamp(11px, 2vw, 15px);
-  font-weight: bold;
-  letter-spacing: 1px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  transition: color 0.25s ease;
+  color: #111;
 }
+.bottom-nav-btn.active .bottom-nav-label { color: #fff; }
 
 /* ─── Responsive: Tablet (≤ 768px) ─── */
 @media (max-width: 768px) {
@@ -202,27 +322,20 @@
     font-size: 22px;
   }
 
-  .pvp-icon-box {
-    width: 44px;
-    height: 44px;
-    font-size: 22px;
-    border-radius: 10px;
-  }
-
-  .pvp-card {
+  .pvp-panel-badge {
+    width: 46px;
+    height: 46px;
+    font-size: 21px;
     border-radius: 12px;
   }
 
-  .bottom-nav {
-    height: 52px;
+  .pvp-panel-card {
+    border-radius: 18px;
+    padding: 20px 18px 18px;
   }
 
   .bottom-nav-label {
-    display: none;
-  }
-
-  .bottom-nav-icon {
-    font-size: 22px;
+    font-size: 0.5rem;
   }
 }
 

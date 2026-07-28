@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import './faculty_class.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdAccountCircle } from 'react-icons/md';
+import { MdAccountCircle, MdGroups } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
+import { SiBookstack } from 'react-icons/si';
+import { CiLogout } from 'react-icons/ci';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../user_context';
 import { db } from '../firebase';
@@ -11,6 +13,7 @@ import {
   collection, addDoc, getDocs, deleteDoc, doc,
   query, where, serverTimestamp, onSnapshot,
 } from 'firebase/firestore';
+import itfunLogo from '../assets/LOGO_NAMEN.png';
 
 function generateClassCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -118,27 +121,33 @@ function getLastNameForSorting(student) {
   return parts[parts.length - 1].toLowerCase();
 }
 
-function DonutChart({ percent, size = 100, strokeWidth = 10 }) {
+function DonutChart({ percent, size = 100, strokeWidth = 10, showSub = true }) {
   const half = size / 2;
   const r = half - strokeWidth;
   const circ = 2 * Math.PI * r;
   const offset = circ - (percent / 100) * circ;
   const color = percent >= 80 ? '#2e7d32' : percent >= 60 ? '#e65100' : '#c8102e';
-  const fontSize = size * 0.13;
-  const subFontSize = size * 0.08;
+  const fontSize = size * 0.2;
+  const subFontSize = size * 0.09;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={half} cy={half} r={r} fill="none" stroke="#f0f0f0" strokeWidth={strokeWidth} />
+      <circle cx={half} cy={half} r={r} fill="none" stroke="#f0e2e5" strokeWidth={strokeWidth} />
       <circle
         cx={half} cy={half} r={r} fill="none"
         stroke={color} strokeWidth={strokeWidth}
         strokeDasharray={circ} strokeDashoffset={offset}
         strokeLinecap="round"
         transform={`rotate(-90 ${half} ${half})`}
-        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        style={{ transition: 'stroke-dashoffset 0.7s ease' }}
       />
-      <text x={half} y={half - 2} textAnchor="middle" fontSize={fontSize} fontWeight="bold" fill="#222" fontFamily="Arial,sans-serif">{percent}%</text>
-      <text x={half} y={half + fontSize * 0.9} textAnchor="middle" fontSize={subFontSize} fill="#888" fontFamily="Arial,sans-serif">OVERALL</text>
+      {showSub ? (
+        <>
+          <text x={half} y={half - 2} textAnchor="middle" fontSize={fontSize} fontWeight="800" fill="#222" fontFamily="Poppins,sans-serif">{percent}%</text>
+          <text x={half} y={half + fontSize * 0.85} textAnchor="middle" fontSize={subFontSize} fill="#999" fontFamily="Montserrat,sans-serif" letterSpacing="1">OVERALL</text>
+        </>
+      ) : (
+        <text x={half} y={half + fontSize * 0.35} textAnchor="middle" fontSize={fontSize} fontWeight="800" fill="#222" fontFamily="Poppins,sans-serif">{percent}%</text>
+      )}
     </svg>
   );
 }
@@ -150,7 +159,6 @@ function FacultyClass() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [classes, setClasses] = useState([]);
   const [myClasses, setMyClasses] = useState([]);
-  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [activeClass, setActiveClass] = useState(null);
   const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -159,6 +167,24 @@ function FacultyClass() {
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [endDate, setEndDate] = useState('');
+  const [confirmFinishId, setConfirmFinishId] = useState(null);
+
+  // ── Local dates (not UTC) for the date picker min + end-of-class check ──
+  const _now = new Date();
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayStr = ymd(_now);
+  const _tomorrow = new Date(_now); _tomorrow.setDate(_tomorrow.getDate() + 1);
+  const tomorrowStr = ymd(_tomorrow); // earliest selectable end date (class must run at least today)
+  const todayLabel = _now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  // A class ends ON its endDate: once today has reached that day, it's over
+  // (string compare is safe for YYYY-MM-DD).
+  const isEnded = (cls) => cls.endDate && todayStr >= cls.endDate;
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
@@ -167,7 +193,7 @@ function FacultyClass() {
   // ── State for selected student's progress ──
   const [selectedStudentProgress, setSelectedStudentProgress] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
-  // ── State for all students' overall progress (for table row bars) ──
+  // ── State for all students' overall progress (for card rings) ──
   const [allStudentsProgress, setAllStudentsProgress] = useState({});
 
   useEffect(() => {
@@ -232,7 +258,7 @@ function FacultyClass() {
     return () => unsub();
   }, [activeClass]);
 
-  // ── Fetch overall progress for all enrolled students (for table row bars) ──
+  // ── Fetch overall progress for all enrolled students (for card rings) ──
   useEffect(() => {
     if (enrolledStudents.length === 0) { setAllStudentsProgress({}); return; }
     const unsubs = enrolledStudents.map(s => {
@@ -322,7 +348,7 @@ function FacultyClass() {
   const handleGenerateCode = () => setGeneratedCode(generateClassCode());
 
   const handleCreateClass = async () => {
-    if (!selectedSection || !generatedCode || !user) return;
+    if (!selectedSection || !generatedCode || !endDate || !user) return;
     setCreating(true);
     try {
       await addDoc(collection(db, 'classes'), {
@@ -332,10 +358,13 @@ function FacultyClass() {
         accessCode: generatedCode,
         facultyId: user.uid,
         facultyName: `${user.firstName} ${user.lastName}`,
+        startDate: todayStr,   // auto: the day the class is created
+        endDate,               // faculty-picked; class auto-ends on this date
         createdAt: serverTimestamp(),
       });
       setSelectedSection('');
       setGeneratedCode('');
+      setEndDate('');
       setShowCreateModal(false);
     } catch (err) {
       console.error('Error creating class:', err);
@@ -343,20 +372,22 @@ function FacultyClass() {
     setCreating(false);
   };
 
-  const handleRemoveClass = (id) => setConfirmRemoveId(id);
+  // ── Finish an ended class: delete it (and its enrollments) so the section
+  //    frees up again in the Create Class dropdown. ──
+  const handleFinishClass = (id) => setConfirmFinishId(id);
 
-  const handleConfirmRemove = async () => {
-    const cls = classes.find(c => c.firestoreId === confirmRemoveId);
-    if (!cls) { setConfirmRemoveId(null); return; }
+  const handleConfirmFinish = async () => {
+    const cls = classes.find(c => c.firestoreId === confirmFinishId);
+    if (!cls) { setConfirmFinishId(null); return; }
     try {
       await deleteDoc(doc(db, 'classes', cls.firestoreId));
       const q = query(collection(db, 'enrollments'), where('classId', '==', cls.firestoreId));
       const snap = await getDocs(q);
       await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'enrollments', d.id))));
     } catch (err) {
-      console.error('Error removing class:', err);
+      console.error('Error finishing class:', err);
     }
-    setConfirmRemoveId(null);
+    setConfirmFinishId(null);
   };
 
   const handleRemoveStudent = (enrollmentDocId) => setConfirmRemoveStudentId(enrollmentDocId);
@@ -389,8 +420,16 @@ function FacultyClass() {
   function avatarColor(uid = '') {
     let hash = 0;
     for (let i = 0; i < uid.length; i++) hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-    return `hsl(${hash % 360}, 60%, 55%)`;
+    return `hsl(${hash % 360}, 55%, 52%)`;
   }
+
+  // Overall percent for the selected student (used by the progress modal donut)
+  const selectedOverall = (() => {
+    if (!hasProgress) return 0;
+    const values = VISIBLE_MODULES.map(key => calculateModuleProgress(key, selectedStudentProgress));
+    const total = values.reduce((sum, p) => sum + p, 0);
+    return Math.round((total / VISIBLE_MODULES.length) * 100) / 100;
+  })();
 
   return (
     <motion.div
@@ -399,377 +438,300 @@ function FacultyClass() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* ── Top Navbar ── */}
+      {/* ── Top Navbar (full width, matches faculty_modules) ── */}
       <div className="top-navbar">
+        <div className="fc-brand">
+          <img src={itfunLogo} className="fc-logo" alt="ITFun logo" />
+          <span className="fc-wordmark">IT<span>Fun</span></span>
+        </div>
         <div className="navbar-spacer" />
-        <div className="top-center-btns">
-          <button className="top-btn" onClick={() => navigate('/faculty-modules')}>
-            Modules
-          </button>
-          <button className="top-btn active-btn">
-            Class
-          </button>
-          <div
-            className="avatar-circle"
-            onClick={() => setShowLogoutModal(true)}
-            title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
-            style={{ cursor: 'pointer', flexShrink: 0 }}
-          >
-            {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
-          </div>
+        <div
+          className="avatar-circle"
+          onClick={() => setShowLogoutModal(true)}
+          title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
+        >
+          {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      {/* ── Body: sidebar + main ── */}
+      <div className="fc-below">
+        <aside className="fc-side">
+          <nav className="fc-nav">
+            <button className="fc-nav-item" onClick={() => navigate('/faculty-modules')}>
+              <span className="fc-nav-icon"><SiBookstack /></span>
+              <span className="fc-nav-label">Modules</span>
+            </button>
+            <button className="fc-nav-item active">
+              <span className="fc-nav-icon"><MdGroups /></span>
+              <span className="fc-nav-label">Classes</span>
+            </button>
+          </nav>
+          <div className="fc-side-foot">Faculty Dashboard</div>
+        </aside>
 
-        {/* ── CLASS LIST VIEW ── */}
-        {!activeClass && (
-          <motion.div
-            key="classlist"
-            className="class-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <h1 style={{
-              textAlign: 'center',
-              fontFamily: 'Arial, sans-serif',
-              fontSize: '36px',
-              fontWeight: 'bold',
-              color: '#222',
-              margin: '0 0 20px 0',
-              letterSpacing: '2px',
-            }}>CLASS SECTION</h1>
+        <main className="fc-main">
+          <AnimatePresence mode="wait">
 
-            <div className="class-cards-area">
-              {loadingClasses ? (
-                <p style={{ fontFamily: 'Arial, sans-serif', color: '#aaa', padding: '20px' }}>Loading classes...</p>
-              ) : (
-                <>
-                  {classes.map(cls => (
-                    <div
-                      key={cls.firestoreId}
-                      className="class-card"
-                      onClick={() => { setActiveClass(cls); setStudentSearch(''); navigate(`/faculty-class?classId=${cls.firestoreId}`); }}
+            {/* ── CLASS LIST VIEW ── */}
+            {!activeClass && (
+              <motion.div
+                key="classlist"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <h2 className="fc-heading">Class Section</h2>
+
+                {loadingClasses ? (
+                  <p className="fc-loading">Loading classes...</p>
+                ) : (
+                  <motion.div
+                    className="fc-class-grid"
+                    initial="hidden"
+                    animate="show"
+                    variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+                  >
+                    {classes.map((cls) => (
+                      <motion.div
+                        key={cls.firestoreId}
+                        className="fc-class-card"
+                        variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
+                        whileHover={{ y: -5 }}
+                        onClick={() => { setActiveClass(cls); setStudentSearch(''); navigate(`/faculty-class?classId=${cls.firestoreId}`); }}
+                      >
+                        <span className="fc-class-subj">{cls.subject}</span>
+                        <div className="fc-class-name">{cls.name}</div>
+                        <div className="fc-class-school">{cls.school}</div>
+                        <div className="fc-class-code">Access Code <strong>{cls.accessCode}</strong></div>
+                        {cls.endDate && (
+                          <div className={`fc-class-duration ${isEnded(cls) ? 'ended' : ''}`}>
+                            {isEnded(cls)
+                              ? <>Ended {fmtDate(cls.endDate)}</>
+                              : <>Ends {fmtDate(cls.endDate)}</>}
+                          </div>
+                        )}
+                        {isEnded(cls) && (
+                          <button
+                            className="fc-class-finish"
+                            onClick={e => { e.stopPropagation(); handleFinishClass(cls.firestoreId); }}
+                          >
+                            ✓ Finish Class
+                          </button>
+                        )}
+                      </motion.div>
+                    ))}
+
+                    <motion.div
+                      className="fc-add-card"
+                      variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowCreateModal(true)}
                     >
-                      <div className="class-card-subject">{cls.subject}</div>
-                      <div className="class-card-name">{cls.name}</div>
-                      <div className="class-card-school">{cls.school}</div>
-                      <div className="class-card-code">Access Code: <strong>{cls.accessCode}</strong></div>
-                      <button
-                        className="class-card-remove"
-                        onClick={e => { e.stopPropagation(); handleRemoveClass(cls.firestoreId); }}
-                        title="Remove class"
-                      >×</button>
-                    </div>
-                  ))}
+                      <span className="fc-add-icon">+</span>
+                      <span className="fc-add-text">Create Class</span>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
 
-                  <div className="class-card add-card" onClick={() => setShowCreateModal(true)}>
-                    <span className="add-card-icon">+</span>
+            {/* ── INSIDE CLASS VIEW ── */}
+            {activeClass && (
+              <motion.div
+                key="insideclass"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="fc-inside-head">
+                  <button className="fc-back" onClick={() => { setActiveClass(null); setSelectedStudent(null); navigate('/faculty-class'); }}>
+                    ← Back
+                  </button>
+                  <div className="fc-inside-info">
+                    <div className="fc-inside-name">{activeClass.name}</div>
+                    <div className="fc-inside-meta">{activeClass.subject} · Code: <strong>{activeClass.accessCode}</strong></div>
                   </div>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── INSIDE CLASS VIEW ── */}
-        {activeClass && (
-          <motion.div
-            key="insideclass"
-            className="inside-class-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="inside-class-header">
-              <button className="ic-back-btn" onClick={() => { setActiveClass(null); setSelectedStudent(null); navigate('/faculty-class'); }}>
-                ← Back
-              </button>
-              <div className="ic-class-info">
-                <div className="ic-class-name">{activeClass.name}</div>
-                <div className="ic-class-subject">{activeClass.subject} · Code: <strong>{activeClass.accessCode}</strong></div>
-              </div>
-            </div>
-
-            <div className="inside-class-body">
-
-              {/* LEFT: Student Table */}
-              <div className="ic-table-panel">
-                <div className="ic-table-title">Enrolled Students</div>
-                <div className="ic-table-subtitle">{enrolledStudents.length} student{enrolledStudents.length !== 1 ? 's' : ''} enrolled</div>
-
-                <div className="ic-search-bar">
-                  <IoSearchCircle className="ic-search-icon" />
-                  <input
-                    type="text"
-                    className="ic-search-input"
-                    placeholder="Search students..."
-                    value={studentSearch}
-                    onChange={e => setStudentSearch(e.target.value)}
-                  />
-                  {studentSearch && (
-                    <button className="ic-search-clear" onClick={() => setStudentSearch('')}>×</button>
-                  )}
                 </div>
 
-                <div className="ic-table-header">
-                  <span>STUDENT</span>
-                  <span>EMAIL</span>
-                  <span>JOINED</span>
-                  <span>PROGRESS</span>
-                  <span></span>
+                <div className="fc-inside-toolbar">
+                  <div className="fc-inside-count">
+                    {enrolledStudents.length} student{enrolledStudents.length !== 1 ? 's' : ''} enrolled
+                  </div>
+                  <div className="fc-search">
+                    <IoSearchCircle className="fc-search-icon" />
+                    <input
+                      type="text"
+                      className="fc-search-input"
+                      placeholder="Search students..."
+                      value={studentSearch}
+                      onChange={e => setStudentSearch(e.target.value)}
+                    />
+                    {studentSearch && (
+                      <button className="fc-search-clear" onClick={() => setStudentSearch('')}>×</button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="ic-table-body">
-                  {loadingStudents ? (
-                    <p style={{ textAlign: 'center', color: '#aaa', padding: '20px', fontFamily: 'Arial, sans-serif', fontSize: '13px' }}>
-                      Loading students...
-                    </p>
-                  ) : filteredStudents.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#aaa', padding: '20px', fontFamily: 'Arial, sans-serif', fontSize: '13px' }}>
+                {loadingStudents ? (
+                  <p className="fc-loading">Loading students...</p>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="fc-empty">
+                    <div className="fc-empty-icon">👥</div>
+                    <p className="fc-empty-text">
                       {enrolledStudents.length === 0
                         ? 'No students have joined yet. Share the access code!'
                         : 'No students match your search.'}
                     </p>
-                  ) : (
-                    filteredStudents.map(s => (
-  <div
-    key={s.enrollmentDocId}
-    className={`ic-table-row ${selectedStudent?.enrollmentDocId === s.enrollmentDocId ? 'selected' : ''}`}
-    onClick={() => setSelectedStudent(s)}
-  >
-    <div className="ic-student-cell">
-      <div className="ic-avatar" style={{ background: avatarColor(s.studentId) }}>
-        {getInitials(s.studentName)}
+                  </div>
+                ) : (
+                  <motion.div
+                    className="fc-student-grid"
+                    initial="hidden"
+                    animate="show"
+                    variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+                  >
+                    {filteredStudents.map(s => {
+                      const pct = Math.round(allStudentsProgress[s.studentId] ?? 0);
+                      return (
+                        <motion.div
+                          key={s.enrollmentDocId}
+                          className="fc-student-card"
+                          variants={{ hidden: { opacity: 0, y: 16, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1 } }}
+                          whileHover={{ y: -5 }}
+                          onClick={() => setSelectedStudent(s)}
+                        >
+                          <button
+                            className="fc-student-unenroll"
+                            onClick={e => { e.stopPropagation(); handleRemoveStudent(s.enrollmentDocId); }}
+                            title="Unenroll student"
+                          >×</button>
+                          <div className="fc-student-avatar" style={{ background: avatarColor(s.studentId) }}>
+                            {getInitials(s.studentName)}
+                          </div>
+                          <div className="fc-student-name">{formatName(s)}</div>
+                          <div className="fc-student-mail">{s.studentEmail}</div>
+                          <div className="fc-student-ring">
+                            <DonutChart percent={pct} size={74} strokeWidth={8} showSub={false} />
+                          </div>
+                          <div className="fc-student-hint">View progress →</div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </main>
       </div>
-      <div className="ic-student-text">
-        <div className="ic-student-name">{formatName(s)}</div>
-        <div className="ic-student-id">{s.studentEmail}</div>
-      </div>
-    </div>
 
-    <div className="ic-section-cell ic-email-cell">
-      {s.studentEmail}
-    </div>
+      {/* ── STUDENT PROGRESS MODAL ── */}
+      <AnimatePresence>
+        {selectedStudent && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setSelectedStudent(null)}
+          >
+            <motion.div
+              className="fc-progress-modal"
+              initial={{ scale: 0.9, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 12 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="fc-pm-head">
+                <span className="fc-pm-title">Student Progress</span>
+                <button className="fc-pm-close" onClick={() => setSelectedStudent(null)}>×</button>
+              </div>
 
-    <div className="ic-section-cell ic-joined-cell">
-      {s.joinedAt?.toDate
-        ? s.joinedAt.toDate().toLocaleDateString('en-PH', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })
-        : '-'}
-    </div>
-
-    <div className="ic-progress-cell">
-      <div className="ic-progress-bar-track">
-        <div
-          className="ic-progress-bar-fill"
-          style={{
-            width: `${allStudentsProgress[s.studentId] ?? 0}%`,
-            background:
-              (allStudentsProgress[s.studentId] ?? 0) >= 80
-                ? '#2e7d32'
-                : (allStudentsProgress[s.studentId] ?? 0) >= 60
-                  ? '#e65100'
-                  : '#c8102e',
-          }}
-        />
-      </div>
-      <span className="ic-progress-label">{allStudentsProgress[s.studentId] ?? 0}%</span>
-    </div>
-
-    <button
-      className="ic-unenroll-btn"
-      onClick={e => {
-        e.stopPropagation();
-        handleRemoveStudent(s.enrollmentDocId);
-      }}
-      title="Unenroll student"
-    >
-      Unenroll
-    </button>
-  </div>
-))
-                  )}
+              <div className="fc-pm-top">
+                <div className="fc-pm-avatar" style={{ background: avatarColor(selectedStudent.studentId) }}>
+                  {getInitials(selectedStudent.studentName)}
+                </div>
+                <div className="fc-pm-id">
+                  <div className="fc-pm-name">{formatName(selectedStudent)}</div>
+                  <div className="fc-pm-mail">{selectedStudent.studentEmail}</div>
+                  <span className="fc-pm-badge">Enrolled</span>
                 </div>
               </div>
 
-              {/* RIGHT: Student Profile Panel */}
-              <AnimatePresence mode="wait">
-                {selectedStudent ? (
-                  <motion.div
-                    key={selectedStudent.enrollmentDocId}
-                    className="ic-profile-panel"
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 30 }}
-                    transition={{ type: 'spring', stiffness: 240, damping: 26 }}
-                  >
-                    <div className="ic-profile-header">
-                      <span className="ic-profile-title">Student Profile</span>
-                      <span className="ic-live-badge">Enrolled</span>
-                    </div>
+              <div className="fc-pm-body">
+                <div className="fc-pm-donut">
+                  <DonutChart percent={selectedOverall} size={150} strokeWidth={16} />
+                  <div className="fc-pm-joined">
+                    Joined {selectedStudent.joinedAt?.toDate
+                      ? selectedStudent.joinedAt.toDate().toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+                      : '—'}
+                  </div>
+                </div>
 
-                    <div className="ic-profile-top">
-                      <div
-                        className="ic-profile-avatar"
-                        style={{ background: avatarColor(selectedStudent.studentId) }}
-                      >
-                        {getInitials(selectedStudent.studentName)}
-                      </div>
-                      <div className="ic-profile-info">
-                        <div className="ic-profile-name">{formatName(selectedStudent)}</div>
-                        <div className="ic-profile-meta">{selectedStudent.studentEmail}</div>
-                        <div className="ic-status-badge" style={{ color: '#2e7d32', background: '#e8f5e9' }}>
-                          Enrolled
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ padding: '12px 0', borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0' }}>
-                      <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888', margin: '0 0 4px' }}>Joined</p>
-                      <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#333', margin: 0 }}>
-                        {selectedStudent.joinedAt?.toDate
-                          ? selectedStudent.joinedAt.toDate().toLocaleString('en-PH', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                          : '—'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#888', margin: '0 0 16px' }}>
-                        Progress data will appear here as students complete modules.
-                      </p>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <DonutChart
-                          percent={(() => {
-                            if (!hasProgress) return 0;
-                            const values = VISIBLE_MODULES.map(key =>
-                              calculateModuleProgress(key, selectedStudentProgress)
-                            );
-                            const total = values.reduce((sum, p) => sum + p, 0);
-                            return Math.round((total / VISIBLE_MODULES.length) * 100) / 100;
-                          })()}
-                          size={160}
-                          strokeWidth={16}
-                        />
-                      </div>
-                    </div>
-
-                    {/* ── MODULE PROGRESS SECTION ── */}
-                    <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', fontWeight: 'bold', color: '#888', margin: '0 0 4px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                        Module Progress
-                      </p>
-                      
-                      {loadingProgress ? (
-                        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                          <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#aaa' }}>Loading progress...</p>
-                        </div>
-                      ) : !hasProgress ? (
-                        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                          <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '13px', color: '#aaa' }}>
-                            No progress data yet
-                          </p>
-                        </div>
-                      ) : (
-                        VISIBLE_MODULES.map((moduleKey) => {
-                          const moduleDef = MODULE_DEFINITIONS[moduleKey];
-                          const moduleProgress = calculateModuleProgress(moduleKey, selectedStudentProgress);
-                          const barColor = moduleProgress >= 80 ? '#2e7d32' : moduleProgress >= 60 ? '#e65100' : '#c8102e';
-                          
-                          return (
-                            <div key={moduleKey}>
-                              <div style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'baseline', 
-                                marginBottom: '4px' 
-                              }}>
-                                <span style={{ 
-                                  fontFamily: 'Arial, sans-serif', 
-                                  fontSize: '13px', 
-                                  color: '#444', 
-                                  flex: 1, 
-                                  paddingRight: '8px', 
-                                  lineHeight: '1.3' 
-                                }}>
-                                  {moduleDef.displayName}
-                                </span>
-                                <span style={{ 
-                                  fontFamily: 'Arial, sans-serif', 
-                                  fontSize: '13px', 
-                                  color: '#888', 
-                                  whiteSpace: 'nowrap', 
-                                  fontWeight: 'bold' 
-                                }}>
-                                  {moduleProgress}%
-                                </span>
-                              </div>
-                              <div style={{ 
-                                height: '7px', 
-                                background: '#f0d0d5', 
-                                borderRadius: '99px', 
-                                overflow: 'hidden' 
-                              }}>
-                                <div style={{ 
-                                  height: '100%', 
-                                  width: `${moduleProgress}%`, 
-                                  background: barColor, 
-                                  borderRadius: '99px', 
-                                  transition: 'width 0.5s ease' 
-                                }} />
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="empty"
-                    className="ic-profile-panel ic-profile-empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="ic-empty-icon">👤</div>
-                    <p className="ic-empty-text">Click a student row to view their profile</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Confirm Remove Student Modal */}
-            <AnimatePresence>
-              {confirmRemoveStudentId !== null && (
-                <motion.div
-                  className="modal-overlay"
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  onClick={() => setConfirmRemoveStudentId(null)}
-                >
-                  <motion.div
-                    className="confirm-remove-modal"
-                    initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <div className="confirm-icon">🗑️</div>
-                    <p className="confirm-message">Unenroll this student from the class?</p>
-                    <div className="confirm-footer">
-                      <button className="confirm-cancel-btn" onClick={() => setConfirmRemoveStudentId(null)}>Cancel</button>
-                      <button className="confirm-remove-btn" onClick={handleConfirmRemoveStudent}>Unenroll</button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                <div className="fc-pm-mods">
+                  <p className="fc-pm-seclabel">Module Progress</p>
+                  {loadingProgress ? (
+                    <p className="fc-pm-note">Loading progress...</p>
+                  ) : !hasProgress ? (
+                    <p className="fc-pm-note">No progress data yet</p>
+                  ) : (
+                    VISIBLE_MODULES.map((moduleKey, i) => {
+                      const moduleDef = MODULE_DEFINITIONS[moduleKey];
+                      const moduleProgress = calculateModuleProgress(moduleKey, selectedStudentProgress);
+                      const barColor = moduleProgress >= 80 ? '#2e7d32' : moduleProgress >= 60 ? '#e65100' : '#c8102e';
+                      return (
+                        <motion.div
+                          key={moduleKey}
+                          className="fc-pm-mrow"
+                          initial={{ opacity: 0, x: 12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 + i * 0.04 }}
+                        >
+                          <div className="fc-pm-mtop">
+                            <span className="fc-pm-mname">{moduleDef.displayName}</span>
+                            <span className="fc-pm-mpct">{moduleProgress}%</span>
+                          </div>
+                          <div className="fc-pm-mtrack">
+                            <div className="fc-pm-mfill" style={{ width: `${moduleProgress}%`, background: barColor }} />
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
 
+      {/* ── CONFIRM REMOVE STUDENT MODAL ── */}
+      <AnimatePresence>
+        {confirmRemoveStudentId !== null && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setConfirmRemoveStudentId(null)}
+          >
+            <motion.div
+              className="confirm-remove-modal"
+              initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="confirm-icon">🗑️</div>
+              <p className="confirm-message">Unenroll this student from the class?</p>
+              <div className="confirm-footer">
+                <button className="confirm-cancel-btn" onClick={() => setConfirmRemoveStudentId(null)}>Cancel</button>
+                <button className="confirm-remove-btn" onClick={handleConfirmRemoveStudent}>Unenroll</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── CREATE CLASS MODAL ── */}
@@ -778,7 +740,7 @@ function FacultyClass() {
           <motion.div
             className="modal-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => { setShowCreateModal(false); setSelectedSection(''); setGeneratedCode(''); }}
+            onClick={() => { setShowCreateModal(false); setSelectedSection(''); setGeneratedCode(''); setEndDate(''); }}
           >
             <motion.div
               className="create-class-modal"
@@ -786,8 +748,10 @@ function FacultyClass() {
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
               onClick={e => e.stopPropagation()}
             >
-              <label className="modal-label">Select Class Section</label>
+              <h3 className="modal-heading">Create a Class</h3>
+              <p className="modal-subheading">Pick a section and generate an access code</p>
 
+              <label className="modal-label">Class Section</label>
               <select
                 className="modal-section-select"
                 value={selectedSection}
@@ -797,11 +761,7 @@ function FacultyClass() {
                 {SECTIONS.map(sec => {
                   const taken = classes.some(c => c.name === sec);
                   return (
-                    <option
-                      key={sec}
-                      value={sec}
-                      disabled={taken}
-                    >
+                    <option key={sec} value={sec} disabled={taken}>
                       {taken ? `${sec} (Already Created)` : sec}
                     </option>
                   );
@@ -814,6 +774,30 @@ function FacultyClass() {
                 </div>
               )}
 
+              <label className="modal-label" style={{ marginTop: '16px' }}>Class Duration</label>
+              <div className="modal-date-row">
+                <span className="modal-date-tag">Start</span>
+                <div className="modal-date-field locked">
+                  <span>{todayLabel}</span>
+                  <span className="modal-date-ico" aria-hidden="true">🔒</span>
+                </div>
+              </div>
+              <div className="modal-date-row">
+                <span className="modal-date-tag">End</span>
+                <div className={`modal-date-field end ${endDate ? 'filled' : ''}`}>
+                  <input
+                    type="date"
+                    className="modal-date-input"
+                    min={tomorrowStr}
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    onKeyDown={e => { if (e.key !== 'Tab') e.preventDefault(); }}
+                    onClick={e => e.currentTarget.showPicker?.()}
+                  />
+                </div>
+              </div>
+              <p className="modal-date-help">The class ends on this date. The earliest end date is tomorrow.</p>
+
               <button
                 className="modal-generate-btn"
                 onClick={handleGenerateCode}
@@ -822,15 +806,24 @@ function FacultyClass() {
                 Generate Access Code
               </button>
 
-              {generatedCode && (
-                <div className="modal-code-display">{generatedCode}</div>
-              )}
+              <AnimatePresence>
+                {generatedCode && (
+                  <motion.div
+                    className="modal-code-display"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+                  >
+                    {generatedCode}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+              <div className="modal-create-row">
                 <button
                   className="modal-create-btn"
                   onClick={handleCreateClass}
-                  disabled={creating || !selectedSection || !generatedCode}
+                  disabled={creating || !selectedSection || !generatedCode || !endDate}
                 >
                   {creating ? 'Creating...' : 'Create Class'}
                 </button>
@@ -840,13 +833,13 @@ function FacultyClass() {
         )}
       </AnimatePresence>
 
-      {/* ── CONFIRM REMOVE CLASS MODAL ── */}
+      {/* ── CONFIRM FINISH CLASS MODAL ── */}
       <AnimatePresence>
-        {confirmRemoveId !== null && (
+        {confirmFinishId !== null && (
           <motion.div
             className="modal-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setConfirmRemoveId(null)}
+            onClick={() => setConfirmFinishId(null)}
           >
             <motion.div
               className="confirm-remove-modal"
@@ -854,11 +847,11 @@ function FacultyClass() {
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
               onClick={e => e.stopPropagation()}
             >
-              <div className="confirm-icon">🗑️</div>
-              <p className="confirm-message">Remove this class? All enrolled students will also be removed.</p>
+              <div className="confirm-icon">🎓</div>
+              <p className="confirm-message">Finish this class? It will be closed and removed, and its section becomes available again. Enrolled students will be unenrolled.</p>
               <div className="confirm-footer">
-                <button className="confirm-cancel-btn" onClick={() => setConfirmRemoveId(null)}>Cancel</button>
-                <button className="confirm-remove-btn" onClick={handleConfirmRemove}>Remove</button>
+                <button className="confirm-cancel-btn" onClick={() => setConfirmFinishId(null)}>Cancel</button>
+                <button className="confirm-remove-btn" onClick={handleConfirmFinish}>Finish Class</button>
               </div>
             </motion.div>
           </motion.div>
@@ -876,7 +869,7 @@ function FacultyClass() {
             onClick={() => setShowLogoutModal(false)}
           >
             <motion.div
-              className="modal-box"
+              className="modal-box lo-modal"
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.85, opacity: 0 }}
@@ -884,15 +877,17 @@ function FacultyClass() {
               onClick={e => e.stopPropagation()}
             >
               <div className="modal-header">
-                <h3 className="modal-title">Confirm Logout</h3>
+                <h3 className="modal-title" style={{ margin: '0 auto', textAlign: 'center' }}>Confirm Logout</h3>
                 <button className="modal-close" onClick={() => setShowLogoutModal(false)}>✕</button>
               </div>
               <div className="modal-body" style={{ flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '28px 20px 20px' }}>
                 <div style={{
                   width: '64px', height: '64px', borderRadius: '50%',
                   background: '#fdecea', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '32px',
-                }}>🚪</div>
+                  justifyContent: 'center',
+                }}>
+                  <CiLogout size={32} color="#c8102e" />
+                </div>
                 <p style={{ fontFamily: 'Arial, sans-serif', fontSize: '15px', color: '#333', margin: 0, textAlign: 'center', fontWeight: 'bold' }}>
                   Are you sure you want to exit?
                 </p>
