@@ -488,8 +488,37 @@
 /* ══════════ M2 — mobile edge-sliver treatment (≤700px) ══════════ */
 @media (max-width: 700px) {
   .lm-panel.sm-page .stk-carousel { height: 440px; }
-  /* active text reserves width away from the right-edge sliver */
-  .lm-panel.sm-page .stk-content { left: 20px; width: calc(100% - 92px); max-width: none; }
+  /* Anchor the content in a band BETWEEN the top chips and the bottom nav
+     buttons (instead of vertically centered) so long titles can't overlap
+     them. Shrink the title + clamp the description so it always fits. */
+  .lm-panel.sm-page .stk-content {
+    top: 46px;
+    bottom: 64px;
+    left: 18px;
+    right: 54px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+  }
+  .lm-panel.sm-page .stk-name { font-size: clamp(1.05rem, 4.8vw, 1.45rem); line-height: 1.14; }
+  .lm-panel.sm-page .stk-des {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 8px 0 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .lm-panel.sm-page .stk-prog { margin-bottom: 0; }
+  .lm-panel.sm-page .stk-track { width: 130px; max-width: 38vw; }
+  .lm-panel.sm-page .stk-cta { margin-top: 14px; padding: 10px 20px; font-size: 12px; }
   .lm-panel.sm-page .stk-item.stk-under::before,
   .lm-panel.sm-page .stk-item.stk-active::before {
     background: linear-gradient(90deg, rgba(6, 6, 7, 0.82) 0%, rgba(6, 6, 7, 0.55) 55%, rgba(6, 6, 7, 0.2) 100%);
