@@ -58,6 +58,18 @@ function RoomDecor() {
   );
 }
 
+// Deterministic avatar color + initials for leaderboard rows/podium.
+function avatarColor(str = '') {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return `hsl(${Math.abs(hash) % 360}, 58%, 46%)`;
+}
+function initials(name = '') {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const str = parts.slice(0, 2).map((w) => w[0] || '').join('');
+  return str.toUpperCase() || '?';
+}
+
 function QuizArena() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -632,24 +644,58 @@ function QuizArena() {
         <div className="results-page">
           <p className="round-label">FINAL RESULTS</p>
 
-          <div className="rankings-list">
-            {finalRankings.map((player, index) => (
-              <motion.div
-                key={player.id}
-                className={`rank-row ${index === 0 ? 'first-place' : ''}`}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <span className="rank-pos">{getOrdinal(index + 1)}</span>
-                <span className="rank-name">
-                  {player.name}
-                  {player.id === socket?.id ? ' (You)' : ''}
-                </span>
-                <span className="rank-score">{player.score}</span>
-              </motion.div>
-            ))}
+          {/* Podium: gold #1 (centre, crowned), silver #2, bronze #3 */}
+          <div className="podium">
+            {[1, 0, 2].map((rankIdx) => {
+              const player = finalRankings[rankIdx];
+              if (!player) return null;
+              const tier = rankIdx === 0 ? 'gold' : rankIdx === 1 ? 'silver' : 'bronze';
+              return (
+                <motion.div
+                  key={player.id}
+                  className={`ped ped-${rankIdx + 1} ${tier}`}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: rankIdx === 0 ? 0.1 : 0.24, type: 'spring', stiffness: 220, damping: 22 }}
+                >
+                  {rankIdx === 0 && <div className="ped-crown">👑</div>}
+                  <span className="ped-av" style={{ background: avatarColor(player.id || player.name) }}>
+                    {initials(player.name)}
+                  </span>
+                  <span className="ped-name">
+                    {player.name}{player.id === socket?.id ? ' (You)' : ''}
+                  </span>
+                  <span className="ped-score">{player.score}</span>
+                  <div className="ped-block">{rankIdx + 1}</div>
+                </motion.div>
+              );
+            })}
           </div>
+
+          {/* Everyone from 4th place down */}
+          {finalRankings.length > 3 && (
+            <div className="rankings-list">
+              {finalRankings.slice(3).map((player, i) => (
+                <motion.div
+                  key={player.id}
+                  className="rank-row"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.06 }}
+                >
+                  <span className="rank-pos">{getOrdinal(i + 4)}</span>
+                  <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
+                    {initials(player.name)}
+                  </span>
+                  <span className="rank-name">
+                    {player.name}
+                    {player.id === socket?.id ? ' (You)' : ''}
+                  </span>
+                  <span className="rank-score">{player.score}</span>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           <button
             className="exit-btn"
@@ -681,23 +727,32 @@ function QuizArena() {
         <div className="results-page">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
 
-          <div className="rankings-list">
-            {rankings.map((player, index) => (
-              <motion.div
-                key={player.id}
-                className={`rank-row ${index === 0 ? 'first-place' : ''}`}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <span className="rank-pos">{getOrdinal(index + 1)}</span>
-                <span className="rank-name">
-                  {player.name}
-                  {player.id === socket?.id ? ' (You)' : ''}
-                </span>
-                <span className="rank-score">{player.score}</span>
-              </motion.div>
-            ))}
+          <div className="rankings-list medal-rows">
+            {rankings.map((player, index) => {
+              const tier = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+              return (
+                <motion.div
+                  key={player.id}
+                  className={`rank-row ${tier ? `medal ${tier}` : ''}`}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.08 }}
+                >
+                  {tier
+                    ? <span className="rank-medal" aria-hidden="true">{medal}</span>
+                    : <span className="rank-pos">{index + 1}</span>}
+                  <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
+                    {initials(player.name)}
+                  </span>
+                  <span className="rank-name">
+                    {player.name}
+                    {player.id === socket?.id ? ' (You)' : ''}
+                  </span>
+                  <span className="rank-score">{player.score}</span>
+                </motion.div>
+              );
+            })}
           </div>
 
           <p className="next-hint">Next question coming up...</p>
