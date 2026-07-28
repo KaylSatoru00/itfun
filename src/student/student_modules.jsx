@@ -356,9 +356,15 @@ function LearningModules() {
 
         const lessons = mData.lessons || {};
         const lessonValues = Object.values(lessons).map(l => l.progress ?? 0);
-        const overallPercent = lessonValues.length > 0
-          ? Math.round(lessonValues.reduce((a, b) => a + b, 0) / lessonValues.length)
-          : 0;
+        // Divide by the module's TOTAL lesson count (not just the lessons that
+        // already have a progress entry), so untouched lessons count as 0%.
+        // e.g. 1 of 3 lessons finished => 100/3 = 33%, not 100/1 = 100%.
+        const totalLessons = (MODULE_LESSONS[m.id] || []).length || lessonValues.length;
+        const overallPercent = completed
+          ? 100
+          : totalLessons > 0
+            ? Math.round(lessonValues.reduce((a, b) => a + b, 0) / totalLessons)
+            : 0;
 
         newStates[m.id] = { unlocked, completed, overallPercent };
       });
