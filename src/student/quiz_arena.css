@@ -582,7 +582,11 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-right: 4px;
+  /* Keep it scrollable, but hide the visible scrollbar */
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / old Edge */
 }
+.rankings-list::-webkit-scrollbar { width: 0; height: 0; display: none; } /* Chrome / Safari */
 
 .rank-row {
   display: flex;
