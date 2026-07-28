@@ -11,15 +11,15 @@ import { useUser } from '../user_context';
 import { auth, db, rtdb } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { ref, set, serverTimestamp as rtdbServerTimestamp } from 'firebase/database';
-import img1 from '../assets/panel1.png';
-import img2 from '../assets/panel2.png';
-import img3 from '../assets/panel3.png';
-import img4 from '../assets/panel4.png';
-import img5 from '../assets/panel5.png';
-import img6 from '../assets/panel6.png';
-import img7 from '../assets/panel7.png';
+import img1 from '../assets/panel1.webp';
+import img2 from '../assets/panel2.jpg';
+import img3 from '../assets/panel3.webp';
+import img4 from '../assets/panel4.avif';
+import img5 from '../assets/panel5.webp';
+import img6 from '../assets/panel6.webp';
+import img7 from '../assets/panel7.webp';
 import img8 from '../assets/panel8.png';
-import img9 from '../assets/panel9.png';
+import img9 from '../assets/panel9.jpg';
 import itfunLogo from '../assets/LOGO_NAMEN.png';
 
 /* ─────────────────────────────────────────────
