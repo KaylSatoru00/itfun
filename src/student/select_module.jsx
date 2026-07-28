@@ -6,15 +6,15 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import './select_module.css';
 
-import panel1 from '../assets/panel1.webp';
-import panel2 from '../assets/panel2.jpg';
-import panel3 from '../assets/panel3.webp';
-import panel4 from '../assets/panel4.avif';
-import panel5 from '../assets/panel5.webp';
-import panel6 from '../assets/panel6.webp';
-import panel7 from '../assets/panel7.webp';
+import panel1 from '../assets/panel1.png';
+import panel2 from '../assets/panel2.png';
+import panel3 from '../assets/panel3.png';
+import panel4 from '../assets/panel4.png';
+import panel5 from '../assets/panel5.png';
+import panel6 from '../assets/panel6.png';
+import panel7 from '../assets/panel7.png';
 import panel8 from '../assets/panel8.png';
-import panel9 from '../assets/panel9.jpg';
+import panel9 from '../assets/panel9.png';
 
 const MODULES = [
   { id: 'module1', img: panel1, label: 'Introduction to Computers and History of Computers', lesson: 'lesson1' },

@@ -6,11 +6,41 @@ function normalizeForCompare(str) {
 }
 
 function singularize(word) {
-  // "PROCESSES" -> "PROCESS", "BOXES" -> "BOX"
-  if (/ES$/.test(word) && word.length > 4) return word.slice(0, -2);
-  // "COMPUTERS" -> "COMPUTER" — pero hindi masyadong maiksing words at
-  // hindi mga word na nagtatapos talaga sa double-S (hal. "ACCESS", "BUS"
-  // ay hindi dapat mag-strip papuntang "ACCES"/"BU")
+  // BUG (nahanap 2026-07-23): dating "if (/ES$/.test(word) ...)" ay
+  // sumasakop sa LAHAT ng salitang nagtatapos sa "ES" — kasama pati yung
+  // mga salitang ang singular form mismo ay nagtatapos na sa "E" (hal.
+  // "BYTE" -> "BYTES", "DEVICE" -> "DEVICES", "PHASE" -> "PHASES"), kung
+  // saan iisang "S" lang talaga ang idinagdag, hindi "ES".
+  // Dating resulta: singularize("DEVICES") -> slice(0,-2) -> "DEVIC" (mali,
+  // dapat "DEVICE"). singularize("BYTES") -> "BYT" (mali, dapat "BYTE").
+  // Kaya kapag ang lesson content ay "Device" pero ang sagot ng player ay
+  // "Devices" (o vice versa), hindi sila nagta-tugma sa answersMatch() kahit
+  // dapat parehong tama — ito yung "valid pero minarkang mali" na kaso.
+  //
+  // FIX: paghiwalayin ang totoong "-es" plurals (base word ay nagtatapos sa
+  // sibilant na kailangan ng "-es" para bumuo ng plural — S/X/Z/CH/SH, hal.
+  // "BOX" -> "BOXES", "PROCESS" -> "PROCESSES", "CLASS" -> "CLASSES") laban
+  // sa mga salitang ang singular ay nagtatapos na sa "E" at "-s" lang talaga
+  // ang idinagdag. Chineck muna ang sibilant+ES pattern; kung hindi tugma,
+  // babagsak na lang sa plain "-s" stripping.
+  // NOTE: pinalitan pa ito ng isang beses — yung unang fix ay sumakop pa
+  // rin sa mga salitang tulad ng "PHASE" -> "PHASES" at "CACHE" -> "CACHES",
+  // dahil parehong "single-S-before-ES" ang shape nila kagaya ng totoong
+  // -es plurals na gaya ng "BUS" -> "BUSES". Walang purong regex na
+  // makaka-distinguish nito nang 100% (kailangan ng dictionary/lexicon), so
+  // dito, dinisenyo ang rule para bias tayo papunta sa mas madalas na term
+  // sa IT-fundamentals lessons niyo (PHASE, CASE, DEVICE, BYTE, CACHE,
+  // MOUSE) — sila ang mas malamang lumabas sa mga tanong kumpara sa mga
+  // tunay na sibilant plurals gaya ng "BUS"/"VIRUS" (bihira namang itanong
+  // sa plural form). Kaya dito, double-strip lang ang "-es" kung talagang
+  // dobleng consonant o X/Z ang bago sa "ES" (di na kasama ang single-S o
+  // CH/SH, dahil doon nangyayari yung collision):
+  // "BOXES" -> "BOX", "PROCESSES"/"CLASSES"/"ACCESSES" -> singular nila
+  if (/(?:SS|[XZ])ES$/.test(word) && word.length > 4) return word.slice(0, -2);
+  // "DEVICES" -> "DEVICE", "BYTES" -> "BYTE", "COMPUTERS" -> "COMPUTER" —
+  // pero hindi masyadong maiksing words at hindi mga word na nagtatapos
+  // talaga sa double-S (hal. "ACCESS", "BUS" ay hindi dapat mag-strip
+  // papuntang "ACCES"/"BU")
   if (/S$/.test(word) && word.length > 3 && !/SS$/.test(word)) return word.slice(0, -1);
   return word;
 }

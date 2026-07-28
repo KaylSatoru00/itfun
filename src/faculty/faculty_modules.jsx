@@ -347,7 +347,7 @@ function FacultyModules() {
               <span className="fm-nav-label">Classes</span>
             </button>
           </nav>
-          <div className="fm-side-foot">Faculty Dashboard</div>
+         
         </aside>
 
         {/* ── Main content ── */}

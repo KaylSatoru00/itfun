@@ -16,7 +16,7 @@ const getAvatarColor = (id = '') => {
 function WaitingLobby() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
+  const { user, authLoading } = useUser();
   const socket = useSocket();
 
   const [roomPin, setRoomPin] = useState('');
@@ -34,7 +34,17 @@ function WaitingLobby() {
   const questions = state.questions || [];
 
   useEffect(() => {
-    if (!socket || roomCreated.current) return;
+    // KRITIKAL: hintayin munang matapos ang Firebase auth restore
+    // (`authLoading`) bago mag-emit ng anumang socket event na may `uid`.
+    // Kapag hard refresh, mas mabilis kadalasang mag-connect ang
+    // Socket.IO client kaysa matapos ang async na auth restore — kaya kung
+    // walang guard dito, maaagawan tayo ng sariling effect at magpapadala
+    // ng `uid: undefined` papunta sa backend, na siyang nagre-reject ng
+    // "Missing uid — please log in again." kahit hindi naman totoong
+    // naka-logout ang user. Hindi natin mina-mark na `roomCreated.current`
+    // dito habang `authLoading` pa, kaya tatakbo ulit ang effect (dahil
+    // nasa deps array ang `authLoading`) sa sandaling maresolba na ito.
+    if (!socket || authLoading || roomCreated.current) return;
     roomCreated.current = true;
 
     const playerDisplayName = user
@@ -152,7 +162,7 @@ function WaitingLobby() {
       socket.off('quiz-started');
       socket.off('room-closed');
     };
-  }, [socket]);
+  }, [socket, authLoading]);
 
   const handleCopyPin = () => {
     navigator.clipboard.writeText(roomPin);
@@ -168,6 +178,16 @@ function WaitingLobby() {
       }
     });
   };
+
+  if (authLoading) {
+    return (
+      <div className="waiting-lobby-panel">
+        <div className="error-container">
+          <p className="error-text">Restoring your session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
