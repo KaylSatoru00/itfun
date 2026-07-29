@@ -178,12 +178,26 @@ function WaitingLobbyJoin() {
       navigate('/pvp-quiz');
     });
 
+    // Host migration: the old host left and the server promoted a new one.
+    socket.on('host-changed', (data) => {
+      setHostName(data.newHostName);
+      // If I'm the new host, move to the host lobby (which has the Start button).
+      if (data.newHostId === socket.id) {
+        localStorage.setItem('itfun_roomPin', pin);
+        localStorage.setItem('itfun_playerName', playerDisplayName);
+        localStorage.setItem('itfun_isHost', 'true');
+        localStorage.setItem('itfun_sessionTime', Date.now().toString());
+        navigate('/waiting-lobby');
+      }
+    });
+
     return () => {
       socket.off('room-update');
       socket.off('player-joined');
       socket.off('player-left');
       socket.off('quiz-started');
       socket.off('room-closed');
+      socket.off('host-changed');
     };
   }, [socket, authLoading]);
 
