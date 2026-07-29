@@ -85,7 +85,7 @@ function PvpQuiz() {
         // parin sa parehong tab), pero ito na ang nag-e-ensure na hindi na
         // sila makakarating sa "Join Room" modal path.
         if (savedIsHost) {
-          navigate('/waiting-lobby-host');
+          navigate('/waiting-lobby');
         } else {
           navigate(`/waiting-lobby-join?pin=${savedPin}`);
         }

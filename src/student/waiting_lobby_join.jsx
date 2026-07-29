@@ -75,7 +75,7 @@ function WaitingLobbyJoin() {
             // host left and is rejoining by PIN). Send them to the host lobby,
             // which has the Start button — the join view does not.
             if (response.isHost) {
-              navigate('/waiting-lobby-host');
+              navigate('/waiting-lobby');
               return;
             }
 
@@ -127,7 +127,7 @@ function WaitingLobbyJoin() {
             localStorage.setItem('itfun_playerName', playerDisplayName);
             localStorage.setItem('itfun_isHost', 'true');
             localStorage.setItem('itfun_sessionTime', Date.now().toString());
-            navigate('/waiting-lobby-host');
+            navigate('/waiting-lobby');
             return;
           }
           setPlayers(response.state.players);
