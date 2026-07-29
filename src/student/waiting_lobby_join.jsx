@@ -71,6 +71,14 @@ function WaitingLobbyJoin() {
             localStorage.setItem('itfun_isHost', response.isHost ? 'true' : 'false');
             localStorage.setItem('itfun_sessionTime', Date.now().toString());
 
+            // The server recognized this account as the room's HOST (e.g. the
+            // host left and is rejoining by PIN). Send them to the host lobby,
+            // which has the Start button — the join view does not.
+            if (response.isHost) {
+              navigate('/waiting-lobby-host');
+              return;
+            }
+
             if (response.state.finished || response.state.question) {
               navigate(`/quiz-arena?pin=${pin}`);
             }
@@ -113,6 +121,15 @@ function WaitingLobbyJoin() {
       socket.emit('rejoin-room', { pin, playerName: playerDisplayName, uid: user?.uid }, (response) => {
         console.log('🔁 join rejoin-room response:', response);
         if (response?.success) {
+          // Host rejoining by PIN → route to the host lobby (has Start button).
+          if (response.isHost) {
+            localStorage.setItem('itfun_roomPin', pin);
+            localStorage.setItem('itfun_playerName', playerDisplayName);
+            localStorage.setItem('itfun_isHost', 'true');
+            localStorage.setItem('itfun_sessionTime', Date.now().toString());
+            navigate('/waiting-lobby-host');
+            return;
+          }
           setPlayers(response.state.players);
           setHostName(response.room?.hostName || hostName);
 
