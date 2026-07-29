@@ -5,14 +5,16 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
 
   const typeInstructions = {
     multiple: `Generate EXACTLY ${questionCount} multiple-choice questions.
-      - Each question MUST have 4 options labeled A, B, C, D.
-      - Only ONE option can be correct.
+      - Each question MUST have EXACTLY 4 options (all different from each other).
+      - EXACTLY ONE option may be correct. Double-check the other 3 are DEFINITELY, FULLY wrong per the lesson — NONE of them may also be arguably correct. ⚠️ Watch out for "Which is an example of an output device?" style questions: make sure only ONE of the 4 options belongs to that category (e.g. do NOT put both "Monitor" and "Printer" as options when both are output devices — a student could correctly pick either).
+      - The "correctAnswer" MUST be copied WORD-FOR-WORD (same spelling and capitalization) from one of the 4 options.
       - The other 3 options must be plausible wrong answers based on the lesson content.
       - Keep ALL questions BASIC and beginner-friendly — these are for 1st year students. NO trick questions, NO advanced application/analysis questions.`,
 
     'true-false': `Generate EXACTLY ${questionCount} true or false questions.
-      - Each question MUST be a clear statement that is either true or false based on the lesson.
+      - Each question MUST be a clear statement that is WHOLLY true or WHOLLY false based on the lesson — never a statement that is only partly true / true in some cases and false in others.
       - Avoid ambiguous statements.
+      - The "correctAnswer" MUST be the exact word "True" or "False" (capitalized) — never "T", "F", "yes", "no", or lowercase.
       - Keep ALL questions BASIC and beginner-friendly — these are for 1st year students. NO trick questions.
       - About 50% should be true and 50% false.`,
 
