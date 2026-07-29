@@ -949,10 +949,26 @@ io.on('connection', (socket) => {
       const pending = disconnectTimers.get(timerKey);
       if (pending) { clearTimeout(pending); disconnectTimers.delete(timerKey); }
 
+      const wasHost = socket.id === room.hostId;
+
       // Hide from the visible player list, keep the slot for rejoin.
       roomManager.markPlayerDisconnected(pin, socket.id);
       socket.leave(pin);
       socket.data.roomPin = null;
+
+      // Host migration (Valorant / CODM style): if the host left and a
+      // connected player remains, promote the earliest-joined still-connected
+      // player to host. If the original host rejoins later, they come back as
+      // a regular player — someone else already holds the role.
+      if (wasHost) {
+        const newHost = room.players.find((p) => !p.disconnected);
+        if (newHost) {
+          room.hostId = newHost.id;
+          room.hostName = newHost.name;
+          room.hostUid = newHost.uid;
+          io.to(pin).emit('host-changed', { newHostId: newHost.id, newHostName: newHost.name });
+        }
+      }
 
       io.to(pin).emit('player-left', {
         playerId: socket.id,
@@ -1086,13 +1102,18 @@ io.on('connection', (socket) => {
     }
 
     if (wasHost) {
-      const newHost = room.players[0];
-      room.hostId = newHost.id;
-      room.hostName = newHost.name;
-      io.to(pin).emit('host-changed', {
-        newHostId: newHost.id,
-        newHostName: newHost.name,
-      });
+      // Promote the earliest-joined still-connected player (Valorant / CODM
+      // style host migration), falling back to the first slot if needed.
+      const newHost = room.players.find((p) => !p.disconnected) || room.players[0];
+      if (newHost) {
+        room.hostId = newHost.id;
+        room.hostName = newHost.name;
+        room.hostUid = newHost.uid;
+        io.to(pin).emit('host-changed', {
+          newHostId: newHost.id,
+          newHostName: newHost.name,
+        });
+      }
     }
 
     io.to(pin).emit('player-left', {
