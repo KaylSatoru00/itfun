@@ -24,6 +24,7 @@ function WaitingLobby() {
   const [hostName, setHostName] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   const roomPinRef = useRef('');
   const roomCreated = useRef(false); // prevent double emit
@@ -164,6 +165,31 @@ function WaitingLobby() {
     };
   }, [socket, authLoading]);
 
+  const doLeaveRoom = () => {
+    localStorage.removeItem('itfun_roomPin');
+    localStorage.removeItem('itfun_playerName');
+    localStorage.removeItem('itfun_isHost');
+    localStorage.removeItem('itfun_sessionTime');
+    navigate('/pvp-quiz');
+  };
+
+  // Intercept the browser Back/Return button. Without this, pressing Back
+  // lands on /pvp-quiz, whose auto-rejoin effect reads the still-saved
+  // session and bounces the user straight back into this lobby (the "bug").
+  // Here we push a history entry and, on Back, show a "leave room?" confirm
+  // instead. Confirming clears the saved session (so pvp-quiz won't
+  // auto-rejoin) — the user can still rejoin by entering the PIN again,
+  // since the server remembers them by uid.
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+      setShowLeaveConfirm(true);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const handleCopyPin = () => {
     navigator.clipboard.writeText(roomPin);
     setCopied(true);
@@ -268,21 +294,39 @@ function WaitingLobby() {
 
           <button
             className="leave-btn"
-            onClick={() => {
-              if (window.confirm('Are you sure you want to leave?')) {
-                localStorage.removeItem('itfun_roomPin');
-                localStorage.removeItem('itfun_playerName');
-                localStorage.removeItem('itfun_isHost');
-                localStorage.removeItem('itfun_sessionTime');
-                navigate('/pvp-quiz');
-              }
-            }}
+            onClick={() => setShowLeaveConfirm(true)}
           >
             Leave Room
           </button>
         </div>
 
       </div>
+
+      {showLeaveConfirm && (
+        <div className="leave-modal-overlay" onClick={() => setShowLeaveConfirm(false)}>
+          <motion.div
+            className="leave-modal"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+          >
+            <div className="leave-modal-icon">🚪</div>
+            <h3 className="leave-modal-title">Leave Room?</h3>
+            <p className="leave-modal-text">
+              Do you want to leave the room? You can rejoin anytime by entering the PIN code again.
+            </p>
+            <div className="leave-modal-actions">
+              <button className="leave-modal-cancel" onClick={() => setShowLeaveConfirm(false)}>
+                Stay
+              </button>
+              <button className="leave-modal-confirm" onClick={doLeaveRoom}>
+                Yes, Leave
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }

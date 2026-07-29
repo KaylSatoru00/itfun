@@ -382,3 +382,96 @@
     width: 66px;
   }
 }
+
+/* ─────────────────────────────────────────────
+   Leave Room confirmation modal (back button / Leave Room)
+───────────────────────────────────────────── */
+.leave-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(60, 10, 20, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.leave-modal {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 28px 26px 24px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(120, 20, 45, 0.35);
+  border: 1px solid rgba(200, 16, 46, 0.08);
+}
+
+.leave-modal-icon {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.leave-modal-title {
+  margin: 0 0 8px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: #A50034;
+}
+
+.leave-modal-text {
+  margin: 0 0 22px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #6b5157;
+}
+
+.leave-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.leave-modal-cancel,
+.leave-modal-confirm {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 28px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.leave-modal-cancel {
+  background: #f3e7ea;
+  color: #A50034;
+  border: 1px solid rgba(165, 0, 52, 0.15);
+}
+
+.leave-modal-cancel:hover {
+  background: #ecd9dd;
+  transform: translateY(-1px);
+}
+
+.leave-modal-confirm {
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.32);
+}
+
+.leave-modal-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(200, 16, 46, 0.42);
+}
+
+@media (max-width: 480px) {
+  .leave-modal-actions { flex-direction: column-reverse; }
+}
