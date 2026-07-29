@@ -927,6 +927,53 @@ io.on('connection', (socket) => {
     sendQuestion(pin);
   });
 
+  // ── Explicit Leave (from the "Leave Room" button / browser Back) ──
+  // Unlike a socket disconnect (which keeps the shared socket alive when the
+  // user merely navigates away), this fires when the user intentionally
+  // leaves the lobby. We hide them from everyone's lobby IMMEDIATELY (real-
+  // time presence) but keep their slot so they — and only they, by uid — can
+  // rejoin by entering the PIN again. Rejoining re-marks them connected and
+  // re-broadcasts, so other players see them reappear.
+  socket.on('leave-room', (data, callback) => {
+    try {
+      const pin = (data && data.pin) || socket.data.roomPin;
+      if (!pin) { if (callback) callback({ success: true }); return; }
+
+      const room = roomManager.getRoom(pin);
+      if (!room) { if (callback) callback({ success: true }); return; }
+
+      const uid = (data && data.uid) || socket.data.uid;
+
+      // Cancel any pending disconnect grace timer for this player.
+      const timerKey = `${pin}:${uid}`;
+      const pending = disconnectTimers.get(timerKey);
+      if (pending) { clearTimeout(pending); disconnectTimers.delete(timerKey); }
+
+      // Hide from the visible player list, keep the slot for rejoin.
+      roomManager.markPlayerDisconnected(pin, socket.id);
+      socket.leave(pin);
+      socket.data.roomPin = null;
+
+      io.to(pin).emit('player-left', {
+        playerId: socket.id,
+        playerCount: roomManager.getVisiblePlayers(pin).length,
+      });
+      io.to(pin).emit('room-update', {
+        players: roomManager.getVisiblePlayers(pin),
+        hostName: room.hostName,
+        isHost: false,
+      });
+
+      // If nobody connected is left, schedule the room for cleanup.
+      scheduleAbandonedRoomCleanup(pin);
+
+      if (callback) callback({ success: true });
+    } catch (err) {
+      console.error('leave-room error:', err.message);
+      if (callback) callback({ success: false, error: err.message });
+    }
+  });
+
   // ── Disconnect ──
   socket.on('disconnect', () => {
     const pin = socket.data.roomPin;
