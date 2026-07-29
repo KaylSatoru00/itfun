@@ -188,6 +188,11 @@ function WaitingLobbyJoin() {
   }, [socket, authLoading]);
 
   const doLeaveRoom = () => {
+    // Tell the server so other players see us disappear in real time (our slot
+    // is kept so we can still rejoin by PIN).
+    if (socket) {
+      socket.emit('leave-room', { pin, uid: user?.uid });
+    }
     localStorage.removeItem('itfun_roomPin');
     localStorage.removeItem('itfun_playerName');
     localStorage.removeItem('itfun_isHost');
