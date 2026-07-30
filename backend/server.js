@@ -25,10 +25,17 @@ import { sendPasswordResetEmail, sendOtpEmail } from './services/email.service.j
 
 const app = express();
 
-// Fixed, known-good origins (production + local dev)
-const allowedOrigins = process.env.CLIENT_URL
-  ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174']
-  : ['http://localhost:5173', 'http://localhost:5174'];
+// Fixed, known-good origins (production + local dev). The production frontend
+// is ALWAYS allowed regardless of CLIENT_URL, and every origin is normalized
+// (trimmed + trailing slash stripped) so an env-var quirk like a trailing
+// slash can't silently break CORS.
+const normalizeOrigin = (o) => String(o || '').trim().replace(/\/+$/, '');
+const allowedOrigins = [
+  'https://itfun.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  process.env.CLIENT_URL,
+].map(normalizeOrigin).filter(Boolean);
 
 // Vercel preview deployments get a random URL per build, e.g.
 // https://itfun-p4ib9yon3-kaylsatoru00s-projects.vercel.app
@@ -40,7 +47,8 @@ function corsOriginCheck(origin, callback) {
   // Allow requests with no origin (e.g. curl, server-to-server, mobile apps)
   if (!origin) return callback(null, true);
 
-  if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+  const o = normalizeOrigin(origin);
+  if (allowedOrigins.includes(o) || vercelPreviewRegex.test(o)) {
     return callback(null, true);
   }
 
