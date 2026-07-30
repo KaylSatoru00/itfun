@@ -607,6 +607,13 @@
   box-shadow: 0 12px 28px rgba(200, 16, 46, 0.32);
 }
 
+/* The current player's own row — a maroon ring so they can follow
+   themselves as the leaderboard reshuffles between rounds. */
+.rank-row.is-you {
+  border-color: #C8102E;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.28), 0 6px 16px rgba(120, 20, 45, 0.12);
+}
+
 .rank-pos {
   font-size: clamp(13px, 1.4vw, 15px);
   font-weight: 800;
