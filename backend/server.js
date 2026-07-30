@@ -102,6 +102,9 @@ const signupOtps = new Map();
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_OTP_ATTEMPTS = 5;
 
+// Maximum players per room, INCLUDING the host (the host occupies slot 1).
+const MAX_PLAYERS_PER_ROOM = 40;
+
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
 }
@@ -352,7 +355,7 @@ async function validateRoomJoin(pin, uid) {
     return { ok: false, error: 'Game already in progress' };
   }
 
-  if (room.players.length >= 10) {
+  if (room.players.length >= MAX_PLAYERS_PER_ROOM) {
     return { ok: false, error: 'Room is full' };
   }
 
