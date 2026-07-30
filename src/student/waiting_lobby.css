@@ -212,8 +212,11 @@
 }
 
 .start-quiz-btn {
-  width: 100%;
-  padding: 14px;
+  width: auto;
+  min-width: 220px;
+  max-width: 100%;
+  padding: 14px 40px;
+  white-space: nowrap;
   background: linear-gradient(135deg, #C8102E, #A50034);
   color: #fff;
   border: none;
