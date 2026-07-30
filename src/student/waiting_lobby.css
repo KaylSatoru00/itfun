@@ -18,18 +18,18 @@
 .waiting-lobby-content {
   flex: 1;
   width: 100%;
-  max-width: 960px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 28px;
+  padding: clamp(20px, 3vw, 48px);
   display: flex;
-  gap: 22px;
+  gap: clamp(20px, 2vw, 32px);
   align-items: stretch;
   box-sizing: border-box;
 }
 
 /* ── Left info panel (maroon) ── */
 .lobby-sidebar {
-  width: 240px;
+  width: clamp(240px, 20vw, 320px);
   flex-shrink: 0;
   background: linear-gradient(160deg, #A50034 0%, #7d0027 100%);
   border-radius: 22px;
@@ -212,8 +212,11 @@
 }
 
 .start-quiz-btn {
-  width: 100%;
-  padding: 14px;
+  width: auto;
+  min-width: 220px;
+  max-width: 100%;
+  padding: 14px 40px;
+  white-space: nowrap;
   background: linear-gradient(135deg, #C8102E, #A50034);
   color: #fff;
   border: none;
