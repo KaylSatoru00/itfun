@@ -6,7 +6,7 @@
 .waiting-lobby-panel {
   width: 100%;
   min-height: 100vh;
-  background: radial-gradient(760px 400px at 50% -8%, #ffffff 0%, #FDF3F4 55%, #FBEAEC 100%);
+  background: radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%);
   display: flex;
   flex-direction: column;
   font-family: 'Poppins', sans-serif;
