@@ -167,6 +167,38 @@ function RankingBoard({ rankings, prevScores, socketId, reduce }) {
   );
 }
 
+// Confirmation shown when a player presses the browser Back button mid-quiz.
+// Leaving keeps their slot on the server (marked disconnected) so they can
+// rejoin with the same PIN while the session is still ongoing.
+function LeaveQuizModal({ onStay, onLeave }) {
+  return (
+    <div className="leave-modal-overlay" onClick={onStay}>
+      <motion.div
+        className="leave-modal"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ scale: 0.9, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      >
+        <div className="leave-modal-icon">🚪</div>
+        <h3 className="leave-modal-title">Leave Quiz?</h3>
+        <p className="leave-modal-text">
+          Do you want to leave? You can still rejoin with the PIN code while the
+          session is still ongoing.
+        </p>
+        <div className="leave-modal-actions">
+          <button className="leave-modal-cancel" onClick={onStay}>
+            Stay
+          </button>
+          <button className="leave-modal-confirm" onClick={onLeave}>
+            Yes, Leave
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function QuizArena() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -195,6 +227,41 @@ function QuizArena() {
   const [currentRound, setCurrentRound] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [finalRankings, setFinalRankings] = useState([]);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // Read inside the popstate handler (which is registered once) so it always
+  // sees the latest "is the quiz over?" value without re-binding the listener.
+  const gameFinishedRef = useRef(false);
+  useEffect(() => { gameFinishedRef.current = gameFinished; }, [gameFinished]);
+
+  // Leave the quiz. Tell the server (keeps our slot, marked disconnected, so
+  // we can rejoin by PIN while the session runs) and clear the saved session.
+  const doLeaveQuiz = () => {
+    if (socket) socket.emit('leave-room', { pin, uid: user?.uid });
+    localStorage.removeItem('itfun_roomPin');
+    localStorage.removeItem('itfun_playerName');
+    localStorage.removeItem('itfun_isHost');
+    localStorage.removeItem('itfun_sessionTime');
+    navigate('/pvp-quiz');
+  };
+
+  // Intercept the browser Back/Return button during the quiz. Without this,
+  // Back silently drops the player out of the game. Instead we push a history
+  // entry and, on Back, show a "Leave Quiz?" confirm — they can still rejoin
+  // by PIN while the session is ongoing (the server keeps them by uid). Once
+  // the quiz is finished there's nothing to rejoin, so Back just exits.
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+      if (gameFinishedRef.current) {
+        navigate('/pvp-quiz');
+      } else {
+        setShowLeaveConfirm(true);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
   // Dati, wala nang gagawin dito dahil kasama na yung correctAnswer sa
   // currentQuestion mula pa sa simula (security issue na inayos na sa
   // backend). Ngayon, dumarating lang ito pagdating ng `round-results`,
@@ -842,6 +909,9 @@ function QuizArena() {
 
           <p className="next-hint">Next question coming up...</p>
         </div>
+        {showLeaveConfirm && (
+          <LeaveQuizModal onStay={() => setShowLeaveConfirm(false)} onLeave={doLeaveQuiz} />
+        )}
       </motion.div>
     );
   }
@@ -872,6 +942,9 @@ function QuizArena() {
             )}
           </AnimatePresence>
         </div>
+        {showLeaveConfirm && (
+          <LeaveQuizModal onStay={() => setShowLeaveConfirm(false)} onLeave={doLeaveQuiz} />
+        )}
       </div>
     );
   }
@@ -1021,6 +1094,9 @@ function QuizArena() {
         )}
 
       </div>
+      {showLeaveConfirm && (
+        <LeaveQuizModal onStay={() => setShowLeaveConfirm(false)} onLeave={doLeaveQuiz} />
+      )}
     </motion.div>
   );
 }
