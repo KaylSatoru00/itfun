@@ -354,15 +354,16 @@
   transition: background 0.15s;
 }
 
-/* MC reveal state */
+/* MC reveal state — CORRECT answer highlighted in gold */
 .options-grid.one-col .option-btn.correct {
-  background: linear-gradient(180deg, #eafaf0, #d6f3e0);
-  color: #14833e;
-  box-shadow: 0 6px 0 #7cc99b, 0 12px 20px rgba(30, 150, 90, 0.25);
+  background: linear-gradient(180deg, #fff8e0, #ffeeb0);
+  color: #8a6100;
+  box-shadow: 0 6px 0 #e6c968, 0 12px 20px rgba(224, 165, 0, 0.28);
 }
 .options-grid.one-col .option-btn.correct .option-radio {
-  background: linear-gradient(135deg, #22b46e, #0e8f54);
-  box-shadow: 0 3px 8px rgba(20, 150, 90, 0.4);
+  background: linear-gradient(135deg, #f7cf4e, #e0a500);
+  box-shadow: 0 3px 8px rgba(224, 165, 0, 0.45);
+  color: #6b4a00;
 }
 
 .options-grid.one-col .option-btn.incorrect {
@@ -422,14 +423,14 @@
 }
 .options-grid.two-col .option-btn.selected .tf-icon { color: #C8102E; }
 
-/* T/F reveal */
+/* T/F reveal — CORRECT answer highlighted in gold */
 .options-grid.two-col .option-btn.correct {
-  border-color: #16a34a;
-  color: #14833e;
-  background: #f0faf4;
-  box-shadow: 0 12px 26px rgba(22, 163, 74, 0.22);
+  border-color: #e0a500;
+  color: #8a6100;
+  background: #fff8e0;
+  box-shadow: 0 12px 26px rgba(224, 165, 0, 0.28);
 }
-.options-grid.two-col .option-btn.correct .tf-icon { color: #16a34a; }
+.options-grid.two-col .option-btn.correct .tf-icon { color: #e0a500; }
 
 .options-grid.two-col .option-btn.incorrect {
   border-color: #c62828;
@@ -491,9 +492,9 @@
 }
 
 .ident-input.correct {
-  border-bottom-color: #16a34a;
-  background: #f0faf4;
-  color: #14833e;
+  border-bottom-color: #e0a500;
+  background: #fff8e0;
+  color: #8a6100;
 }
 
 .ident-input.incorrect {
