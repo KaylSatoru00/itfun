@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSocket } from '../socket_context';
 import { useUser } from '../user_context';
+import kidsImg from '../assets/kids.png';
 import './quiz_arena.css';
 
 // Owl mascot perched on the chalkboard. Alternates its idle animation by
@@ -54,6 +55,7 @@ function RoomDecor() {
       <span className="arena-room-plant" aria-hidden="true">🪴</span>
       <span className="arena-room-books" aria-hidden="true">📚</span>
       <div className="arena-room-desk" aria-hidden="true" />
+      <img className="arena-kids" src={kidsImg} alt="" aria-hidden="true" />
     </>
   );
 }
