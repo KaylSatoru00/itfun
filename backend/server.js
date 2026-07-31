@@ -884,9 +884,19 @@ io.on('connection', (socket) => {
       // lobby but LEFT before start — whose stale slot may still linger in
       // room.players — is deliberately excluded, so they can't rejoin a game
       // they weren't part of when it began.
+      //
+      // Ground truth = who actually has a LIVE socket in the room right now
+      // (Socket.IO room membership), not the `disconnected` flag. Someone who
+      // left via the Leave button (socket.leave) OR closed their tab (socket
+      // dropped) is no longer in this set — which also closes the pre-start
+      // grace-period race where a leaver's flag is briefly still `false`.
+      const liveSocketIds = io.sockets.adapter.rooms.get(pin) || new Set();
       room.startedParticipants = new Set(
-        room.players.filter((p) => !p.disconnected).map((p) => p.uid).filter(Boolean)
+        room.players
+          .filter((p) => !p.disconnected && liveSocketIds.has(p.id) && p.uid)
+          .map((p) => p.uid)
       );
+      console.log(`🎬 Quiz ${pin} started with participants:`, [...room.startedParticipants]);
 
       callback({ success: true });
 
