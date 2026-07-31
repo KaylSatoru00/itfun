@@ -655,7 +655,7 @@ function QuizArena() {
     playBoostedSfx(
       isUserCorrect
         ? '/sounds/mixkit-correct-answer-reward-952.wav'
-        : '/sounds/fahhh_KcgAXfs.wav',
+        : '/sounds/wrong.wav',
       1.8
     );
     // Sadyang [revealedAnswer] lang ang dependency — gusto lang natin itong
@@ -666,6 +666,13 @@ function QuizArena() {
 
   const handleAnswer = (answer) => {
     if (isAnswered || !currentQuestion || !socket) return;
+
+    // Click/submit feedback sound. This fires for Multiple Choice and
+    // True/False the moment an option is clicked, and for Identification /
+    // Fill-in-the-Blank when the Submit button is pressed — all four types
+    // funnel through handleAnswer, so one call covers every case.
+    playBoostedSfx('/sounds/select.wav', 1.2);
+
     setSelectedAnswer(answer);
     setIsAnswered(true);
 
@@ -1047,6 +1054,8 @@ function QuizArena() {
             <div className="ident-wrap">
               <span className="ident-label">Type your answer</span>
               <input
+                /* On reveal the input shows the correct answer, tinted gold if
+                   the player got it right and red if they got it wrong. */
                 className={`ident-input ${
                   revealedAnswer
                     ? (selectedAnswer || '').trim().toUpperCase() === revealedAnswer.trim().toUpperCase()
