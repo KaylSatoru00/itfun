@@ -347,12 +347,24 @@ async function validateRoomJoin(pin, uid) {
   // ang PIN sa halip na sa auto-rejoin flow), rejoin ang tamang landas para
   // sa kanya — hindi dapat siya harangan ng "Game already in progress".
   const existingPlayer = uid ? roomManager.findPlayerByUid(pin, uid) : null;
-  if (existingPlayer) {
-    return { ok: true, room, isRejoin: true };
+
+  // Mid-quiz: rejoin is allowed ONLY for players who were present in the
+  // lobby when the game actually started (see `room.startedParticipants`,
+  // set in the start-quiz handler). This blocks two cases that both look
+  // like an "existing" uid otherwise: a brand-new player, and — the bug this
+  // guards — someone who joined the lobby but LEFT before the game began
+  // (their disconnected slot can still linger in room.players).
+  if (room.status === 'playing') {
+    if (existingPlayer && room.startedParticipants && room.startedParticipants.has(uid)) {
+      return { ok: true, room, isRejoin: true };
+    }
+    return { ok: false, error: 'Game already in progress' };
   }
 
-  if (room.status === 'playing') {
-    return { ok: false, error: 'Game already in progress' };
+  // Not playing (waiting lobby, or a finished room): an existing member
+  // simply returns as a rejoin.
+  if (existingPlayer) {
+    return { ok: true, room, isRejoin: true };
   }
 
   if (room.players.length >= MAX_PLAYERS_PER_ROOM) {
@@ -409,6 +421,18 @@ async function performRejoin(socket, data, callback) {
       // "walang player talaga" — pareho lang dapat itong itsura sa
       // kabilang panig.
       callback({ success: false, error: 'Player not found in room' });
+      return;
+    }
+
+    // Same rule as validateRoomJoin: once the quiz is underway, only players
+    // who were present when it STARTED may rejoin. Someone who left the lobby
+    // before start still has a slot here, but is not on the start roster —
+    // block them so they can't sneak back in via the reconnect path.
+    if (
+      room.status === 'playing' &&
+      !(room.startedParticipants && room.startedParticipants.has(uid))
+    ) {
+      callback({ success: false, error: 'Game already in progress' });
       return;
     }
 
@@ -853,6 +877,16 @@ io.on('connection', (socket) => {
       const quizEngine = new QuizEngine(room, scoringService);
       room.quizEngine = quizEngine;
       room.status = 'playing';
+
+      // Snapshot exactly who is present in the lobby at the moment the game
+      // starts. ONLY these uids may rejoin once the quiz is underway (e.g.
+      // after a disconnect or an accidental leave). Anyone who joined the
+      // lobby but LEFT before start — whose stale slot may still linger in
+      // room.players — is deliberately excluded, so they can't rejoin a game
+      // they weren't part of when it began.
+      room.startedParticipants = new Set(
+        room.players.filter((p) => !p.disconnected).map((p) => p.uid).filter(Boolean)
+      );
 
       callback({ success: true });
 
