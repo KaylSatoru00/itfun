@@ -6,7 +6,7 @@
 .waiting-lobby-panel {
   width: 100%;
   min-height: 100vh;
-  background: radial-gradient(760px 400px at 50% -8%, #ffffff 0%, #FDF3F4 55%, #FBEAEC 100%);
+  background: radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%);
   display: flex;
   flex-direction: column;
   font-family: 'Poppins', sans-serif;
@@ -18,18 +18,18 @@
 .waiting-lobby-content {
   flex: 1;
   width: 100%;
-  max-width: 960px;
+  max-width: 1840px;
   margin: 0 auto;
-  padding: 28px;
+  padding: clamp(18px, 2.2vw, 40px);
   display: flex;
-  gap: 22px;
+  gap: clamp(20px, 2vw, 32px);
   align-items: stretch;
   box-sizing: border-box;
 }
 
 /* ── Left info panel (maroon) ── */
 .lobby-sidebar {
-  width: 240px;
+  width: clamp(240px, 20vw, 320px);
   flex-shrink: 0;
   background: linear-gradient(160deg, #A50034 0%, #7d0027 100%);
   border-radius: 22px;
@@ -39,7 +39,8 @@
   align-items: center;
   gap: 24px;
   color: #fff;
-  box-shadow: 0 12px 28px rgba(165, 0, 52, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 26px 60px rgba(120, 0, 40, 0.38), 0 8px 18px rgba(120, 0, 40, 0.22);
 }
 
 .pin-section {
@@ -91,7 +92,7 @@
   text-align: center;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.20);
 }
 
 .module-card-img {
@@ -115,7 +116,7 @@
 /* ── Right roster card ── */
 .lobby-main {
   flex: 1;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.9);
@@ -123,7 +124,7 @@
   padding: 24px 26px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 22px rgba(200, 16, 46, 0.07);
+  box-shadow: 0 26px 60px rgba(200, 16, 46, 0.16), 0 8px 20px rgba(200, 16, 46, 0.10);
   min-width: 0;
 }
 
@@ -186,7 +187,7 @@
   justify-content: center;
   font-size: 22px;
   font-weight: 800;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
   border: 2.5px solid #fff;
 }
 
@@ -212,8 +213,11 @@
 }
 
 .start-quiz-btn {
-  width: 100%;
-  padding: 14px;
+  width: auto;
+  min-width: 220px;
+  max-width: 100%;
+  padding: 14px 40px;
+  white-space: nowrap;
   background: linear-gradient(135deg, #C8102E, #A50034);
   color: #fff;
   border: none;
@@ -381,4 +385,97 @@
   .player-avatar-wrap {
     width: 66px;
   }
+}
+
+/* ─────────────────────────────────────────────
+   Leave Room confirmation modal (back button / Leave Room)
+───────────────────────────────────────────── */
+.leave-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(60, 10, 20, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.leave-modal {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 28px 26px 24px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(120, 20, 45, 0.35);
+  border: 1px solid rgba(200, 16, 46, 0.08);
+}
+
+.leave-modal-icon {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.leave-modal-title {
+  margin: 0 0 8px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: #A50034;
+}
+
+.leave-modal-text {
+  margin: 0 0 22px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #6b5157;
+}
+
+.leave-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.leave-modal-cancel,
+.leave-modal-confirm {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 28px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.leave-modal-cancel {
+  background: #f3e7ea;
+  color: #A50034;
+  border: 1px solid rgba(165, 0, 52, 0.15);
+}
+
+.leave-modal-cancel:hover {
+  background: #ecd9dd;
+  transform: translateY(-1px);
+}
+
+.leave-modal-confirm {
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.32);
+}
+
+.leave-modal-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(200, 16, 46, 0.42);
+}
+
+@media (max-width: 480px) {
+  .leave-modal-actions { flex-direction: column-reverse; }
 }

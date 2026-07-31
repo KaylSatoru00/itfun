@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSocket } from '../socket_context';
@@ -70,6 +70,135 @@ function initials(name = '') {
   return str.toUpperCase() || '?';
 }
 
+// 1 -> "1st", 2 -> "2nd", 11 -> "11th", etc.
+function getOrdinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// Tween a number from `from` to `to` over `duration` ms (ease-out cubic).
+// Used on the leaderboard so each player's score visibly counts up while the
+// rows re-sort. Snaps straight to `to` when reduced motion is preferred.
+function AnimatedScore({ from, to, duration = 1100, delay = 0, reduce = false }) {
+  const [val, setVal] = useState(reduce ? to : from);
+  useEffect(() => {
+    if (reduce || from === to) { setVal(to); return; }
+    let raf;
+    const start = performance.now() + delay;
+    const tick = (now) => {
+      const t = (now - start) / duration;
+      if (t < 0) { raf = requestAnimationFrame(tick); return; }
+      const p = t >= 1 ? 1 : 1 - Math.pow(1 - t, 3);
+      setVal(Math.round(from + (to - from) * p));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [from, to, duration, delay, reduce]);
+  return <>{val}</>;
+}
+
+// Quizizz/Quiz.com-style moving leaderboard. Rows first appear at their
+// PREVIOUS standings, then slide up/down into their new positions (Framer
+// `layout`) while the scores count up from the old total to the new one.
+//   props: rankings   = new order, sorted by new score (each has id/name/score)
+//          prevScores = { [id]: scoreAtEndOfPreviousRound }
+function RankingBoard({ rankings, prevScores, socketId, reduce }) {
+  // Order the rows by the PREVIOUS scores for the opening frame.
+  const oldOrder = useMemo(
+    () => rankings.slice().sort(
+      (a, b) => (prevScores[b.id] || 0) - (prevScores[a.id] || 0)
+    ),
+    [rankings, prevScores]
+  );
+  const [order, setOrder] = useState(oldOrder);
+  const [revealed, setRevealed] = useState(false);
+
+  // Hold on the old standings for a beat, then flip to the new order so the
+  // slide + count-up read as a deliberate "ranking change" moment.
+  useEffect(() => {
+    setOrder(oldOrder);
+    setRevealed(false);
+    const t = setTimeout(() => { setOrder(rankings); setRevealed(true); },
+      reduce ? 0 : 750);
+    return () => clearTimeout(t);
+  }, [rankings, oldOrder, reduce]);
+
+  return (
+    <div className="rankings-list medal-rows">
+      {order.map((player) => {
+        const pos = order.findIndex((p) => p.id === player.id);
+        const tier = pos === 0 ? 'gold' : pos === 1 ? 'silver' : pos === 2 ? 'bronze' : '';
+        const medal = pos === 0 ? '🥇' : pos === 1 ? '🥈' : pos === 2 ? '🥉' : '';
+        const prev = prevScores[player.id] || 0;
+        return (
+          <motion.div
+            key={player.id}
+            layout={reduce ? false : 'position'}
+            transition={{ layout: { type: 'spring', stiffness: 520, damping: 34 } }}
+            className={`rank-row ${tier ? `medal ${tier}` : ''} ${player.id === socketId ? 'is-you' : ''}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <span className="rank-pos">{getOrdinal(pos + 1)}</span>
+            {tier
+              ? <span className="rank-medal" aria-hidden="true">{medal}</span>
+              : <span className="rank-medal-spacer" aria-hidden="true" />}
+            <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
+              {initials(player.name)}
+            </span>
+            <span className="rank-name">
+              {player.name}
+              {player.id === socketId ? ' (You)' : ''}
+            </span>
+            <span className="rank-score">
+              <AnimatedScore
+                from={prev}
+                to={player.score}
+                delay={revealed ? 0 : 750}
+                reduce={reduce}
+              />
+            </span>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Confirmation shown when a player presses the browser Back button mid-quiz.
+// Leaving keeps their slot on the server (marked disconnected) so they can
+// rejoin with the same PIN while the session is still ongoing.
+function LeaveQuizModal({ onStay, onLeave }) {
+  return (
+    <div className="leave-modal-overlay" onClick={onStay}>
+      <motion.div
+        className="leave-modal"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ scale: 0.9, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      >
+        <div className="leave-modal-icon">🚪</div>
+        <h3 className="leave-modal-title">Leave Quiz?</h3>
+        <p className="leave-modal-text">
+          Do you want to leave? You can still rejoin with the PIN code while the
+          session is still ongoing.
+        </p>
+        <div className="leave-modal-actions">
+          <button className="leave-modal-cancel" onClick={onStay}>
+            Stay
+          </button>
+          <button className="leave-modal-confirm" onClick={onLeave}>
+            Yes, Leave
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function QuizArena() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,10 +219,49 @@ function QuizArena() {
   const [identInput, setIdentInput] = useState('');
   const [players, setPlayers] = useState([]);
   const [rankings, setRankings] = useState([]);
+  // Player totals as they stood at the END of the previous round — the
+  // leaderboard animates each row from here up to the new total.
+  const [prevScores, setPrevScores] = useState({});
+  const prevScoresRef = useRef({});
   const [showRoundResults, setShowRoundResults] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [finalRankings, setFinalRankings] = useState([]);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // Read inside the popstate handler (which is registered once) so it always
+  // sees the latest "is the quiz over?" value without re-binding the listener.
+  const gameFinishedRef = useRef(false);
+  useEffect(() => { gameFinishedRef.current = gameFinished; }, [gameFinished]);
+
+  // Leave the quiz. Tell the server (keeps our slot, marked disconnected, so
+  // we can rejoin by PIN while the session runs) and clear the saved session.
+  const doLeaveQuiz = () => {
+    if (socket) socket.emit('leave-room', { pin, uid: user?.uid });
+    localStorage.removeItem('itfun_roomPin');
+    localStorage.removeItem('itfun_playerName');
+    localStorage.removeItem('itfun_isHost');
+    localStorage.removeItem('itfun_sessionTime');
+    navigate('/pvp-quiz');
+  };
+
+  // Intercept the browser Back/Return button during the quiz. Without this,
+  // Back silently drops the player out of the game. Instead we push a history
+  // entry and, on Back, show a "Leave Quiz?" confirm — they can still rejoin
+  // by PIN while the session is ongoing (the server keeps them by uid). Once
+  // the quiz is finished there's nothing to rejoin, so Back just exits.
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+      if (gameFinishedRef.current) {
+        navigate('/pvp-quiz');
+      } else {
+        setShowLeaveConfirm(true);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
   // Dati, wala nang gagawin dito dahil kasama na yung correctAnswer sa
   // currentQuestion mula pa sa simula (security issue na inayos na sa
   // backend). Ngayon, dumarating lang ito pagdating ng `round-results`,
@@ -283,6 +451,9 @@ function QuizArena() {
       console.log('🎮 Quiz started:', data);
       setTotalQuestions(data.totalQuestions);
       setPlayers(data.players);
+      // Fresh game — everyone starts from 0 for the leaderboard animation.
+      prevScoresRef.current = {};
+      setPrevScores({});
 
       // Server-authoritative clock offset: kung magkano ang pagkakaiba ng
       // server clock (data.serverTime) sa sarili nating device clock sa
@@ -353,6 +524,13 @@ function QuizArena() {
         });
         return updated;
       });
+      // Snapshot the totals from the round that just ended (kept in a ref
+      // across rounds) so the board can start each row at its old score and
+      // count up; then remember the NEW totals for the next round.
+      setPrevScores(prevScoresRef.current);
+      const nextScores = {};
+      data.rankings.forEach((r) => { nextScores[r.id] = r.score; });
+      prevScoresRef.current = nextScores;
       setRankings(data.rankings);
       setRevealedAnswer(data.correctAnswer ?? null);
       // Bigyan muna ng ilang segundo bago lumipat sa rankings screen, para
@@ -508,12 +686,6 @@ function QuizArena() {
         setSelectedAnswer(null);
       }
     });
-  };
-
-  const getOrdinal = (n) => {
-    const s = ['th', 'st', 'nd', 'rd'];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
   };
 
   const timerPercent = (timer / maxTimer) * 100;
@@ -727,37 +899,19 @@ function QuizArena() {
         <div className="results-page results-big">
           <p className="round-label">{getOrdinal(currentRound).toUpperCase()} ROUND</p>
 
-          <div className="rankings-list medal-rows">
-            {rankings.map((player, index) => {
-              const tier = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
-              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-              return (
-                <motion.div
-                  key={player.id}
-                  className={`rank-row ${tier ? `medal ${tier}` : ''}`}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.08 }}
-                >
-                  <span className="rank-pos">{getOrdinal(index + 1)}</span>
-                  {tier
-                    ? <span className="rank-medal" aria-hidden="true">{medal}</span>
-                    : <span className="rank-medal-spacer" aria-hidden="true" />}
-                  <span className="rank-av" style={{ background: avatarColor(player.id || player.name) }}>
-                    {initials(player.name)}
-                  </span>
-                  <span className="rank-name">
-                    {player.name}
-                    {player.id === socket?.id ? ' (You)' : ''}
-                  </span>
-                  <span className="rank-score">{player.score}</span>
-                </motion.div>
-              );
-            })}
-          </div>
+          <RankingBoard
+            key={currentRound}
+            rankings={rankings}
+            prevScores={prevScores}
+            socketId={socket?.id}
+            reduce={reduce}
+          />
 
           <p className="next-hint">Next question coming up...</p>
         </div>
+        {showLeaveConfirm && (
+          <LeaveQuizModal onStay={() => setShowLeaveConfirm(false)} onLeave={doLeaveQuiz} />
+        )}
       </motion.div>
     );
   }
@@ -788,6 +942,9 @@ function QuizArena() {
             )}
           </AnimatePresence>
         </div>
+        {showLeaveConfirm && (
+          <LeaveQuizModal onStay={() => setShowLeaveConfirm(false)} onLeave={doLeaveQuiz} />
+        )}
       </div>
     );
   }
@@ -937,6 +1094,9 @@ function QuizArena() {
         )}
 
       </div>
+      {showLeaveConfirm && (
+        <LeaveQuizModal onStay={() => setShowLeaveConfirm(false)} onLeave={doLeaveQuiz} />
+      )}
     </motion.div>
   );
 }

@@ -25,10 +25,17 @@ import { sendPasswordResetEmail, sendOtpEmail } from './services/email.service.j
 
 const app = express();
 
-// Fixed, known-good origins (production + local dev)
-const allowedOrigins = process.env.CLIENT_URL
-  ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174']
-  : ['http://localhost:5173', 'http://localhost:5174'];
+// Fixed, known-good origins (production + local dev). The production frontend
+// is ALWAYS allowed regardless of CLIENT_URL, and every origin is normalized
+// (trimmed + trailing slash stripped) so an env-var quirk like a trailing
+// slash can't silently break CORS.
+const normalizeOrigin = (o) => String(o || '').trim().replace(/\/+$/, '');
+const allowedOrigins = [
+  'https://itfun.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  process.env.CLIENT_URL,
+].map(normalizeOrigin).filter(Boolean);
 
 // Vercel preview deployments get a random URL per build, e.g.
 // https://itfun-p4ib9yon3-kaylsatoru00s-projects.vercel.app
@@ -40,7 +47,8 @@ function corsOriginCheck(origin, callback) {
   // Allow requests with no origin (e.g. curl, server-to-server, mobile apps)
   if (!origin) return callback(null, true);
 
-  if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+  const o = normalizeOrigin(origin);
+  if (allowedOrigins.includes(o) || vercelPreviewRegex.test(o)) {
     return callback(null, true);
   }
 
@@ -93,6 +101,9 @@ const ABANDONED_ROOM_CLEANUP_MS = 30 * 60 * 1000; // 30 mins, failsafe lang
 const signupOtps = new Map();
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_OTP_ATTEMPTS = 5;
+
+// Maximum players per room, INCLUDING the host (the host occupies slot 1).
+const MAX_PLAYERS_PER_ROOM = 40;
 
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
@@ -336,15 +347,27 @@ async function validateRoomJoin(pin, uid) {
   // ang PIN sa halip na sa auto-rejoin flow), rejoin ang tamang landas para
   // sa kanya — hindi dapat siya harangan ng "Game already in progress".
   const existingPlayer = uid ? roomManager.findPlayerByUid(pin, uid) : null;
+
+  // Mid-quiz: rejoin is allowed ONLY for players who were present in the
+  // lobby when the game actually started (see `room.startedParticipants`,
+  // set in the start-quiz handler). This blocks two cases that both look
+  // like an "existing" uid otherwise: a brand-new player, and — the bug this
+  // guards — someone who joined the lobby but LEFT before the game began
+  // (their disconnected slot can still linger in room.players).
+  if (room.status === 'playing') {
+    if (existingPlayer && room.startedParticipants && room.startedParticipants.has(uid)) {
+      return { ok: true, room, isRejoin: true };
+    }
+    return { ok: false, error: 'Game already in progress' };
+  }
+
+  // Not playing (waiting lobby, or a finished room): an existing member
+  // simply returns as a rejoin.
   if (existingPlayer) {
     return { ok: true, room, isRejoin: true };
   }
 
-  if (room.status === 'playing') {
-    return { ok: false, error: 'Game already in progress' };
-  }
-
-  if (room.players.length >= 10) {
+  if (room.players.length >= MAX_PLAYERS_PER_ROOM) {
     return { ok: false, error: 'Room is full' };
   }
 
@@ -398,6 +421,18 @@ async function performRejoin(socket, data, callback) {
       // "walang player talaga" — pareho lang dapat itong itsura sa
       // kabilang panig.
       callback({ success: false, error: 'Player not found in room' });
+      return;
+    }
+
+    // Same rule as validateRoomJoin: once the quiz is underway, only players
+    // who were present when it STARTED may rejoin. Someone who left the lobby
+    // before start still has a slot here, but is not on the start roster —
+    // block them so they can't sneak back in via the reconnect path.
+    if (
+      room.status === 'playing' &&
+      !(room.startedParticipants && room.startedParticipants.has(uid))
+    ) {
+      callback({ success: false, error: 'Game already in progress' });
       return;
     }
 
@@ -843,6 +878,26 @@ io.on('connection', (socket) => {
       room.quizEngine = quizEngine;
       room.status = 'playing';
 
+      // Snapshot exactly who is present in the lobby at the moment the game
+      // starts. ONLY these uids may rejoin once the quiz is underway (e.g.
+      // after a disconnect or an accidental leave). Anyone who joined the
+      // lobby but LEFT before start — whose stale slot may still linger in
+      // room.players — is deliberately excluded, so they can't rejoin a game
+      // they weren't part of when it began.
+      //
+      // Ground truth = who actually has a LIVE socket in the room right now
+      // (Socket.IO room membership), not the `disconnected` flag. Someone who
+      // left via the Leave button (socket.leave) OR closed their tab (socket
+      // dropped) is no longer in this set — which also closes the pre-start
+      // grace-period race where a leaver's flag is briefly still `false`.
+      const liveSocketIds = io.sockets.adapter.rooms.get(pin) || new Set();
+      room.startedParticipants = new Set(
+        room.players
+          .filter((p) => !p.disconnected && liveSocketIds.has(p.id) && p.uid)
+          .map((p) => p.uid)
+      );
+      console.log(`🎬 Quiz ${pin} started with participants:`, [...room.startedParticipants]);
+
       callback({ success: true });
 
       // `serverTime` dito ay ang TANGING reference na gagamitin ng lahat ng
@@ -925,6 +980,69 @@ io.on('connection', (socket) => {
     const room = roomManager.getRoom(pin);
     if (!room || room.status !== 'playing') return;
     sendQuestion(pin);
+  });
+
+  // ── Explicit Leave (from the "Leave Room" button / browser Back) ──
+  // Unlike a socket disconnect (which keeps the shared socket alive when the
+  // user merely navigates away), this fires when the user intentionally
+  // leaves the lobby. We hide them from everyone's lobby IMMEDIATELY (real-
+  // time presence) but keep their slot so they — and only they, by uid — can
+  // rejoin by entering the PIN again. Rejoining re-marks them connected and
+  // re-broadcasts, so other players see them reappear.
+  socket.on('leave-room', (data, callback) => {
+    try {
+      const pin = (data && data.pin) || socket.data.roomPin;
+      if (!pin) { if (callback) callback({ success: true }); return; }
+
+      const room = roomManager.getRoom(pin);
+      if (!room) { if (callback) callback({ success: true }); return; }
+
+      const uid = (data && data.uid) || socket.data.uid;
+
+      // Cancel any pending disconnect grace timer for this player.
+      const timerKey = `${pin}:${uid}`;
+      const pending = disconnectTimers.get(timerKey);
+      if (pending) { clearTimeout(pending); disconnectTimers.delete(timerKey); }
+
+      const wasHost = socket.id === room.hostId;
+
+      // Hide from the visible player list, keep the slot for rejoin.
+      roomManager.markPlayerDisconnected(pin, socket.id);
+      socket.leave(pin);
+      socket.data.roomPin = null;
+
+      // Host migration (Valorant / CODM style): if the host left and a
+      // connected player remains, promote the earliest-joined still-connected
+      // player to host. If the original host rejoins later, they come back as
+      // a regular player — someone else already holds the role.
+      if (wasHost) {
+        const newHost = room.players.find((p) => !p.disconnected);
+        if (newHost) {
+          room.hostId = newHost.id;
+          room.hostName = newHost.name;
+          room.hostUid = newHost.uid;
+          io.to(pin).emit('host-changed', { newHostId: newHost.id, newHostName: newHost.name });
+        }
+      }
+
+      io.to(pin).emit('player-left', {
+        playerId: socket.id,
+        playerCount: roomManager.getVisiblePlayers(pin).length,
+      });
+      io.to(pin).emit('room-update', {
+        players: roomManager.getVisiblePlayers(pin),
+        hostName: room.hostName,
+        isHost: false,
+      });
+
+      // If nobody connected is left, schedule the room for cleanup.
+      scheduleAbandonedRoomCleanup(pin);
+
+      if (callback) callback({ success: true });
+    } catch (err) {
+      console.error('leave-room error:', err.message);
+      if (callback) callback({ success: false, error: err.message });
+    }
   });
 
   // ── Disconnect ──
@@ -1039,13 +1157,18 @@ io.on('connection', (socket) => {
     }
 
     if (wasHost) {
-      const newHost = room.players[0];
-      room.hostId = newHost.id;
-      room.hostName = newHost.name;
-      io.to(pin).emit('host-changed', {
-        newHostId: newHost.id,
-        newHostName: newHost.name,
-      });
+      // Promote the earliest-joined still-connected player (Valorant / CODM
+      // style host migration), falling back to the first slot if needed.
+      const newHost = room.players.find((p) => !p.disconnected) || room.players[0];
+      if (newHost) {
+        room.hostId = newHost.id;
+        room.hostName = newHost.name;
+        room.hostUid = newHost.uid;
+        io.to(pin).emit('host-changed', {
+          newHostId: newHost.id,
+          newHostName: newHost.name,
+        });
+      }
     }
 
     io.to(pin).emit('player-left', {
