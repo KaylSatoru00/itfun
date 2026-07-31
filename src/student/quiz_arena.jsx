@@ -1054,10 +1054,15 @@ function QuizArena() {
             <div className="ident-wrap">
               <span className="ident-label">Type your answer</span>
               <input
-                /* On reveal the input shows the CORRECT answer, so it's always
-                   styled gold (.correct) — whether the player got it right or
-                   wrong is conveyed by the sound + round-results screen. */
-                className={`ident-input ${revealedAnswer ? 'correct' : ''}`}
+                /* On reveal the input shows the correct answer, tinted gold if
+                   the player got it right and red if they got it wrong. */
+                className={`ident-input ${
+                  revealedAnswer
+                    ? (selectedAnswer || '').trim().toUpperCase() === revealedAnswer.trim().toUpperCase()
+                      ? 'correct'
+                      : 'incorrect'
+                    : ''
+                }`}
                 type="text"
                 placeholder="Type your answer here..."
                 value={
