@@ -159,12 +159,37 @@ function repeatedDivision(decimal, base) {
 // routes through decimal, so we show: (1) source → decimal by expanded
 // notation, then (2) decimal → target by repeated division — skipping whichever
 // step is trivial when the source or target is already decimal.
+// A place-value chart: each digit (0/1 for binary) in a box under its weight.
+function BitChart({ cells }) {
+  return (
+    <div className="s3-bitchart">
+      {cells.map((c, i) => (
+        <div className="s3-bitcol" key={i}>
+          <div className="s3-bitw">{c.weight}</div>
+          <div className="s3-bitb">{c.digit}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ConverterSolution({ sourceOption, targetOption, input, decimalValue }) {
   const showExpand = sourceOption.base !== 10;
   const showDivide = targetOption.base !== 10;
   const exp = showExpand ? expandedNotation(input, sourceOption.base) : null;
   const div = showDivide ? repeatedDivision(decimalValue, targetOption.base) : null;
+  const isBinarySource = sourceOption.base === 2;
+  const isBinaryTarget = targetOption.base === 2;
   let step = 0;
+
+  // Helper to render a term list joined with " + ".
+  const joinTerms = (terms, fn) =>
+    terms.map((t, i) => (
+      <span key={i}>
+        {i > 0 && <span className="s3-sol-op"> + </span>}
+        {fn(t)}
+      </span>
+    ));
 
   return (
     <div className="s3-sol">
@@ -175,35 +200,35 @@ function ConverterSolution({ sourceOption, targetOption, input, decimalValue }) 
             {sourceOption.label} → Decimal (expanded notation)
           </div>
           <p className="s3-sol-note">
-            Multiply each digit by (base {sourceOption.base}) raised to its position,
-            counting from the right starting at 0:
+            {isBinarySource
+              ? 'Line up each bit (0 or 1) under its place value, then add the place values where the bit is 1:'
+              : `Multiply each digit by (base ${sourceOption.base}) raised to its position, counting from the right starting at 0:`}
           </p>
+
+          {/* Binary: show the 0/1 place-value chart in place of the exponent line */}
+          {isBinarySource && (
+            <BitChart cells={exp.terms.map((t) => ({ weight: t.place, digit: t.d }))} />
+          )}
+
+          {/* Non-binary: show the exponent form first */}
+          {!isBinarySource && (
+            <div className="s3-sol-line">
+              {joinTerms(exp.terms, (t) => (
+                <>
+                  {t.d}{sourceOption.base === 16 && t.val > 9 ? `(${t.val})` : ''}×{sourceOption.base}
+                  <sup>{t.power}</sup>
+                </>
+              ))}
+            </div>
+          )}
+
           <div className="s3-sol-line">
-            {exp.terms.map((t, i) => (
-              <span key={i}>
-                {i > 0 && <span className="s3-sol-op"> + </span>}
-                {t.d}{sourceOption.base === 16 && t.val > 9 ? `(${t.val})` : ''}×{sourceOption.base}
-                <sup>{t.power}</sup>
-              </span>
-            ))}
+            {!isBinarySource && <span className="s3-sol-op">= </span>}
+            {joinTerms(exp.terms, (t) => `${t.val}×${t.place}`)}
           </div>
           <div className="s3-sol-line">
             <span className="s3-sol-op">= </span>
-            {exp.terms.map((t, i) => (
-              <span key={i}>
-                {i > 0 && <span className="s3-sol-op"> + </span>}
-                {t.val}×{t.place}
-              </span>
-            ))}
-          </div>
-          <div className="s3-sol-line">
-            <span className="s3-sol-op">= </span>
-            {exp.terms.map((t, i) => (
-              <span key={i}>
-                {i > 0 && <span className="s3-sol-op"> + </span>}
-                {t.product}
-              </span>
-            ))}
+            {joinTerms(exp.terms, (t) => t.product)}
           </div>
           <div className="s3-sol-line">
             <span className="s3-sol-op">= </span>
@@ -219,7 +244,8 @@ function ConverterSolution({ sourceOption, targetOption, input, decimalValue }) 
             Decimal → {targetOption.label} (repeated division)
           </div>
           <p className="s3-sol-note">
-            Divide by {targetOption.base} repeatedly and keep the remainders:
+            Divide by {targetOption.base} repeatedly and keep the remainders
+            {isBinaryTarget ? ' (each is a 0 or 1)' : ''}:
           </p>
           <div className="s3-sol-div">
             {div.rows.map((r, i) => (
@@ -235,6 +261,19 @@ function ConverterSolution({ sourceOption, targetOption, input, decimalValue }) 
           <div className="s3-sol-line">
             Read remainders bottom → top: <span className="s3-sol-ans">{div.result}</span>
           </div>
+
+          {/* Binary: show the resulting 0s and 1s under their place values */}
+          {isBinaryTarget && (
+            <>
+              <p className="s3-sol-note">The 0s and 1s placed under their weights:</p>
+              <BitChart
+                cells={div.result.split('').map((d, i) => ({
+                  weight: Math.pow(2, div.result.length - 1 - i),
+                  digit: d,
+                }))}
+              />
+            </>
+          )}
         </div>
       )}
     </div>
