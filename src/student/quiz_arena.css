@@ -902,6 +902,33 @@
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.15));
 }
 
+/* ── Final Results confetti (side cannons) ── */
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+.confetti-pc {
+  position: absolute;
+  bottom: 0;
+  will-change: transform, opacity;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  animation-name: confetti-cannon;
+  animation-timing-function: cubic-bezier(0.25, 0.6, 0.3, 1);
+  animation-fill-mode: both;
+}
+@keyframes confetti-cannon {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  6%   { opacity: 1; }
+  45%  { transform: translate(calc(var(--tx) * 0.55), var(--rise)) rotate(calc(var(--r) * 0.5)); opacity: 1; }
+  100% { transform: translate(var(--tx), 16vh) rotate(var(--r)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-layer { display: none; }
+}
+
 .arena-owl {
   position: absolute;
   right: -4px;
