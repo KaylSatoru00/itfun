@@ -821,6 +821,40 @@
 
 .s3-sol-rem { color: #A50034; font-weight: 700; white-space: nowrap; }
 
+/* Binary place-value chart (0/1 boxes under their weights) */
+.s3-bitchart {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+.s3-bitcol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.s3-bitw {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b06c7e;
+}
+.s3-bitb {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid #A50034;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #A50034;
+}
+
 .s3-converter-result-label {
   display: flex;
   align-items: center;
