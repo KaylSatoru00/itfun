@@ -1026,6 +1026,22 @@
   .lm-panel.sm-page .search-bar { flex: 1 1 auto; }
   .lm-panel.sm-page .top-btn { font-size: 0.7rem; padding: 7px 12px; }
   .lm-panel.sm-page .bottom-nav-label { font-size: 0.55rem; }
+
+  /* On phones the search bar is narrow, so break the results dropdown out
+     to a near-full-width panel under the navbar instead of matching the
+     (tiny) bar width — otherwise each result truncates to one letter. */
+  .lm-panel.sm-page .search-dropdown {
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    max-height: 72vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lm-panel.sm-page .search-dropdown-item { padding: 12px 14px; }
+  .lm-panel.sm-page .search-dropdown-label { white-space: normal; }
+  .lm-panel.sm-page .search-dropdown-sublabel { white-space: nowrap; }
 }
 
 @media (max-width: 420px) {
