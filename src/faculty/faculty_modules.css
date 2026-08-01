@@ -715,6 +715,22 @@
   .fm-panel .fm-grid { grid-template-columns: 1fr; }
   .fm-panel .search-bar { flex: 1 1 auto; }
   .fm-panel .fm-wordmark { display: none; }
+
+  /* On phones the search bar is narrow, so break the results dropdown out
+     to a near-full-width panel under the navbar instead of matching the
+     (tiny) bar width — otherwise each result truncates to one letter. */
+  .fm-panel .search-dropdown {
+    position: fixed;
+    top: 62px;
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+    max-height: 72vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fm-panel .search-dropdown-label { white-space: normal; }
+  .fm-panel .search-dropdown-sublabel { white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
