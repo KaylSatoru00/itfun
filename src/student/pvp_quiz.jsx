@@ -17,6 +17,14 @@ function PvpQuiz() {
   const [pinFocused, setPinFocused] = useState(false);
   const pinInputRef = useRef(null);
 
+  // Bottom-nav active pill: starts on the OTHER tab and slides into place on
+  // mount, so switching tabs reads as the pill gliding to the tapped one.
+  const [navPillReady, setNavPillReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setNavPillReady(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   // Kung may saved session tayo (host man o joiner) galing sa localStorage,
   // ibig sabihin may room pa siyang binalikan — kaya bago pa man ipakita
   // itong landing page (na may "Join Room" modal na dumadaan sa
@@ -102,10 +110,9 @@ function PvpQuiz() {
   return (
     <motion.div
       className="pvp-panel"
-      initial={{ opacity: 0, x: 44 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 44 }}
-      transition={{ duration: 0.34, ease: 'easeInOut' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
     >
       {/* Header */}
       <div className="pvp-header">
@@ -202,7 +209,7 @@ function PvpQuiz() {
       </div>
 
       {/* Bottom Navigation — Sliding Pill */}
-      <div className="bottom-nav">
+      <div className={`bottom-nav ${navPillReady ? 'pill-right' : 'pill-left'}`}>
         <div className="bottom-nav-pill" />
         <div className="bottom-nav-btn" onClick={() => navigate('/learning-modules')}>
           <span className="bottom-nav-icon"><SiBookstack /></span>
