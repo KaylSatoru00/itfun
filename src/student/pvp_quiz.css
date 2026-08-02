@@ -24,35 +24,97 @@
   text-align: center;
 }
 
-.pvp-header-icon {
-  width: 64px;
-  height: 64px;
+/* ── Emblem badge (glossy maroon→red circle + crossed swords) ── */
+.pvp-emblem {
+  position: relative;
+  width: clamp(74px, 18vw, 92px);
+  height: clamp(74px, 18vw, 92px);
   border-radius: 50%;
-  background: #f2d7d5;
+  background: linear-gradient(135deg, #C8102E 0%, #7d0027 100%);
+  box-shadow: 0 14px 32px rgba(165, 0, 52, 0.42), inset 0 2px 8px rgba(255, 255, 255, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
-  border: 2px solid #A50034;
   flex-shrink: 0;
+}
+.pvp-emblem::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(200, 16, 46, 0.35);
+}
+.pvp-emblem-swords {
+  position: relative;
+  z-index: 1;
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+}
+
+/* Sword glint — a light streak sweeps across the emblem periodically */
+.pvp-emblem-glint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+.pvp-emblem-glint span {
+  position: absolute;
+  top: -30%;
+  left: -60%;
+  width: 40%;
+  height: 160%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: rotate(18deg);
+  animation: pvp-glint 3.2s ease-in-out infinite;
+}
+@keyframes pvp-glint {
+  0%   { left: -60%; }
+  40%  { left: 120%; }
+  100% { left: 120%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-emblem-glint span { animation: none; display: none; }
 }
 
 .pvp-header-title {
-  font-size: clamp(20px, 4vw, 28px);
-  font-weight: bold;
-  color: #A50034;
-  margin: 0;
-  font-family: Arial, sans-serif;
-  letter-spacing: 1px;
+  font-size: clamp(40px, 11vw, 64px);
+  font-weight: 900;
+  margin: 8px 0 0;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg, #C8102E, #A50034);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
+/* decorative divider between title and subtitle */
+.pvp-header-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #A50034;
+}
+.pvp-header-divider span {
+  height: 2px;
+  width: clamp(32px, 9vw, 48px);
+  background: linear-gradient(90deg, transparent, #C8102E);
+}
+.pvp-header-divider span:last-child {
+  background: linear-gradient(270deg, transparent, #C8102E);
+}
+.pvp-header-divider b { font-size: 13px; line-height: 1; }
+
 .pvp-header-subtitle {
-  font-size: clamp(12px, 2vw, 14px);
-  color: #555;
-  margin: 0;
-  font-family: Arial, sans-serif;
-  font-style: italic;
-  max-width: 340px;
+  font-size: clamp(13px, 2.4vw, 16px);
+  color: #7a5560;
+  margin: 4px 0 0;
+  font-family: 'Montserrat', sans-serif;
+  max-width: 400px;
 }
 
 /* ═══════════ CREATE / JOIN PANELS — Sample C (Split Contrast) ═══════════ */
@@ -246,8 +308,12 @@
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
-.bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
-  transform: translateX(calc(100% + 4px));
+/* Pill position is driven by a class on .bottom-nav so it can start on the
+   opposite tab and slide into place on mount (see navPillReady in the JSX). */
+.bottom-nav.pill-left .bottom-nav-pill { transform: translateX(0); }
+.bottom-nav.pill-right .bottom-nav-pill { transform: translateX(calc(100% + 4px)); }
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav-pill { transition: none; }
 }
 .bottom-nav-btn {
   flex: 1;
@@ -293,12 +359,6 @@
     margin-bottom: 28px;
   }
 
-  .pvp-header-icon {
-    width: 54px;
-    height: 54px;
-    font-size: 26px;
-  }
-
   .pvp-cards {
     max-width: 100%;
   }
@@ -314,12 +374,6 @@
 
   .pvp-header {
     margin-bottom: 24px;
-  }
-
-  .pvp-header-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 22px;
   }
 
   .pvp-panel-badge {

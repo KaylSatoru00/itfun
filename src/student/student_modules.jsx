@@ -154,6 +154,14 @@ function LearningModules() {
   const [showDropdown, setShowDropdown]   = useState(false);
   const searchRef                         = useRef(null);
 
+  // Bottom-nav active pill: starts on the OTHER tab and slides into place on
+  // mount, so switching tabs reads as the pill gliding to the tapped one.
+  const [navPillReady, setNavPillReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setNavPillReady(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   // ── Join Course modal states ──
   const [joinStep, setJoinStep]       = useState('input');
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -734,7 +742,15 @@ function LearningModules() {
                         style={{ backgroundImage: `url(${module.img})` }}
                         onClick={pos >= 2 ? () => bringToActive(pos) : undefined}
                       >
-                        <span className="stk-chip">Module {module.num}</span>
+                        {pos >= 2 ? (
+                          // Peek cards: show the module name beside the chip.
+                          <div className="stk-peek-topbar">
+                            <span className="stk-chip">Module {module.num}</span>
+                            <span className="stk-peek-name">{module.label}</span>
+                          </div>
+                        ) : (
+                          <span className="stk-chip">Module {module.num}</span>
+                        )}
                         {locked
                           ? <span className="stk-lock">🔒 Locked</span>
                           : state.completed
@@ -799,7 +815,7 @@ function LearningModules() {
       </div>
 
       {/* Bottom Navigation — Sliding Pill */}
-      <div className="bottom-nav">
+      <div className={`bottom-nav ${navPillReady ? 'pill-left' : 'pill-right'}`}>
         <div className="bottom-nav-pill" />
         <div className="bottom-nav-btn active" onClick={() => navigate('/learning-modules')}>
           <span className="bottom-nav-icon"><SiBookstack /></span>

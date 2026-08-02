@@ -327,10 +327,10 @@
 }
 
 /* receding peeks on the right */
-.lm-panel.sm-page .stk-item.peek-1 { left: 64%; cursor: pointer; }
-.lm-panel.sm-page .stk-item.peek-2 { left: calc(64% + 325px); cursor: pointer; }
-.lm-panel.sm-page .stk-item.peek-3 { left: calc(64% + 650px); cursor: pointer; }
-.lm-panel.sm-page .stk-item.stk-hidden { left: calc(64% + 975px); opacity: 0; pointer-events: none; }
+.lm-panel.sm-page .stk-item.peek-1 { left: 69%; cursor: pointer; }
+.lm-panel.sm-page .stk-item.peek-2 { left: calc(69% + 325px); cursor: pointer; }
+.lm-panel.sm-page .stk-item.peek-3 { left: calc(69% + 650px); cursor: pointer; }
+.lm-panel.sm-page .stk-item.stk-hidden { left: calc(69% + 975px); opacity: 0; pointer-events: none; }
 .lm-panel.sm-page .stk-item.stk-under { pointer-events: none; }
 
 /* locked peek cards dimmed */
@@ -354,6 +354,37 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 .lm-panel.sm-page .stk-item.stk-peek .stk-chip { font-size: 10px; padding: 3px 9px; top: 10px; left: 10px; }
+
+/* Peek card top bar: "Module N" chip + module name beside it */
+.lm-panel.sm-page .stk-peek-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(180deg, rgba(6, 6, 7, 0.8) 0%, rgba(6, 6, 7, 0.35) 60%, transparent 100%);
+}
+.lm-panel.sm-page .stk-peek-topbar .stk-chip {
+  position: static;
+  flex-shrink: 0;
+}
+.lm-panel.sm-page .stk-peek-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 10px;          /* same size as the peek "Module N" chip */
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .lm-panel.sm-page .stk-lock {
   position: absolute;
   top: 14px;
@@ -762,10 +793,12 @@
   color: #111;
 }
 .lm-panel.sm-page .bottom-nav-btn.active .bottom-nav-label { color: #fff; }
-/* When the second tab (.bottom-nav-btn:nth-child(3) because pill is child 1)
-   is active, slide the pill to the right half */
-.lm-panel.sm-page .bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
-  transform: translateX(calc(100% + 4px));
+/* Pill position is driven by a class on .bottom-nav so it can start on the
+   opposite tab and slide into place on mount (see navPillReady in the JSX). */
+.lm-panel.sm-page .bottom-nav.pill-left .bottom-nav-pill { transform: translateX(0); }
+.lm-panel.sm-page .bottom-nav.pill-right .bottom-nav-pill { transform: translateX(calc(100% + 4px)); }
+@media (prefers-reduced-motion: reduce) {
+  .lm-panel.sm-page .bottom-nav-pill { transition: none; }
 }
 
 /* ═══════════ MODALS ═══════════ */
@@ -995,6 +1028,22 @@
   .lm-panel.sm-page .search-bar { flex: 1 1 auto; }
   .lm-panel.sm-page .top-btn { font-size: 0.7rem; padding: 7px 12px; }
   .lm-panel.sm-page .bottom-nav-label { font-size: 0.55rem; }
+
+  /* On phones the search bar is narrow, so break the results dropdown out
+     to a near-full-width panel under the navbar instead of matching the
+     (tiny) bar width — otherwise each result truncates to one letter. */
+  .lm-panel.sm-page .search-dropdown {
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    max-height: 72vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lm-panel.sm-page .search-dropdown-item { padding: 12px 14px; }
+  .lm-panel.sm-page .search-dropdown-label { white-space: normal; }
+  .lm-panel.sm-page .search-dropdown-sublabel { white-space: nowrap; }
 }
 
 @media (max-width: 420px) {

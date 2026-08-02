@@ -17,6 +17,14 @@ function PvpQuiz() {
   const [pinFocused, setPinFocused] = useState(false);
   const pinInputRef = useRef(null);
 
+  // Bottom-nav active pill: starts on the OTHER tab and slides into place on
+  // mount, so switching tabs reads as the pill gliding to the tapped one.
+  const [navPillReady, setNavPillReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setNavPillReady(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   // Kung may saved session tayo (host man o joiner) galing sa localStorage,
   // ibig sabihin may room pa siyang binalikan — kaya bago pa man ipakita
   // itong landing page (na may "Join Room" modal na dumadaan sa
@@ -108,8 +116,29 @@ function PvpQuiz() {
     >
       {/* Header */}
       <div className="pvp-header">
-        <div className="pvp-header-icon">⚔️</div>
+        <div className="pvp-emblem" aria-hidden="true">
+          <div className="pvp-emblem-glint"><span></span></div>
+          <svg viewBox="0 0 56 56" className="pvp-emblem-swords">
+            <g transform="rotate(45 28 28)">
+              <polygon points="26,6 30,6 28,2" fill="#ffffff" />
+              <rect x="26" y="6" width="4" height="30" fill="#eef3f8" />
+              <rect x="20" y="35" width="16" height="4" rx="2" fill="#f0b429" />
+              <rect x="26.5" y="39" width="3" height="10" fill="#8a5a2b" />
+              <circle cx="28" cy="50" r="2.6" fill="#f0b429" />
+            </g>
+            <g transform="rotate(-45 28 28)">
+              <polygon points="26,6 30,6 28,2" fill="#ffffff" />
+              <rect x="26" y="6" width="4" height="30" fill="#e6edf5" />
+              <rect x="20" y="35" width="16" height="4" rx="2" fill="#f0b429" />
+              <rect x="26.5" y="39" width="3" height="10" fill="#8a5a2b" />
+              <circle cx="28" cy="50" r="2.6" fill="#f0b429" />
+            </g>
+          </svg>
+        </div>
         <h2 className="pvp-header-title">QUIZ ARENA</h2>
+        <div className="pvp-header-divider" aria-hidden="true">
+          <span></span><b>◆</b><span></span>
+        </div>
         <p className="pvp-header-subtitle">Challenge your classmates in real-time quiz battles!</p>
       </div>
 
@@ -180,7 +209,7 @@ function PvpQuiz() {
       </div>
 
       {/* Bottom Navigation — Sliding Pill */}
-      <div className="bottom-nav">
+      <div className={`bottom-nav ${navPillReady ? 'pill-right' : 'pill-left'}`}>
         <div className="bottom-nav-pill" />
         <div className="bottom-nav-btn" onClick={() => navigate('/learning-modules')}>
           <span className="bottom-nav-icon"><SiBookstack /></span>

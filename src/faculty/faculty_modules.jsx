@@ -392,7 +392,15 @@ function FacultyModules() {
                           style={{ backgroundImage: `url(${module.img})` }}
                           onClick={pos >= 2 ? () => bringToActive(pos) : undefined}
                         >
-                          <span className="stk-chip">Module {module.num}</span>
+                          {pos >= 2 ? (
+                            // Peek cards: show the module name beside the chip.
+                            <div className="stk-peek-topbar">
+                              <span className="stk-chip">Module {module.num}</span>
+                              <span className="stk-peek-name">{module.label}</span>
+                            </div>
+                          ) : (
+                            <span className="stk-chip">Module {module.num}</span>
+                          )}
 
                           {isActive && (
                             <div className="stk-content" key={module.num}>

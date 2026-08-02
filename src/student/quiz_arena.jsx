@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSocket } from '../socket_context';
 import { useUser } from '../user_context';
+import kidsImg from '../assets/kids.png';
 import './quiz_arena.css';
 
 // Owl mascot perched on the chalkboard. Alternates its idle animation by
@@ -54,6 +55,7 @@ function RoomDecor() {
       <span className="arena-room-plant" aria-hidden="true">🪴</span>
       <span className="arena-room-books" aria-hidden="true">📚</span>
       <div className="arena-room-desk" aria-hidden="true" />
+      <img className="arena-kids" src={kidsImg} alt="" aria-hidden="true" />
     </>
   );
 }
@@ -163,6 +165,63 @@ function RankingBoard({ rankings, prevScores, socketId, reduce }) {
           </motion.div>
         );
       })}
+    </div>
+  );
+}
+
+// Celebration confetti for the Final Results — two "side cannons" that pop
+// up from the bottom-left and bottom-right corners, arc toward the centre,
+// then drift down and fade. Plays once (the component mounts with the
+// results screen). Skipped entirely under prefers-reduced-motion.
+const CONFETTI_COLORS = ['#C8102E', '#A50034', '#f7cf4e', '#ff8fae', '#ffffff', '#e0a500'];
+function ConfettiCannons({ reduce }) {
+  const pieces = useMemo(() => {
+    if (reduce) return [];
+    const arr = [];
+    const perSide = 34;
+    [-1, 1].forEach((side) => {           // -1 = left cannon, 1 = right cannon
+      for (let i = 0; i < perSide; i++) {
+        const r = Math.random;
+        const round = r() > 0.6;
+        const size = 6 + r() * 8;
+        arr.push({
+          round,
+          size,
+          color: CONFETTI_COLORS[Math.floor(r() * CONFETTI_COLORS.length)],
+          left: side === -1 ? r() * 8 : 92 + r() * 8,   // hug the edge
+          tx: (side === -1 ? 1 : -1) * (10 + r() * 42),  // drift toward centre (vw)
+          rise: -(38 + r() * 42),                        // peak height (vh, up)
+          rot: r() * 720 - 360,
+          dur: 2.4 + r() * 1.3,
+          delay: r() * 0.5,
+        });
+      }
+    });
+    return arr;
+  }, [reduce]);
+
+  if (!pieces.length) return null;
+
+  return (
+    <div className="confetti-layer" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="confetti-pc"
+          style={{
+            left: `${p.left}%`,
+            width: `${p.size}px`,
+            height: `${p.round ? p.size : p.size * 1.4}px`,
+            background: p.color,
+            borderRadius: p.round ? '50%' : '2px',
+            '--tx': `${p.tx}vw`,
+            '--rise': `${p.rise}vh`,
+            '--r': `${p.rot}deg`,
+            animationDuration: `${p.dur}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -820,6 +879,7 @@ function QuizArena() {
         animate={{ opacity: 1 }}
       >
         <Wordmark />
+        <ConfettiCannons reduce={reduce} />
         <div className="results-page results-big">
           <p className="round-label">FINAL RESULTS</p>
 

@@ -127,6 +127,159 @@ const BASE_OPTIONS = [
   { key: 'hexadecimal', label: 'Hexadecimal', base: 16, example: 'FF',       regex: /^[0-9A-Fa-f]+$/ },
 ];
 
+const HEX_DIGITS = '0123456789ABCDEF';
+
+// Source (any base) → decimal via expanded positional notation.
+function expandedNotation(input, base) {
+  const digits = input.toUpperCase().split('');
+  const n = digits.length;
+  const terms = digits.map((d, i) => {
+    const val = HEX_DIGITS.indexOf(d);
+    const power = n - 1 - i;
+    return { d, val, power, place: Math.pow(base, power), product: val * Math.pow(base, power) };
+  });
+  const sum = terms.reduce((a, t) => a + t.product, 0);
+  return { terms, sum };
+}
+
+// Decimal → target base via repeated division, keeping remainders.
+function repeatedDivision(decimal, base) {
+  const rows = [];
+  let q = decimal;
+  if (q === 0) rows.push({ dividend: 0, quotient: 0, remainder: 0 });
+  while (q > 0) {
+    rows.push({ dividend: q, quotient: Math.floor(q / base), remainder: q % base });
+    q = Math.floor(q / base);
+  }
+  const result = rows.map((r) => HEX_DIGITS[r.remainder]).reverse().join('') || '0';
+  return { rows, result };
+}
+
+// Step-by-step derivation shown under each conversion result. Every conversion
+// routes through decimal, so we show: (1) source → decimal by expanded
+// notation, then (2) decimal → target by repeated division — skipping whichever
+// step is trivial when the source or target is already decimal.
+// A place-value chart: each digit (0/1 for binary) in a box under its weight.
+function BitChart({ cells }) {
+  return (
+    <div className="s3-bitchart">
+      {cells.map((c, i) => (
+        <div className="s3-bitcol" key={i}>
+          <div className="s3-bitw">{c.weight}</div>
+          <div className="s3-bitb">{c.digit}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ConverterSolution({ sourceOption, targetOption, input, decimalValue }) {
+  const showExpand = sourceOption.base !== 10;
+  const showDivide = targetOption.base !== 10;
+  const exp = showExpand ? expandedNotation(input, sourceOption.base) : null;
+  const div = showDivide ? repeatedDivision(decimalValue, targetOption.base) : null;
+  const isBinarySource = sourceOption.base === 2;
+  const isBinaryTarget = targetOption.base === 2;
+  let step = 0;
+
+  // Helper to render a term list joined with " + ".
+  const joinTerms = (terms, fn) =>
+    terms.map((t, i) => (
+      <span key={i}>
+        {i > 0 && <span className="s3-sol-op"> + </span>}
+        {fn(t)}
+      </span>
+    ));
+
+  return (
+    <div className="s3-sol">
+      {showExpand && (
+        <div className="s3-sol-step">
+          <div className="s3-sol-step-title">
+            <span className="s3-sol-num">{++step}</span>
+            {sourceOption.label} → Decimal (expanded notation)
+          </div>
+          <p className="s3-sol-note">
+            {isBinarySource
+              ? 'Line up each bit (0 or 1) under its place value, then add the place values where the bit is 1:'
+              : `Multiply each digit by (base ${sourceOption.base}) raised to its position, counting from the right starting at 0:`}
+          </p>
+
+          {/* Binary: show the 0/1 place-value chart in place of the exponent line */}
+          {isBinarySource && (
+            <BitChart cells={exp.terms.map((t) => ({ weight: t.place, digit: t.d }))} />
+          )}
+
+          {/* Non-binary: show the exponent form first */}
+          {!isBinarySource && (
+            <div className="s3-sol-line">
+              {joinTerms(exp.terms, (t) => (
+                <>
+                  {t.d}{sourceOption.base === 16 && t.val > 9 ? `(${t.val})` : ''}×{sourceOption.base}
+                  <sup>{t.power}</sup>
+                </>
+              ))}
+            </div>
+          )}
+
+          <div className="s3-sol-line">
+            {!isBinarySource && <span className="s3-sol-op">= </span>}
+            {joinTerms(exp.terms, (t) => `${t.val}×${t.place}`)}
+          </div>
+          <div className="s3-sol-line">
+            <span className="s3-sol-op">= </span>
+            {joinTerms(exp.terms, (t) => t.product)}
+          </div>
+          <div className="s3-sol-line">
+            <span className="s3-sol-op">= </span>
+            <span className="s3-sol-ans">{exp.sum}</span> <span className="s3-sol-mut">(decimal)</span>
+          </div>
+        </div>
+      )}
+
+      {showDivide && (
+        <div className="s3-sol-step">
+          <div className="s3-sol-step-title">
+            <span className="s3-sol-num">{++step}</span>
+            Decimal → {targetOption.label} (repeated division)
+          </div>
+          <p className="s3-sol-note">
+            Divide by {targetOption.base} repeatedly and keep the remainders
+            {isBinaryTarget ? ' (each is a 0 or 1)' : ''}:
+          </p>
+          <div className="s3-sol-div">
+            {div.rows.map((r, i) => (
+              <div className="s3-sol-div-row" key={i}>
+                <span>{r.dividend} ÷ {targetOption.base} = {r.quotient}</span>
+                <span className="s3-sol-rem">
+                  remainder {r.remainder}
+                  {targetOption.base === 16 && r.remainder > 9 ? ` (${HEX_DIGITS[r.remainder]})` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="s3-sol-line">
+            Read remainders bottom → top: <span className="s3-sol-ans">{div.result}</span>
+          </div>
+
+          {/* Binary: show the resulting 0s and 1s under their place values */}
+          {isBinaryTarget && (
+            <>
+              <p className="s3-sol-note">The 0s and 1s placed under their weights:</p>
+              <BitChart
+                cells={div.result.split('').map((d, i) => ({
+                  weight: Math.pow(2, div.result.length - 1 - i),
+                  digit: d,
+                }))}
+              />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Chapter3() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useModuleSection(
@@ -138,6 +291,8 @@ function Chapter3() {
   // ── Convert Tool state ──
   const [convBase, setConvBase] = useState('binary');
   const [convInput, setConvInput] = useState('');
+  // Which conversion results have their step-by-step solution expanded.
+  const [openSol, setOpenSol] = useState({});
 
   const nsT   = useProgressTracker('module3', 'lesson1', LESSON_TOTALS.numbersystem);
   const convT = useProgressTracker('module3', 'lesson2', LESSON_TOTALS.conversions);
@@ -174,6 +329,7 @@ function Chapter3() {
   };
 
   let convError = '';
+  let decimalValue = null;
   const convResults = {};
   const trimmedInput = convInput.trim();
 
@@ -181,7 +337,7 @@ function Chapter3() {
     if (!currentBaseOption.regex.test(trimmedInput)) {
       convError = `Enter a valid ${currentBaseOption.label.toLowerCase()} number.`;
     } else {
-      const decimalValue = parseInt(trimmedInput, currentBaseOption.base);
+      decimalValue = parseInt(trimmedInput, currentBaseOption.base);
       targetBaseOptions.forEach(t => {
         convResults[t.key] = decimalValue.toString(t.base).toUpperCase();
       });
@@ -377,16 +533,42 @@ function Chapter3() {
 
                 <p className="s3-converter-step-label">Step 3 — Conversion Results</p>
                 <div className="s3-converter-results">
-                  {targetBaseOptions.map(t => (
-                    <div className="s3-converter-result-row" key={t.key}>
-                      <span className="s3-converter-result-label">
-                        {currentBaseOption.label} <span className="s3-converter-result-arrow">→</span> {t.label}
-                      </span>
-                      <span className={`s3-converter-result-value ${!convResults[t.key] ? 'empty' : ''}`}>
-                        {convResults[t.key] || '—'}
-                      </span>
-                    </div>
-                  ))}
+                  {targetBaseOptions.map(t => {
+                    const value = convResults[t.key];
+                    const open = !!openSol[t.key];
+                    return (
+                      <div className="s3-converter-result-row" key={t.key}>
+                        <div className="s3-converter-result-head">
+                          <span className="s3-converter-result-label">
+                            {currentBaseOption.label} <span className="s3-converter-result-arrow">→</span> {t.label}
+                          </span>
+                          <span className={`s3-converter-result-value ${!value ? 'empty' : ''}`}>
+                            {value || '—'}
+                          </span>
+                        </div>
+                        {value && (
+                          <>
+                            <button
+                              type="button"
+                              className="s3-sol-toggle"
+                              aria-expanded={open}
+                              onClick={() => setOpenSol(s => ({ ...s, [t.key]: !s[t.key] }))}
+                            >
+                              📝 Step-by-step solution <span className="s3-sol-caret">{open ? '▲' : '▼'}</span>
+                            </button>
+                            {open && (
+                              <ConverterSolution
+                                sourceOption={currentBaseOption}
+                                targetOption={t}
+                                input={trimmedInput}
+                                decimalValue={decimalValue}
+                              />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

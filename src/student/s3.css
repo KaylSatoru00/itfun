@@ -703,14 +703,156 @@
 
 .s3-converter-result-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   background: #ffffff;
   border: 2px solid #A50034;
   border-radius: 14px;
   padding: 20px 26px;
+  gap: 10px;
+}
+
+.s3-converter-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+/* ── Step-by-step solution ── */
+.s3-sol-toggle {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #A50034;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.s3-sol-caret { text-decoration: none; font-size: 11px; }
+
+.s3-sol {
+  background: #fff4f5;
+  border: 1.5px dashed #e6a9b6;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.s3-sol-step { margin-bottom: 18px; }
+.s3-sol-step:last-child { margin-bottom: 0; }
+
+.s3-sol-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #A50034;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.s3-sol-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #A50034;
+  color: #fff;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s3-sol-note {
+  margin: 0 0 8px 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12.5px;
+  font-style: italic;
+  color: #b06c7e;
+}
+
+.s3-sol-line {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  line-height: 2;
+  color: #5c3742;
+  word-break: break-word;
+}
+
+.s3-sol-op { color: #c96b83; font-weight: 700; }
+
+.s3-sol-ans {
+  color: #A50034;
+  font-weight: 800;
+  background: #fff2cc;
+  padding: 1px 9px;
+  border-radius: 6px;
+}
+
+.s3-sol-mut {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12.5px;
+  color: #b06c7e;
+}
+
+.s3-sol-div { margin: 4px 0 8px; }
+
+.s3-sol-div-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 440px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  color: #5c3742;
+  padding: 4px 0;
+  border-bottom: 1px dotted #e6c3cc;
+}
+
+.s3-sol-rem { color: #A50034; font-weight: 700; white-space: nowrap; }
+
+/* Binary place-value chart (0/1 boxes under their weights) */
+.s3-bitchart {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+.s3-bitcol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.s3-bitw {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b06c7e;
+}
+.s3-bitb {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid #A50034;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #A50034;
 }
 
 .s3-converter-result-label {

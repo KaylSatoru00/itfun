@@ -373,6 +373,37 @@
 }
 .fm-panel .stk-item.stk-peek .stk-chip { font-size: 10px; padding: 3px 9px; top: 10px; left: 10px; }
 
+/* Peek card top bar: "Module N" chip + module name beside it */
+.fm-panel .stk-peek-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(180deg, rgba(6, 6, 7, 0.8) 0%, rgba(6, 6, 7, 0.35) 60%, transparent 100%);
+}
+.fm-panel .stk-peek-topbar .stk-chip {
+  position: static;
+  flex-shrink: 0;
+}
+.fm-panel .stk-peek-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 10px;          /* same size as the peek "Module N" chip */
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* active content — same reference geometry + entrance as student_modules */
 .fm-panel .stk-content {
   position: absolute;
@@ -677,12 +708,29 @@
   .fm-panel .stk-item.peek-3 { left: calc(100% + 100px); opacity: 0; pointer-events: none; }
   .fm-panel .stk-item.stk-hidden { left: calc(100% + 100px); }
   .fm-panel .stk-item.stk-peek .stk-chip { display: none; }
+  .fm-panel .stk-peek-topbar { display: none; }
 }
 
 @media (max-width: 640px) {
   .fm-panel .fm-grid { grid-template-columns: 1fr; }
   .fm-panel .search-bar { flex: 1 1 auto; }
   .fm-panel .fm-wordmark { display: none; }
+
+  /* On phones the search bar is narrow, so break the results dropdown out
+     to a near-full-width panel under the navbar instead of matching the
+     (tiny) bar width — otherwise each result truncates to one letter. */
+  .fm-panel .search-dropdown {
+    position: fixed;
+    top: 62px;
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+    max-height: 72vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fm-panel .search-dropdown-label { white-space: normal; }
+  .fm-panel .search-dropdown-sublabel { white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
