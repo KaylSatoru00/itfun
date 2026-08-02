@@ -568,9 +568,10 @@ function LearningModules() {
   return (
     <motion.div
       className="lm-panel sm-page"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, x: -44 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -44 }}
+      transition={{ duration: 0.34, ease: 'easeInOut' }}
     >
       {/* ── Top Navbar ── */}
       <div className="top-navbar">
