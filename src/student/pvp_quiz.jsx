@@ -109,6 +109,7 @@ function PvpQuiz() {
       {/* Header */}
       <div className="pvp-header">
         <div className="pvp-emblem" aria-hidden="true">
+          <div className="pvp-emblem-glint"><span></span></div>
           <svg viewBox="0 0 56 56" className="pvp-emblem-swords">
             <g transform="rotate(45 28 28)">
               <polygon points="26,6 30,6 28,2" fill="#ffffff" />
