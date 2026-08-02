@@ -793,10 +793,12 @@
   color: #111;
 }
 .lm-panel.sm-page .bottom-nav-btn.active .bottom-nav-label { color: #fff; }
-/* When the second tab (.bottom-nav-btn:nth-child(3) because pill is child 1)
-   is active, slide the pill to the right half */
-.lm-panel.sm-page .bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
-  transform: translateX(calc(100% + 4px));
+/* Pill position is driven by a class on .bottom-nav so it can start on the
+   opposite tab and slide into place on mount (see navPillReady in the JSX). */
+.lm-panel.sm-page .bottom-nav.pill-left .bottom-nav-pill { transform: translateX(0); }
+.lm-panel.sm-page .bottom-nav.pill-right .bottom-nav-pill { transform: translateX(calc(100% + 4px)); }
+@media (prefers-reduced-motion: reduce) {
+  .lm-panel.sm-page .bottom-nav-pill { transition: none; }
 }
 
 /* ═══════════ MODALS ═══════════ */

@@ -308,8 +308,12 @@
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
-.bottom-nav:has(.bottom-nav-btn:nth-child(3).active) .bottom-nav-pill {
-  transform: translateX(calc(100% + 4px));
+/* Pill position is driven by a class on .bottom-nav so it can start on the
+   opposite tab and slide into place on mount (see navPillReady in the JSX). */
+.bottom-nav.pill-left .bottom-nav-pill { transform: translateX(0); }
+.bottom-nav.pill-right .bottom-nav-pill { transform: translateX(calc(100% + 4px)); }
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav-pill { transition: none; }
 }
 .bottom-nav-btn {
   flex: 1;
