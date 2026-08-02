@@ -27,11 +27,11 @@
 /* ── Emblem badge (glossy maroon→red circle + crossed swords) ── */
 .pvp-emblem {
   position: relative;
-  width: clamp(112px, 28vw, 144px);
-  height: clamp(112px, 28vw, 144px);
+  width: clamp(88px, 22vw, 108px);
+  height: clamp(88px, 22vw, 108px);
   border-radius: 50%;
   background: linear-gradient(135deg, #C8102E 0%, #7d0027 100%);
-  box-shadow: 0 16px 38px rgba(165, 0, 52, 0.42), inset 0 2px 8px rgba(255, 255, 255, 0.28);
+  box-shadow: 0 14px 32px rgba(165, 0, 52, 0.42), inset 0 2px 8px rgba(255, 255, 255, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,21 +40,50 @@
 .pvp-emblem::after {
   content: '';
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: 50%;
   border: 2px solid rgba(200, 16, 46, 0.35);
 }
 .pvp-emblem-swords {
   position: relative;
+  z-index: 1;
   width: 72%;
   height: 72%;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
 }
 
+/* Sword glint — a light streak sweeps across the emblem periodically */
+.pvp-emblem-glint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+.pvp-emblem-glint span {
+  position: absolute;
+  top: -30%;
+  left: -60%;
+  width: 40%;
+  height: 160%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: rotate(18deg);
+  animation: pvp-glint 3.2s ease-in-out infinite;
+}
+@keyframes pvp-glint {
+  0%   { left: -60%; }
+  40%  { left: 120%; }
+  100% { left: 120%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pvp-emblem-glint span { animation: none; display: none; }
+}
+
 .pvp-header-title {
-  font-size: clamp(32px, 8vw, 50px);
+  font-size: clamp(40px, 11vw, 64px);
   font-weight: 900;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   font-family: 'Poppins', sans-serif;
   letter-spacing: 3px;
   background: linear-gradient(90deg, #C8102E, #A50034);
