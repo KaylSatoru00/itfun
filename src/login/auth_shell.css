@@ -79,9 +79,9 @@
   position: absolute;
   z-index: 3;
   pointer-events: none;
-  height: clamp(128px, 18vw, 172px);
-  left: 17.5%;
-  top: -44px;
+  height: clamp(84px, 11vw, 116px);
+  left: 20%;
+  top: 4px;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
 
@@ -157,10 +157,10 @@
   /* Keep the kid but scale it down and tuck it to the wordmark's right edge
      so it doesn't crowd the centered stack on small screens. */
   .as-kid {
-    height: clamp(96px, 26vw, 130px);
+    height: clamp(64px, 17vw, 92px);
     left: auto;
-    right: 12%;
-    top: -18px;
+    right: 16%;
+    top: 2px;
   }
   .as-side {
     flex: 1 0 auto;
