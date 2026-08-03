@@ -81,7 +81,7 @@
   pointer-events: none;
   height: clamp(84px, 11vw, 116px);
   left: 30.5%;
-  top: 2px;
+  top: -12px;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
 
@@ -160,7 +160,7 @@
     height: clamp(64px, 17vw, 92px);
     left: auto;
     right: 7%;
-    top: 0;
+    top: -10px;
   }
   .as-side {
     flex: 1 0 auto;
