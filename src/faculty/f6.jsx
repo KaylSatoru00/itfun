@@ -145,37 +145,13 @@ function FacultyChapter6() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useModuleSection('characteristics', ['characteristics', 'internet', 'areas']);
 
-  // Hardware accordion states
-  const [hw0, setHw0] = useState(false);
-  const [hw1, setHw1] = useState(false);
-  const [hw2, setHw2] = useState(false);
-  const [hw3, setHw3] = useState(false);
-  const [hw4, setHw4] = useState(false);
-  const [hw5, setHw5] = useState(false);
-  const [hw6, setHw6] = useState(false);
-  const hwStates  = [hw0, hw1, hw2, hw3, hw4, hw5, hw6];
-  const hwToggles = [
-    () => setHw0(o => !o),
-    () => setHw1(o => !o),
-    () => setHw2(o => !o),
-    () => setHw3(o => !o),
-    () => setHw4(o => !o),
-    () => setHw5(o => !o),
-    () => setHw6(o => !o),
-  ];
+  // Hardware accordion — single-open: opening one closes the others
+  const [openHw, setOpenHw] = useState(null);
+  const toggleHw = (i) => setOpenHw(prev => (prev === i ? null : i));
 
-  // Digital connections accordion states
-  const [dig0, setDig0] = useState(false);
-  const [dig1, setDig1] = useState(false);
-  const [dig2, setDig2] = useState(false);
-  const [dig3, setDig3] = useState(false);
-  const digStates  = [dig0, dig1, dig2, dig3];
-  const digToggles = [
-    () => setDig0(o => !o),
-    () => setDig1(o => !o),
-    () => setDig2(o => !o),
-    () => setDig3(o => !o),
-  ];
+  // Digital connections accordion — single-open
+  const [openDig, setOpenDig] = useState(null);
+  const toggleDig = (i) => setOpenDig(prev => (prev === i ? null : i));
 
   useEffect(() => {
     document.body.style.backgroundImage = 'none';
@@ -274,8 +250,8 @@ function FacultyChapter6() {
                   <AccordionItem
                     key={name}
                     title={name}
-                    isOpen={hwStates[i]}
-                    onToggle={hwToggles[i]}
+                    isOpen={openHw === i}
+                    onToggle={() => toggleHw(i)}
                   >
                     <div className="s6-hardware-card">
                       <div className="s6-hardware-img-wrap">
@@ -469,8 +445,8 @@ function FacultyChapter6() {
                   <AccordionItem
                     key={i}
                     title={item.title}
-                    isOpen={digStates[i]}
-                    onToggle={digToggles[i]}
+                    isOpen={openDig === i}
+                    onToggle={() => toggleDig(i)}
                   >
                     <p style={{ fontSize: 15, color: '#333', lineHeight: 1.75, margin: 0 }}>{item.desc}</p>
                   </AccordionItem>

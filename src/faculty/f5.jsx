@@ -102,8 +102,8 @@ function FacultyChapter5() {
   const [activeSection, setActiveSection] = useModuleSection('software', ['software']);
 
   // Accordion / dropdown state
-  const [sysFuncOpen,   setSysFuncOpen]   = useState(false);
-  const [sysExOpen,     setSysExOpen]     = useState(false);
+  // System Software group is single-open: opening one closes the other.
+  const [openSys,       setOpenSys]       = useState(null);
   const [appExOpen,     setAppExOpen]     = useState(false);
   const [tableOpen,     setTableOpen]     = useState(false);
 
@@ -300,8 +300,8 @@ function FacultyChapter5() {
               <div className="chap-accordion" style={{ marginTop: 10 }}>
                 <AccordionItem
                   title="Functions of System Software"
-                  isOpen={sysFuncOpen}
-                  onToggle={() => setSysFuncOpen(o => !o)}
+                  isOpen={openSys === 'func'}
+                  onToggle={() => setOpenSys(prev => (prev === 'func' ? null : 'func'))}
                 >
                   <ul className="s3-bullet-list" style={{ margin: 0 }}>
                     <li>Starts the computer</li>
@@ -315,8 +315,8 @@ function FacultyChapter5() {
                 {/* Examples accordion */}
                 <AccordionItem
                   title="Examples of System Software"
-                  isOpen={sysExOpen}
-                  onToggle={() => setSysExOpen(o => !o)}
+                  isOpen={openSys === 'ex'}
+                  onToggle={() => setOpenSys(prev => (prev === 'ex' ? null : 'ex'))}
                 >
                   <ul className="s3-bullet-list" style={{ margin: 0 }}>
                     <li>Operating Systems (Windows, macOS, Android, iOS)</li>
