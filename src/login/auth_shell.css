@@ -80,7 +80,7 @@
   z-index: 3;
   pointer-events: none;
   height: clamp(84px, 11vw, 116px);
-  left: 30.5%;
+  left: 34.5%;
   top: -12px;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
@@ -88,7 +88,7 @@
 .as-wordmark {
   font-family: 'Poppins', sans-serif;
   font-weight: 800;
-  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  font-size: clamp(4rem, 9vw, 7.25rem);
   line-height: 1;
   margin: 0;
   color: #fff;
@@ -159,7 +159,7 @@
   .as-kid {
     height: clamp(64px, 17vw, 92px);
     left: auto;
-    right: 11.5%;
+    right: 7.5%;
     top: -10px;
   }
   .as-side {
