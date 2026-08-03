@@ -24,8 +24,8 @@ const EMIT_MIN_DT = 0.045;   // s between emitted rings while dragging
 const EMIT_MIN_DIST = 0.018; // normalized distance between rings
 
 // Intensity preset "A — Subtle"
-const AMP = 0.5;
-const TINT = 0.35;
+const AMP = 0.85;
+const TINT = 0.55;
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
 
@@ -57,8 +57,8 @@ void main(){
     vec2 d = (uv - p) * aspect;
     float r = length(d);
     float wave = sin(r * 44.0 - age * 9.0);
-    float env = exp(-r * 15.0) * exp(-age * 2.8) * smoothstep(0.0, 0.08, age);
-    float ring = exp(-pow((r - age * 0.13) * 16.0, 2.0));
+    float env = exp(-r * 7.5) * exp(-age * 2.2) * smoothstep(0.0, 0.08, age);
+    float ring = exp(-pow((r - age * 0.3) * 11.0, 2.0));
     float h = wave * env * ring;
     disp += h;
     grad += normalize(d + 1e-5) * h;
