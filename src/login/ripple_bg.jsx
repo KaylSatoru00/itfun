@@ -57,8 +57,8 @@ void main(){
     vec2 d = (uv - p) * aspect;
     float r = length(d);
     float wave = sin(r * 44.0 - age * 9.0);
-    float env = exp(-r * 1.6) * exp(-age * 1.1) * smoothstep(0.0, 0.08, age);
-    float ring = exp(-pow((r - age * 0.85) * 9.0, 2.0));
+    float env = exp(-r * 7.5) * exp(-age * 2.2) * smoothstep(0.0, 0.08, age);
+    float ring = exp(-pow((r - age * 0.3) * 11.0, 2.0));
     float h = wave * env * ring;
     disp += h;
     grad += normalize(d + 1e-5) * h;
