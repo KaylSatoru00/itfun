@@ -94,7 +94,7 @@
   pointer-events: none;
   height: clamp(76px, 10vw, 104px);
   left: 100%;
-  bottom: -0.02em;
+  bottom: 0.16em;
   margin-left: -0.06em;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
@@ -166,7 +166,7 @@
     left: 100%;
     right: auto;
     top: auto;
-    bottom: -0.02em;
+    bottom: 0.14em;
     margin-left: -0.05em;
   }
   .as-side {
