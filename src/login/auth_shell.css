@@ -92,7 +92,7 @@
   position: absolute;
   z-index: 3;
   pointer-events: none;
-  height: clamp(76px, 10vw, 104px);
+  height: clamp(88px, 11.5vw, 120px);
   left: 100%;
   bottom: 0.16em;
   margin-left: -0.06em;
@@ -162,7 +162,7 @@
   /* Keep the kid but scale it down and tuck it to the wordmark's right edge
      so it doesn't crowd the centered stack on small screens. */
   .as-kid {
-    height: clamp(52px, 13vw, 74px);
+    height: clamp(60px, 15vw, 86px);
     left: 100%;
     right: auto;
     top: auto;
