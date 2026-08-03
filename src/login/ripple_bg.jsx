@@ -56,9 +56,9 @@ void main(){
     vec2 p = vec2(uRipplePos[i].x, 1.0 - uRipplePos[i].y);
     vec2 d = (uv - p) * aspect;
     float r = length(d);
-    float wave = sin(r * 30.0 - age * 9.0);
-    float env = exp(-r * 4.5) * exp(-age * 2.0) * smoothstep(0.0, 0.08, age);
-    float ring = exp(-pow((r - age * 0.5) * 9.0, 2.0));
+    float wave = sin(r * 42.0 - age * 9.0);
+    float env = exp(-r * 8.5) * exp(-age * 2.4) * smoothstep(0.0, 0.08, age);
+    float ring = exp(-pow((r - age * 0.32) * 13.0, 2.0));
     float h = wave * env * ring;
     disp += h;
     grad += normalize(d + 1e-5) * h;
