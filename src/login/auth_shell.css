@@ -127,6 +127,65 @@
   backdrop-filter: blur(6px);
 }
 
+/* ── Chip hover preview (desktop only) ──
+   Hovering a chip pops a small screenshot card below it, with an arrow
+   pointing up at the chip. */
+.as-chip-preview {
+  position: relative;
+  cursor: default;
+}
+.as-chip-pop {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  width: clamp(240px, 24vw, 300px);
+  padding: 6px;
+  background: #ffffff;
+  border: 2px solid #eab8c9;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 30;
+  pointer-events: none;
+}
+.as-chip-pop img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+/* arrow: pink border triangle behind, white triangle in front */
+.as-chip-pop::before,
+.as-chip-pop::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 34px;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+}
+.as-chip-pop::before {
+  transform: translateX(-50%);
+  border-bottom-color: #eab8c9;
+}
+.as-chip-pop::after {
+  transform: translateX(-50%) translateY(3px);
+  border: 7px solid transparent;
+  border-bottom-color: #ffffff;
+}
+/* Only reveal on real hover-capable pointers (desktop), never on touch */
+@media (hover: hover) and (pointer: fine) {
+  .as-chip-preview:hover .as-chip-pop {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
 /* ── Right: content side ── */
 .as-side {
   flex: 1 1 48%;

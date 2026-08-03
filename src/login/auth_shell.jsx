@@ -2,6 +2,8 @@ import './auth_shell.css';
 import { motion } from 'framer-motion';
 import RippleBg from './ripple_bg.jsx';
 import kidImg from '../assets/kid.png';
+import previewModules from '../assets/first.png';
+import previewArena from '../assets/second.png';
 
 /**
  * Shared split-screen auth layout: animated dark brand panel on the left,
@@ -34,8 +36,18 @@ function AuthShell({ children }) {
           </h1>
           <p className="as-tagline">IT Fundamentals Made Fun</p>
           <div className="as-chips">
-            <span className="as-chip">9 Learning Modules</span>
-            <span className="as-chip">PVP Quiz Arena</span>
+            <span className="as-chip as-chip-preview">
+              9 Learning Modules
+              <span className="as-chip-pop" aria-hidden="true">
+                <img src={previewModules} alt="" />
+              </span>
+            </span>
+            <span className="as-chip as-chip-preview">
+              PVP Quiz Arena
+              <span className="as-chip-pop" aria-hidden="true">
+                <img src={previewArena} alt="" />
+              </span>
+            </span>
             <span className="as-chip">Gamified Quizzes</span>
           </div>
         </motion.div>
