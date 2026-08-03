@@ -92,10 +92,11 @@ function FlipCard({ image, text, title, itemId, onInteract }) {
 }
 
 // ── Tracked AccordionItem ──
-function AccordionItem({ title, description, isOpen, onToggle, itemId, onInteract }) {
+function AccordionItem({ title, description, itemId, onInteract }) {
+  const [isOpen, setIsOpen] = useState(false);
   const handleToggle = () => {
     if (!isOpen && onInteract) onInteract(itemId);
-    onToggle();
+    setIsOpen(o => !o);
   };
   return (
     <div className="chap-accordion-item">
@@ -178,7 +179,9 @@ function InventorStage({ image, name, description, wide = false, itemId, onInter
 }
 
 // ── HistoryPersonBlock — passes tracking down ──
-function HistoryPersonBlock({ name, label, image, description, inventions, openIndex, setOpenIndex, wide = false, personItemId, inventionBaseId, onInteract }) {
+function HistoryPersonBlock({ name, label, image, description, inventions, wide = false, personItemId, inventionBaseId, onInteract }) {
+  const [openInv, setOpenInv] = useState(() => new Set());
+  const toggleInv = (i) => setOpenInv(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; });
   return (
     <>
       <div className="chap-history-divider" />
@@ -196,17 +199,17 @@ function HistoryPersonBlock({ name, label, image, description, inventions, openI
           {inventions.map((item, i) => (
             <div key={i} className="chap-accordion-item">
               <button
-                className={`chap-accordion-header ${openIndex === i ? 'open' : ''}`}
+                className={`chap-accordion-header ${openInv.has(i) ? 'open' : ''}`}
                 onClick={() => {
-                  if (openIndex !== i && onInteract) onInteract(`${inventionBaseId}_${i}`);
-                  setOpenIndex(openIndex === i ? null : i);
+                  if (!openInv.has(i) && onInteract) onInteract(`${inventionBaseId}_${i}`);
+                  toggleInv(i);
                 }}
               >
                 <span>{item.title}</span>
-                <span className="chap-accordion-chevron">{openIndex === i ? '∧' : '∨'}</span>
+                <span className="chap-accordion-chevron">{openInv.has(i) ? '∧' : '∨'}</span>
               </button>
               <AnimatePresence initial={false}>
-                {openIndex === i && (
+                {openInv.has(i) && (
                   <motion.div className="chap-accordion-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }}>
                     <div className="chap-pascal-accordion-content">
                       {item.image && <img src={item.image} alt={item.title} className="chap-pascal-invention-img" />}

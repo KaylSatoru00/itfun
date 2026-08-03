@@ -80,10 +80,11 @@ function FlipCard({ image, text, title }) {
   );
 }
 
-function AccordionItem({ title, description, isOpen, onToggle }) {
+function AccordionItem({ title, description }) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="chap-accordion-item">
-      <button className={`chap-accordion-header ${isOpen ? 'open' : ''}`} onClick={onToggle}>
+      <button className={`chap-accordion-header ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(o => !o)}>
         <span>{title}</span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>
       </button>
@@ -157,7 +158,9 @@ function PersonFlipCard({ image, name, description, wide = false }) {
   );
 }
 
-function HistoryPersonBlock({ name, label, image, description, inventions, openIndex, setOpenIndex, wide = false }) {
+function HistoryPersonBlock({ name, label, image, description, inventions, wide = false }) {
+  const [openInv, setOpenInv] = useState(() => new Set());
+  const toggleInv = (i) => setOpenInv(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; });
   return (
     <>
       {/* Divider */}
@@ -179,14 +182,14 @@ function HistoryPersonBlock({ name, label, image, description, inventions, openI
           {inventions.map((item, i) => (
             <div key={i} className="chap-accordion-item">
               <button
-                className={`chap-accordion-header ${openIndex === i ? 'open' : ''}`}
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className={`chap-accordion-header ${openInv.has(i) ? 'open' : ''}`}
+                onClick={() => toggleInv(i)}
               >
                 <span>{item.title}</span>
-                <span className="chap-accordion-chevron">{openIndex === i ? '∧' : '∨'}</span>
+                <span className="chap-accordion-chevron">{openInv.has(i) ? '∧' : '∨'}</span>
               </button>
               <AnimatePresence initial={false}>
-                {openIndex === i && (
+                {openInv.has(i) && (
                   <motion.div
                     className="chap-accordion-body"
                     initial={{ height: 0, opacity: 0 }}

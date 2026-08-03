@@ -54,13 +54,14 @@ import './s4.css';
 /* ────────────────────────────────────────────
    Accordion — with progress tracking
 ─────────────────────────────────────────────*/
-function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }) {
+function AccordionItem({ title, children, itemId, onInteract }) {
+  const [isOpen, setIsOpen] = useState(false);
   const handleToggle = useCallback(() => {
     if (!isOpen && onInteract && itemId) {
       onInteract(itemId);
     }
-    onToggle();
-  }, [isOpen, onInteract, itemId, onToggle]);
+    setIsOpen(o => !o);
+  }, [isOpen, onInteract, itemId]);
 
   return (
     <div className="chap-accordion-item">

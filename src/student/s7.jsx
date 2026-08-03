@@ -39,8 +39,9 @@ const LESSON_TOTALS = {
 /* ────────────────────────────────────────────
    Accordion — calls trackInteraction(id) once on first open
 ─────────────────────────────────────────────*/
-function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }) {
+function AccordionItem({ title, children, itemId, onInteract }) {
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = useCallback(() => {
     if (!isOpen && !hasInteracted) {
@@ -49,8 +50,8 @@ function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }
         onInteract(itemId);
       }
     }
-    onToggle();
-  }, [isOpen, hasInteracted, onToggle, onInteract, itemId]);
+    setIsOpen(o => !o);
+  }, [isOpen, hasInteracted, onInteract, itemId]);
 
   return (
     <div className="chap-accordion-item">

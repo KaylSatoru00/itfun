@@ -22,11 +22,12 @@ const LESSON_TOTALS = {
 /* ────────────────────────────────────────────
    Accordion — calls onFirstOpen(id) once
 ─────────────────────────────────────────────*/
-function AccordionItem({ id, title, children, isOpen, onToggle, onFirstOpen }) {
+function AccordionItem({ id, title, children, onFirstOpen }) {
   const [counted, setCounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = () => {
-    onToggle();
+    setIsOpen(o => !o);
     if (!isOpen && !counted) {
       setCounted(true);
       onFirstOpen?.(id);
