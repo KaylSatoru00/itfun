@@ -79,9 +79,9 @@
   position: absolute;
   z-index: 3;
   pointer-events: none;
-  height: clamp(140px, 20vw, 190px);
-  left: 14%;
-  top: -58px;
+  height: clamp(128px, 18vw, 172px);
+  left: 17.5%;
+  top: -44px;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
 
