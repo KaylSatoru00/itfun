@@ -74,6 +74,17 @@
   z-index: 1;
 }
 
+/* Cartoon kid leaning on the end of the "Fun" wordmark */
+.as-kid {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  height: clamp(140px, 20vw, 190px);
+  left: 14%;
+  top: -58px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+}
+
 .as-wordmark {
   font-family: 'Poppins', sans-serif;
   font-weight: 800;
@@ -142,6 +153,14 @@
   }
   .as-chips {
     justify-content: center;
+  }
+  /* Keep the kid but scale it down and tuck it to the wordmark's right edge
+     so it doesn't crowd the centered stack on small screens. */
+  .as-kid {
+    height: clamp(96px, 26vw, 130px);
+    left: auto;
+    right: 12%;
+    top: -18px;
   }
   .as-side {
     flex: 1 0 auto;
