@@ -75,12 +75,28 @@
 }
 
 .as-wordmark {
+  position: relative;
+  display: inline-block;
   font-family: 'Poppins', sans-serif;
   font-weight: 800;
-  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  font-size: clamp(4rem, 9vw, 7.25rem);
   line-height: 1;
   margin: 0;
   color: #fff;
+}
+
+/* Cartoon kid leaning on the end of the "Fun" wordmark. Anchored to the
+   wordmark's own right edge (not the panel width) so it stays glued beside
+   the "n" at every viewport width. */
+.as-kid {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  height: clamp(84px, 11vw, 116px);
+  left: 100%;
+  bottom: -0.08em;
+  margin-left: -0.34em;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
 .as-wordmark .as-accent {
   color: #c8102e;
@@ -142,6 +158,16 @@
   }
   .as-chips {
     justify-content: center;
+  }
+  /* Keep the kid but scale it down and tuck it to the wordmark's right edge
+     so it doesn't crowd the centered stack on small screens. */
+  .as-kid {
+    height: clamp(58px, 15vw, 82px);
+    left: 100%;
+    right: auto;
+    top: auto;
+    bottom: -0.05em;
+    margin-left: -0.28em;
   }
   .as-side {
     flex: 1 0 auto;

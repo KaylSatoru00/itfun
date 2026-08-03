@@ -1,6 +1,7 @@
 import './auth_shell.css';
 import { motion } from 'framer-motion';
 import RippleBg from './ripple_bg.jsx';
+import kidImg from '../assets/kid.png';
 
 /**
  * Shared split-screen auth layout: animated dark brand panel on the left,
@@ -29,6 +30,7 @@ function AuthShell({ children }) {
         >
           <h1 className="as-wordmark">
             IT<span className="as-accent">Fun</span>
+            <img className="as-kid" src={kidImg} alt="" aria-hidden="true" />
           </h1>
           <p className="as-tagline">IT Fundamentals Made Fun</p>
           <div className="as-chips">
