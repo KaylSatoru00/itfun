@@ -15,12 +15,13 @@ import { TbNumber10 } from 'react-icons/tb';
 import './f3.css';
 
 /* ── Accordion ── */
-function AccordionItem({ title, description, isOpen, onToggle }) {
+function AccordionItem({ title, description }) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="chap-accordion-item">
       <button
         className={`chap-accordion-header ${isOpen ? 'open' : ''}`}
-        onClick={onToggle}
+        onClick={() => setIsOpen(o => !o)}
       >
         <span>{title}</span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>

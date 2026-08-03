@@ -30,16 +30,17 @@ const TOTAL_ITEMS = 6;
 /* ────────────────────────────────────────────
    Accordion — calls trackInteraction(id) once on first open
 ─────────────────────────────────────────────*/
-function AccordionItem({ title, children, isOpen, onToggle, itemId, onInteract }) {
+function AccordionItem({ title, children, itemId, onInteract }) {
   const [counted, setCounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = useCallback(() => {
     if (!isOpen && !counted) {
       setCounted(true);
       onInteract?.(itemId);
     }
-    onToggle();
-  }, [isOpen, counted, onToggle, onInteract, itemId]);
+    setIsOpen(o => !o);
+  }, [isOpen, counted, onInteract, itemId]);
 
   return (
     <div className="chap-accordion-item">

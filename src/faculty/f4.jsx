@@ -53,12 +53,13 @@ import './f4.css';
 /* ────────────────────────────────────────────
    Accordion — supports JSX or string as body
 ─────────────────────────────────────────────*/
-function AccordionItem({ title, children, isOpen, onToggle }) {
+function AccordionItem({ title, children }) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="chap-accordion-item">
       <button
         className={`chap-accordion-header ${isOpen ? 'open' : ''}`}
-        onClick={onToggle}
+        onClick={() => setIsOpen(o => !o)}
       >
         <span>{title}</span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>

@@ -21,10 +21,11 @@ import './s3.css';
 // conversions  : 3 FlipCardImageBacks = 3
 const LESSON_TOTALS = { numbersystem: 5, conversions: 3 };
 
-function AccordionItem({ title, description, isOpen, onToggle, itemId, onInteract }) {
+function AccordionItem({ title, description, itemId, onInteract }) {
+  const [isOpen, setIsOpen] = useState(false);
   const handleToggle = () => {
     if (!isOpen && onInteract) onInteract(itemId);
-    onToggle();
+    setIsOpen(o => !o);
   };
   return (
     <div className="chap-accordion-item">
