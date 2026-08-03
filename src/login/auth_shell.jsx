@@ -28,9 +28,9 @@ function AuthShell({ children }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
-          <img className="as-kid" src={kidImg} alt="" aria-hidden="true" />
           <h1 className="as-wordmark">
             IT<span className="as-accent">Fun</span>
+            <img className="as-kid" src={kidImg} alt="" aria-hidden="true" />
           </h1>
           <p className="as-tagline">IT Fundamentals Made Fun</p>
           <div className="as-chips">
