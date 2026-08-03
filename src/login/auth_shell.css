@@ -80,7 +80,7 @@
   z-index: 3;
   pointer-events: none;
   height: clamp(84px, 11vw, 116px);
-  left: 20%;
+  left: 24.5%;
   top: 4px;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
@@ -159,7 +159,7 @@
   .as-kid {
     height: clamp(64px, 17vw, 92px);
     left: auto;
-    right: 16%;
+    right: 13%;
     top: 2px;
   }
   .as-side {
