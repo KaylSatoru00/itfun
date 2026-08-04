@@ -4,6 +4,52 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | Bookw</title>
+
+    <!-- ── Audio capture (must run BEFORE the Unity loader) ──
+         Wrap the AudioContext constructor so we get a reference to every
+         context Unity creates, no matter where Unity stashes it. The ITFun
+         page toggles mute via postMessage; we suspend/resume the captured
+         contexts to silence / restore ALL game audio. -->
+    <script>
+      (function () {
+        window.__itfunCtxs = [];
+        window.__itfunMuted = false;
+        var Native = window.AudioContext || window.webkitAudioContext;
+        if (!Native) return;
+
+        function reapply(ctx) {
+          try {
+            if (window.__itfunMuted) {
+              if (ctx.state === "running") ctx.suspend();
+            } else {
+              if (ctx.state === "suspended") ctx.resume();
+            }
+          } catch (e) {}
+        }
+
+        function Patched() {
+          var ctx = Reflect.construct(Native, arguments);
+          window.__itfunCtxs.push(ctx);
+          reapply(ctx);
+          // If Unity resumes it (e.g. on a user gesture) while muted, re-mute.
+          ctx.addEventListener("statechange", function () {
+            if (window.__itfunMuted && ctx.state === "running") {
+              try { ctx.suspend(); } catch (e) {}
+            }
+          });
+          return ctx;
+        }
+        Patched.prototype = Native.prototype;
+        window.AudioContext = Patched;
+        window.webkitAudioContext = Patched;
+
+        // Apply a mute state to every captured context.
+        window.__itfunApplyMute = function () {
+          window.__itfunCtxs.forEach(reapply);
+        };
+      })();
+    </script>
+
     <style>
       html, body {
         width: 100%;
@@ -40,53 +86,13 @@
         canvas.style.position = "fixed";
       }
 
-      // ── Mute bridge ──────────────────────────────────────────────
-      // The ITFun page (parent window) posts { type: "SET_MUTE", value }
-      // when the speaker icon is clicked. We silence *all* Unity audio by
-      // suspending its shared WebAudio context (and resume to unmute). A
-      // statechange guard keeps it muted even if Unity resumes the context
-      // on a user gesture.
-      var unityInstanceRef = null;
-      var desiredMuted = false;
-
-      function itfunGetAudioContext() {
-        try {
-          return unityInstanceRef &&
-                 unityInstanceRef.Module &&
-                 unityInstanceRef.Module.WEBAudio &&
-                 unityInstanceRef.Module.WEBAudio.audioContext || null;
-        } catch (e) { return null; }
-      }
-
-      function itfunApplyMute() {
-        var ctx = itfunGetAudioContext();
-        if (!ctx) return;
-        try {
-          if (desiredMuted) {
-            if (ctx.state === "running") ctx.suspend();
-          } else {
-            if (ctx.state === "suspended") ctx.resume();
-          }
-        } catch (e) {}
-      }
-
-      function itfunAttachGuard() {
-        var ctx = itfunGetAudioContext();
-        if (ctx && !ctx.__itfunGuard) {
-          ctx.__itfunGuard = true;
-          ctx.addEventListener("statechange", function () {
-            if (desiredMuted && ctx.state === "running") {
-              try { ctx.suspend(); } catch (e) {}
-            }
-          });
-        }
-      }
-
+      // The ITFun page posts { type: "SET_MUTE", value } when the speaker
+      // icon is clicked. Flip the flag and apply it to every captured context.
       window.addEventListener("message", function (e) {
         var d = e.data;
         if (d && d.type === "SET_MUTE") {
-          desiredMuted = !!d.value;
-          itfunApplyMute();
+          window.__itfunMuted = !!d.value;
+          if (window.__itfunApplyMute) window.__itfunApplyMute();
         }
       });
 
@@ -102,9 +108,8 @@
         // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
         // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
       }).then((unityInstance) => {
-        unityInstanceRef = unityInstance;
-        itfunAttachGuard();
-        itfunApplyMute(); // honor a mute toggled before the game finished loading
+        // Re-apply mute in case it was toggled before the game finished loading.
+        if (window.__itfunApplyMute) window.__itfunApplyMute();
       }).catch((message) => {
         alert(message);
       });
