@@ -2,10 +2,11 @@
    (login / signup / OTP / forgot). Layout shell lives in auth_shell.css. */
 
 .af-card {
+  --af-pad: clamp(1.5rem, 3vw, 2.25rem);
   width: min(440px, 100%);
   background: #fff;
   border-radius: 1.5rem;
-  padding: clamp(1.5rem, 3vw, 2.25rem);
+  padding: var(--af-pad);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
@@ -197,3 +198,87 @@
   font-size: 0.8rem;
   color: #77777e;
 }
+/* ═══════════ Sign-up — formal / minimal layout (Option 3) ═══════════
+   Scoped to .af-signup so login / OTP / reset screens are untouched.
+   The password-requirements checklist (.af-checklist) is intentionally
+   left exactly as-is. */
+.af-signup-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.af-signup-mono {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #c8102e, #a50034);
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.28);
+}
+.af-signup-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.25rem, 2.4vw, 1.5rem);
+  color: #17171b;
+  margin: 0;
+}
+.af-signup-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  color: #84848c;
+  margin: 0.3rem 0 0;
+}
+/* full-bleed hairline under the header */
+.af-signup-rule {
+  height: 1px;
+  background: #efeff2;
+  margin-left: calc(-1 * var(--af-pad));
+  margin-right: calc(-1 * var(--af-pad));
+}
+/* section label — maroon uppercase */
+.af-signup .af-sec {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a50034;
+  margin: 0;
+}
+/* divider between the two sections (within padding) */
+.af-signup-divider {
+  height: 1px;
+  background: #efeff2;
+}
+/* refined boxed inputs + maroon focus ring */
+.af-signup .form-control {
+  border-radius: 9px;
+  border: 1px solid #d8d8de;
+}
+.af-signup .form-control:focus {
+  border-color: #a50034;
+  box-shadow: 0 0 0 3px rgba(165, 0, 52, 0.12);
+}
+/* solid, flat maroon action button (more formal than the gradient) */
+.af-signup-btn {
+  background: #a50034;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 0.8rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+.af-signup-btn:hover:not(:disabled) { background: #8a0029; }
+.af-signup-btn:active:not(:disabled) { transform: translateY(1px); }
+.af-signup-btn:disabled { opacity: 0.6; cursor: not-allowed; }
