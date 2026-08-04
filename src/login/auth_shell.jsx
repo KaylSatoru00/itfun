@@ -1,9 +1,19 @@
 import './auth_shell.css';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import RippleBg from './ripple_bg.jsx';
 import kidImg from '../assets/kid.png';
 import previewModules from '../assets/first.png';
 import previewArena from '../assets/second.png';
+import game1 from '../assets/m1.png';
+import game2 from '../assets/m2.png';
+import game3 from '../assets/m3.png';
+import game4 from '../assets/m4.png';
+import game5 from '../assets/m5.png';
+import game6 from '../assets/m6.png';
+import game7 from '../assets/m7.png';
+
+const GAME_PREVIEWS = [game1, game2, game3, game4, game5, game6, game7];
 
 /**
  * Shared split-screen auth layout: animated dark brand panel on the left,
@@ -11,6 +21,26 @@ import previewArena from '../assets/second.png';
  * below 900px. Purely presentational — no auth logic lives here.
  */
 function AuthShell({ children }) {
+  // "Gamified Quizzes" chip: hovering auto-cycles through the game preview
+  // screenshots (m1–m7). Cycling only runs while hovering and resets on leave.
+  const [gameIdx, setGameIdx] = useState(0);
+  const gameTimer = useRef(null);
+
+  const startGameCycle = () => {
+    if (gameTimer.current) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return; // honor reduced motion: show a single static frame
+    gameTimer.current = setInterval(() => {
+      setGameIdx((i) => (i + 1) % GAME_PREVIEWS.length);
+    }, 1100);
+  };
+  const stopGameCycle = () => {
+    clearInterval(gameTimer.current);
+    gameTimer.current = null;
+    setGameIdx(0);
+  };
+  useEffect(() => () => clearInterval(gameTimer.current), []);
+
   return (
     <motion.div
       className="as-wrapper"
@@ -48,7 +78,26 @@ function AuthShell({ children }) {
                 <img src={previewArena} alt="" />
               </span>
             </span>
-            <span className="as-chip">Gamified Quizzes</span>
+            <span
+              className="as-chip as-chip-preview"
+              onMouseEnter={startGameCycle}
+              onMouseLeave={stopGameCycle}
+            >
+              Gamified Quizzes
+              <span className="as-chip-pop as-chip-pop-game" aria-hidden="true">
+                <span className="as-game-frame">
+                  <img src={GAME_PREVIEWS[gameIdx]} alt="" />
+                </span>
+                <span className="as-game-meta">
+                  <span className="as-game-count">Game {gameIdx + 1} / {GAME_PREVIEWS.length}</span>
+                  <span className="as-game-dots">
+                    {GAME_PREVIEWS.map((_, i) => (
+                      <i key={i} className={i === gameIdx ? 'on' : ''} />
+                    ))}
+                  </span>
+                </span>
+              </span>
+            </span>
           </div>
         </motion.div>
       </div>
