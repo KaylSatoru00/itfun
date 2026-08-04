@@ -205,22 +205,14 @@
 .af-signup-head {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-}
-.af-signup-mono {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #c8102e, #a50034);
-  color: #fff;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 800;
-  font-size: 15px;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 0.85rem;
-  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.28);
+  text-align: center;
+}
+.af-signup-logo {
+  width: 66px;
+  height: 66px;
+  object-fit: contain;
+  margin-bottom: 0.6rem;
 }
 .af-signup-title {
   font-family: 'Poppins', sans-serif;
