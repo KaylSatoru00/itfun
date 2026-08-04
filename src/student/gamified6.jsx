@@ -181,11 +181,11 @@ export default function Gamified6() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: isPseudoFullscreen ? "flex-start" : "center",
+        justifyContent: "flex-start",
         position: "relative",
         overflowX: "hidden",
         overflowY: isPseudoFullscreen ? "hidden" : "auto",
-        padding: isPseudoFullscreen ? 0 : "76px 16px 24px",
+        padding: isPseudoFullscreen ? 0 : "40px 16px 24px",
         boxSizing: "border-box",
         background: "radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%)",
       }}
@@ -239,12 +239,12 @@ export default function Gamified6() {
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
-              fontSize: "clamp(22px, 4vw, 32px)",
+              fontSize: "clamp(28px, 5vw, 44px)",
               letterSpacing: "0.04em",
               textTransform: "uppercase",
               color: "#2b2130",
               textAlign: "center",
-              margin: "0 0 14px",
+              margin: "0 0 16px",
             }}
           >
             Networking Fundamentals
