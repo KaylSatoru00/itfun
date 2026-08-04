@@ -185,7 +185,7 @@ export default function Gamified6() {
         position: "relative",
         overflowX: "hidden",
         overflowY: isPseudoFullscreen ? "hidden" : "auto",
-        padding: isPseudoFullscreen ? 0 : "40px 16px 24px",
+        padding: isPseudoFullscreen ? 0 : "20px 16px 24px",
         boxSizing: "border-box",
         background: "radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%)",
       }}
@@ -239,7 +239,7 @@ export default function Gamified6() {
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
-              fontSize: "clamp(28px, 5vw, 44px)",
+              fontSize: "clamp(34px, 6vw, 56px)",
               letterSpacing: "0.04em",
               textTransform: "uppercase",
               color: "#2b2130",
