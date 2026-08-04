@@ -12,30 +12,35 @@
          contexts to silence / restore ALL game audio. -->
     <script>
       (function () {
-        window.__itfunCtxs = [];
+        window.__itfunGains = [];
         window.__itfunMuted = false;
         var Native = window.AudioContext || window.webkitAudioContext;
         if (!Native) return;
 
-        function reapply(ctx) {
+        // Route everything that would reach the speakers through a master
+        // gain node we control. Muting sets its gain to 0 — the audio context
+        // keeps RUNNING, so the game never pauses (unlike suspending it).
+        var origConnect = AudioNode.prototype.connect;
+        AudioNode.prototype.connect = function () {
           try {
-            if (window.__itfunMuted) {
-              if (ctx.state === "running") ctx.suspend();
-            } else {
-              if (ctx.state === "suspended") ctx.resume();
+            var dest = arguments[0];
+            if (dest && dest.context && dest === dest.context.destination) {
+              var g = dest.context.__itfunGain;
+              if (g && this !== g) arguments[0] = g; // reroute to master gain
             }
           } catch (e) {}
-        }
+          return origConnect.apply(this, arguments);
+        };
 
         function Patched() {
           var ctx = Reflect.construct(Native, arguments);
-          window.__itfunCtxs.push(ctx);
-          reapply(ctx);
-          ctx.addEventListener("statechange", function () {
-            if (window.__itfunMuted && ctx.state === "running") {
-              try { ctx.suspend(); } catch (e) {}
-            }
-          });
+          try {
+            var gain = ctx.createGain();
+            gain.gain.value = window.__itfunMuted ? 0 : 1;
+            gain.connect(ctx.destination);
+            ctx.__itfunGain = gain;
+            window.__itfunGains.push(gain);
+          } catch (e) {}
           return ctx;
         }
         Patched.prototype = Native.prototype;
@@ -43,7 +48,9 @@
         window.webkitAudioContext = Patched;
 
         window.__itfunApplyMute = function () {
-          window.__itfunCtxs.forEach(reapply);
+          window.__itfunGains.forEach(function (g) {
+            try { g.gain.value = window.__itfunMuted ? 0 : 1; } catch (e) {}
+          });
         };
       })();
     </script>
