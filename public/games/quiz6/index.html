@@ -40,6 +40,56 @@
         canvas.style.position = "fixed";
       }
 
+      // ── Mute bridge ──────────────────────────────────────────────
+      // The ITFun page (parent window) posts { type: "SET_MUTE", value }
+      // when the speaker icon is clicked. We silence *all* Unity audio by
+      // suspending its shared WebAudio context (and resume to unmute). A
+      // statechange guard keeps it muted even if Unity resumes the context
+      // on a user gesture.
+      var unityInstanceRef = null;
+      var desiredMuted = false;
+
+      function itfunGetAudioContext() {
+        try {
+          return unityInstanceRef &&
+                 unityInstanceRef.Module &&
+                 unityInstanceRef.Module.WEBAudio &&
+                 unityInstanceRef.Module.WEBAudio.audioContext || null;
+        } catch (e) { return null; }
+      }
+
+      function itfunApplyMute() {
+        var ctx = itfunGetAudioContext();
+        if (!ctx) return;
+        try {
+          if (desiredMuted) {
+            if (ctx.state === "running") ctx.suspend();
+          } else {
+            if (ctx.state === "suspended") ctx.resume();
+          }
+        } catch (e) {}
+      }
+
+      function itfunAttachGuard() {
+        var ctx = itfunGetAudioContext();
+        if (ctx && !ctx.__itfunGuard) {
+          ctx.__itfunGuard = true;
+          ctx.addEventListener("statechange", function () {
+            if (desiredMuted && ctx.state === "running") {
+              try { ctx.suspend(); } catch (e) {}
+            }
+          });
+        }
+      }
+
+      window.addEventListener("message", function (e) {
+        var d = e.data;
+        if (d && d.type === "SET_MUTE") {
+          desiredMuted = !!d.value;
+          itfunApplyMute();
+        }
+      });
+
       createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
         dataUrl: "Build/module6.data.br",
@@ -52,6 +102,9 @@
         // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
         // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
       }).then((unityInstance) => {
+        unityInstanceRef = unityInstance;
+        itfunAttachGuard();
+        itfunApplyMute(); // honor a mute toggled before the game finished loading
       }).catch((message) => {
         alert(message);
       });
