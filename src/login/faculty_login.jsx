@@ -9,6 +9,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useUser } from '../user_context';
 import AuthShell from './auth_shell.jsx';
+import itfunLogo from '../assets/LOGO_NAMEN.png';
 import {
   toPascalCase, passwordRules, PasswordChecklist,
   RequiredLabel, PasswordInput, screenVariants,
@@ -446,7 +447,7 @@ function FacultyLogin() {
             className="af-signup d-flex flex-column gap-3 w-100"
           >
             <div className="af-signup-head">
-              <div className="af-signup-mono">TF</div>
+              <img className="af-signup-logo" src={itfunLogo} alt="ITFun" />
               <h1 className="af-signup-title">Faculty Registration</h1>
               <p className="af-signup-sub">Please complete the fields below to create your account.</p>
             </div>
