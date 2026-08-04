@@ -187,7 +187,7 @@ export default function Gamified6() {
         overflowY: isPseudoFullscreen ? "hidden" : "auto",
         padding: isPseudoFullscreen ? 0 : "76px 16px 24px",
         boxSizing: "border-box",
-        background: `linear-gradient(135deg, ${COLORS.black} 0%, #1a0008 100%)`,
+        background: "radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%)",
       }}
     >
       {/* Floating background blobs */}
@@ -246,9 +246,9 @@ export default function Gamified6() {
               gap: 6,
               padding: "8px 14px",
               borderRadius: 9999,
-              background: "rgba(255,255,255,0.08)",
-              color: COLORS.white,
-              border: `1px solid ${COLORS.rose}55`,
+              background: "rgba(255,255,255,0.85)",
+              color: COLORS.maroon,
+              border: `1px solid ${COLORS.rose}`,
               backdropFilter: "blur(8px)",
               cursor: "pointer",
               fontSize: 13,
@@ -270,9 +270,9 @@ export default function Gamified6() {
               height: 38,
               flexShrink: 0,
               borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)",
-              color: COLORS.white,
-              border: `1px solid ${COLORS.rose}55`,
+              background: "rgba(255,255,255,0.85)",
+              color: COLORS.maroon,
+              border: `1px solid ${COLORS.rose}`,
               backdropFilter: "blur(8px)",
               cursor: "pointer",
             }}
