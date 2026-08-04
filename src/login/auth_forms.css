@@ -19,6 +19,14 @@
   text-align: center;
 }
 
+/* ITFun logo centered above the login title */
+.af-login-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  align-self: center;
+}
+
 .af-sub {
   font-family: 'Montserrat', sans-serif;
   font-size: 0.9rem;
