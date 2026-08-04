@@ -89,7 +89,6 @@ function AuthShell({ children }) {
                   <img src={GAME_PREVIEWS[gameIdx]} alt="" />
                 </span>
                 <span className="as-game-meta">
-                  <span className="as-game-count">Game {gameIdx + 1} / {GAME_PREVIEWS.length}</span>
                   <span className="as-game-dots">
                     {GAME_PREVIEWS.map((_, i) => (
                       <i key={i} className={i === gameIdx ? 'on' : ''} />
