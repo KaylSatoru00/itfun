@@ -34,6 +34,14 @@ export default function Gamified9() {
           "*"
         );
       }
+      // Return keyboard focus to the game so a focus-pausing build keeps running.
+      try {
+        const win = iframeRef.current?.contentWindow;
+        win?.focus?.();
+        win?.document?.getElementById("unity-canvas")?.focus?.();
+      } catch (_) {
+        // cross-origin or not ready — ignore
+      }
       return next;
     });
   };
@@ -275,6 +283,9 @@ export default function Gamified9() {
 
           <button
             onClick={toggleMute}
+            // Keep keyboard focus on the game canvas — this keyboarding build
+            // pauses when it loses focus, so don't let the button grab it.
+            onMouseDown={(e) => e.preventDefault()}
             style={{
               display: "flex",
               alignItems: "center",
