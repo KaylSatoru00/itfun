@@ -443,13 +443,17 @@ function FacultyLogin() {
             key="signup"
             variants={screenVariants}
             initial="initial" animate="animate" exit="exit"
-            className="d-flex flex-column gap-3 w-100"
+            className="af-signup d-flex flex-column gap-3 w-100"
           >
-            <h1 className="af-title">Sign Up as Faculty</h1>
-            <p className="af-sub">Create your account to manage classes</p>
+            <div className="af-signup-head">
+              <div className="af-signup-mono">TF</div>
+              <h1 className="af-signup-title">Faculty Registration</h1>
+              <p className="af-signup-sub">Please complete the fields below to create your account.</p>
+            </div>
+            <div className="af-signup-rule" />
             {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
-            <p className="af-section-heading">Personal information</p>
+            <p className="af-sec">Personal information</p>
             <div className="row g-2">
               <div className="col-sm-6 af-field">
                 <RequiredLabel label="First Name" touched={signupTouched.firstName} value={firstName} />
@@ -487,7 +491,8 @@ function FacultyLogin() {
               />
             </div>
 
-            <p className="af-section-heading">Create password</p>
+            <div className="af-signup-divider" />
+            <p className="af-sec">Account security</p>
             <div className="row g-2">
               <div className="col-sm-6 af-field d-flex flex-column">
                 <RequiredLabel label="Password" touched={signupTouched.password} value={signupPassword} />
@@ -526,8 +531,8 @@ function FacultyLogin() {
             {/* live password checklist */}
             <PasswordChecklist password={signupPassword} />
 
-            <button className="btn btn-itfun w-100 py-2" onClick={handleSignUp} disabled={loading}>
-              {loading ? 'Creating account...' : 'Sign Up'}
+            <button className="btn af-signup-btn w-100" onClick={handleSignUp} disabled={loading}>
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
             <p className="af-toggle-text">
               Already have an account?{' '}
