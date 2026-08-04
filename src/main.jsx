@@ -51,6 +51,7 @@ import FacultyChapter9 from './faculty/f9.jsx'
 // Gamified Quiz
 import Gamified1 from './student/gamified1.jsx'
 import Gamified6 from './student/gamified6.jsx';
+import Gamified7 from './student/gamified7.jsx'
 import Gamified8 from './student/gamified8.jsx'
 import Gamified9 from './student/gamified9.jsx'
 
@@ -95,6 +96,7 @@ function AnimatedRoutes() {
         <Route path="/faculty-chapter-9" element={<FacultyChapter9 />} />
         <Route path="/gamified-1" element={<Gamified1 />} />
         <Route path="/gamified-6" element={<Gamified6 />} />
+        <Route path="/gamified-7" element={<Gamified7 />} />
         <Route path="/gamified-8" element={<Gamified8 />} />
         <Route path="/gamified-9" element={<Gamified9 />} />
         <Route path="/reset-password" element={<ResetPassword />} />
