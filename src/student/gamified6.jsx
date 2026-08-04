@@ -224,20 +224,38 @@ export default function Gamified6() {
         </>
       )}
 
-      {/* Top row: Back button + Mute toggle, sits above the panel in normal flow */}
+      {/* Header: module title + Back/Mute row, sits above the panel in normal flow */}
       {!isPseudoFullscreen && (
         <div
           ref={topRowRef}
           style={{
             width: "100%",
             maxWidth: GAME_WIDTH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
             marginBottom: 12,
             zIndex: 20,
           }}
         >
+          <h1
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 700,
+              fontSize: "clamp(22px, 4vw, 32px)",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color: "#2b2130",
+              textAlign: "center",
+              margin: "0 0 14px",
+            }}
+          >
+            Networking Fundamentals
+          </h1>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
           <button
             onClick={() => navigate(-1)}
             style={{
@@ -279,6 +297,7 @@ export default function Gamified6() {
           >
             {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
+          </div>
         </div>
       )}
 
