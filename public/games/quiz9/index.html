@@ -4,194 +4,130 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | Keyboarding</title>
-
-    <!-- ── Audio capture (must run BEFORE the Unity loader) ──
-         Wrap the AudioContext constructor so we get a reference to every
-         context Unity creates, no matter where Unity stashes it. The ITFun
-         page toggles mute via postMessage; we suspend/resume the captured
-         contexts to silence / restore ALL game audio. -->
-    <script>
-      (function () {
-        window.__itfunGains = [];
-        window.__itfunMuted = false;
-        var Native = window.AudioContext || window.webkitAudioContext;
-        if (!Native) return;
-
-        // Route everything that would reach the speakers through a master
-        // gain node we control. Muting sets its gain to 0 — the audio context
-        // keeps RUNNING, so the game never pauses (unlike suspending it).
-        var origConnect = AudioNode.prototype.connect;
-        AudioNode.prototype.connect = function () {
-          try {
-            var dest = arguments[0];
-            if (dest && dest.context && dest === dest.context.destination) {
-              var g = dest.context.__itfunGain;
-              if (g && this !== g) arguments[0] = g; // reroute to master gain
-            }
-          } catch (e) {}
-          return origConnect.apply(this, arguments);
-        };
-
-        function Patched() {
-          var ctx = Reflect.construct(Native, arguments);
-          try {
-            var gain = ctx.createGain();
-            gain.gain.value = window.__itfunMuted ? 0 : 1;
-            gain.connect(ctx.destination);
-            ctx.__itfunGain = gain;
-            window.__itfunGains.push(gain);
-          } catch (e) {}
-          return ctx;
-        }
-        Patched.prototype = Native.prototype;
-        window.AudioContext = Patched;
-        window.webkitAudioContext = Patched;
-
-        window.__itfunApplyMute = function () {
-          window.__itfunGains.forEach(function (g) {
-            try { g.gain.value = window.__itfunMuted ? 0 : 1; } catch (e) {}
-          });
-        };
-      })();
-    </script>
-
-    <style>
-      html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        overflow: hidden;
-        background: #231F20;
-      }
-      #unity-canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        background: #231F20;
-      }
-
-      /* ── ITFun loading screen (shown while the game downloads, before
-            Unity's own "Made with Unity" splash) ── */
-      #itfun-loading {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 22px;
-        background: radial-gradient(circle at 50% 38%, #2a1218 0%, #171011 70%);
-        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        z-index: 10;
-        transition: opacity 0.45s ease;
-      }
-      #itfun-loading.hide { opacity: 0; pointer-events: none; }
-      .il-brand {
-        font-size: clamp(40px, 9vw, 60px);
-        font-weight: 800;
-        letter-spacing: 1px;
-        color: #ffffff;
-        line-height: 1;
-      }
-      .il-brand span { color: #e11d3d; text-shadow: 0 0 26px rgba(200, 16, 46, 0.55); }
-      .il-tag {
-        margin-top: -10px;
-        font-size: 13px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        color: rgba(255, 255, 255, 0.55);
-      }
-      .il-track {
-        width: min(280px, 70vw);
-        height: 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.12);
-        overflow: hidden;
-      }
-      .il-fill {
-        width: 0%;
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #C8102E, #A50034);
-        transition: width 0.2s ease;
-      }
-      .il-pct {
-        font-size: 13px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.7);
-        letter-spacing: 0.5px;
-      }
-      .il-spinner {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        border: 3px solid rgba(255, 255, 255, 0.15);
-        border-top-color: #e11d3d;
-        animation: il-spin 0.8s linear infinite;
-      }
-      @keyframes il-spin { to { transform: rotate(360deg); } }
-    </style>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
   </head>
   <body>
-    <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-
-    <div id="itfun-loading">
-      <div class="il-brand">IT<span>Fun</span></div>
-      <div class="il-tag">IT Fundamentals Made Fun</div>
-      <div class="il-track"><div id="il-fill" class="il-fill"></div></div>
-      <div id="il-pct" class="il-pct">Loading&hellip; 0%</div>
-      <div class="il-spinner"></div>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-logo-title-footer"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">Keyboarding</div>
+      </div>
     </div>
-
-    <script src="Build/module9.loader.js"></script>
     <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+      var canvas = document.querySelector("#unity-canvas");
 
-        var canvas = document.querySelector("#unity-canvas");
-        canvas.style.position = "fixed";
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
       }
 
-      // Mute bridge: parent posts { type: "SET_MUTE", value } on speaker click.
-      window.addEventListener("message", function (e) {
-        var d = e.data;
-        if (d && d.type === "SET_MUTE") {
-          window.__itfunMuted = !!d.value;
-          if (window.__itfunApplyMute) window.__itfunApplyMute();
-        }
-      });
-
-      var loadingEl = document.getElementById("itfun-loading");
-      var fillEl = document.getElementById("il-fill");
-      var pctEl = document.getElementById("il-pct");
-
-      createUnityInstance(document.querySelector("#unity-canvas"), {
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/module9.loader.js";
+      var config = {
         arguments: [],
-        dataUrl: "Build/module9.data.br",
-        frameworkUrl: "Build/module9.framework.js.br",
-        codeUrl: "Build/module9.wasm.br",
+        dataUrl: buildUrl + "/module9.data.br",
+        frameworkUrl: buildUrl + "/module9.framework.js.br",
+        codeUrl: buildUrl + "/module9.wasm.br",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "Keyboarding",
         productVersion: "1.0",
-      }, function (progress) {
-        var p = Math.round(progress * 100);
-        if (fillEl) fillEl.style.width = p + "%";
-        if (pctEl) pctEl.textContent = "Loading… " + p + "%";
-      }).then((unityInstance) => {
-        if (loadingEl) {
-          loadingEl.classList.add("hide");
-          setTimeout(function () { loadingEl.style.display = "none"; }, 500);
-        }
-        if (window.__itfunApplyMute) window.__itfunApplyMute();
-      }).catch((message) => {
-        alert(message);
-      });
+        showBanner: unityShowBanner,
+        // errorHandler: function(err, url, line) {
+        //    alert("error " + err + " occurred at line " + line);
+        //    // Return 'true' if you handled this error and don't want Unity
+        //    // to process it further, 'false' otherwise.
+        //    return true;
+        // },
+      };
+
+      // By default, Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      // If you would like all file writes inside Unity Application.persistentDataPath
+      // directory to automatically persist so that the contents are remembered when
+      // the user revisits the site the next time, uncomment the following line:
+      // config.autoSyncPersistentDataPath = true;
+      // This autosyncing is currently not the default behavior to avoid regressing
+      // existing user projects that might rely on the earlier manual
+      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+      // expected to change.
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
+
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
+
+
+      } else {
+        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+        canvas.style.width = "960px";
+        canvas.style.height = "600px";
+      }
+
+      document.querySelector("#unity-loading-bar").style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+              }).then((unityInstance) => {
+                document.querySelector("#unity-loading-bar").style.display = "none";
+                document.querySelector("#unity-fullscreen-button").onclick = () => {
+                  unityInstance.SetFullscreen(1);
+                };
+
+              }).catch((message) => {
+                alert(message);
+              });
+            };
+
+      document.body.appendChild(script);
+
     </script>
   </body>
 </html>
