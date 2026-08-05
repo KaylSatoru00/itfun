@@ -20,8 +20,10 @@ export default function Gamified8() {
   const [muted, setMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
+  const [panelSize, setPanelSize] = useState({ width: GAME_WIDTH, height: GAME_HEIGHT });
   const iframeRef = useRef(null);
   const panelRef = useRef(null);
+  const topRowRef = useRef(null);
 
   const toggleMute = () => {
     setMuted((prev) => {
@@ -31,6 +33,14 @@ export default function Gamified8() {
           { type: "SET_MUTE", value: next },
           "*"
         );
+      }
+      // Return keyboard focus to the game so a focus-pausing build keeps running.
+      try {
+        const win = iframeRef.current?.contentWindow;
+        win?.focus?.();
+        win?.document?.getElementById("unity-canvas")?.focus?.();
+      } catch (_) {
+        // cross-origin or not ready — ignore
       }
       return next;
     });
@@ -122,6 +132,50 @@ export default function Gamified8() {
 
   const useRotatedLayout = isPseudoFullscreen;
 
+  // Dynamically fit the panel to available viewport space while preserving
+  // the 960:600 (16:10) aspect ratio.
+  useEffect(() => {
+    if (isFullscreen || useRotatedLayout) return;
+
+    const computeSize = () => {
+      const aspect = GAME_WIDTH / GAME_HEIGHT; // 1.6
+      const BOTTOM_PADDING = 24; // matches outer container's bottom padding
+
+      let chromeHeight = 76; // fallback if ref not ready yet (top padding only)
+      if (topRowRef.current) {
+        const rect = topRowRef.current.getBoundingClientRect();
+        const marginBottom = parseFloat(
+          getComputedStyle(topRowRef.current).marginBottom
+        ) || 0;
+        chromeHeight = rect.bottom + marginBottom; // viewport-relative space used above the panel
+      }
+
+      const availW = window.innerWidth * 0.96;
+      const availH = window.innerHeight - chromeHeight - BOTTOM_PADDING;
+
+      let width = Math.min(GAME_WIDTH, availW);
+      let height = width / aspect;
+
+      if (height > availH) {
+        height = Math.max(0, availH);
+        width = height * aspect;
+      }
+
+      setPanelSize({ width, height });
+    };
+
+    // Run after paint so topRowRef has real layout dimensions
+    const raf = requestAnimationFrame(computeSize);
+
+    window.addEventListener("resize", computeSize);
+    window.addEventListener("orientationchange", computeSize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", computeSize);
+      window.removeEventListener("orientationchange", computeSize);
+    };
+  }, [isFullscreen, useRotatedLayout]);
+
   return (
     <div
       style={{
@@ -130,13 +184,13 @@ export default function Gamified8() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: isPseudoFullscreen ? "flex-start" : "center",
+        justifyContent: "flex-start",
         position: "relative",
         overflowX: "hidden",
         overflowY: isPseudoFullscreen ? "hidden" : "auto",
-        padding: isPseudoFullscreen ? 0 : "76px 16px 24px",
+        padding: isPseudoFullscreen ? 0 : "52px 16px 24px",
         boxSizing: "border-box",
-        background: `linear-gradient(135deg, ${COLORS.black} 0%, #1a0008 100%)`,
+        background: "radial-gradient(1200px 640px at 50% -10%, #FFFFFF 0%, #F2D7D5 58%, #EAB8C9 100%)",
       }}
     >
       {/* Floating background blobs */}
@@ -173,19 +227,39 @@ export default function Gamified8() {
         </>
       )}
 
-      {/* Top row: Back button + Mute toggle, sits above the panel in normal flow */}
+      {/* Header: module title + Back/Mute row, sits above the panel in normal flow */}
       {!isPseudoFullscreen && (
         <div
+          ref={topRowRef}
           style={{
             width: "100%",
             maxWidth: GAME_WIDTH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
             marginBottom: 12,
             zIndex: 20,
           }}
         >
+          <h1
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontWeight: 700,
+              fontSize: "clamp(24px, 3.8vw, 40px)",
+              lineHeight: 1.12,
+              letterSpacing: "0.03em",
+              textTransform: "uppercase",
+              color: "#2b2130",
+              textAlign: "center",
+              margin: "0 0 16px",
+            }}
+          >
+            Application of Computers in Different Fields
+          </h1>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
           <button
             onClick={() => navigate(-1)}
             style={{
@@ -194,9 +268,9 @@ export default function Gamified8() {
               gap: 6,
               padding: "8px 14px",
               borderRadius: 9999,
-              background: "rgba(255,255,255,0.08)",
-              color: COLORS.white,
-              border: `1px solid ${COLORS.rose}55`,
+              background: "rgba(255,255,255,0.85)",
+              color: COLORS.maroon,
+              border: `1px solid ${COLORS.rose}`,
               backdropFilter: "blur(8px)",
               cursor: "pointer",
               fontSize: 13,
@@ -210,6 +284,9 @@ export default function Gamified8() {
 
           <button
             onClick={toggleMute}
+            // Keep keyboard focus on the game canvas — some builds pause when
+            // they lose focus, so don't let the button grab it.
+            onMouseDown={(e) => e.preventDefault()}
             style={{
               display: "flex",
               alignItems: "center",
@@ -218,23 +295,20 @@ export default function Gamified8() {
               height: 38,
               flexShrink: 0,
               borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)",
-              color: COLORS.white,
-              border: `1px solid ${COLORS.rose}55`,
+              background: "rgba(255,255,255,0.85)",
+              color: COLORS.maroon,
+              border: `1px solid ${COLORS.rose}`,
               backdropFilter: "blur(8px)",
               cursor: "pointer",
             }}
           >
             {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
+          </div>
         </div>
       )}
 
-      {/* Fixed-size game panel — stretches to fill screen in fullscreen mode.
-          When isPseudoFullscreen is true (iOS fallback), the panel is taken
-          out of normal flow, pinned to the viewport, and rotated 90deg so the
-          16:10-ish game fills the phone screen in a forced "landscape" look
-          even though the device itself is still physically in portrait. */}
+      {/* Fixed-size game panel — stretches to fill screen in fullscreen mode. */}
       <div
         ref={panelRef}
         style={
@@ -255,10 +329,8 @@ export default function Gamified8() {
               }
             : {
                 position: "relative",
-                width: isFullscreen ? "100vw" : "min(960px, 96vw)",
-                height: isFullscreen
-                  ? "100vh"
-                  : "min(600px, calc(min(960px, 96vw) * 0.625), 75vh)",
+                width: isFullscreen ? "100vw" : `${panelSize.width}px`,
+                height: isFullscreen ? "100vh" : `${panelSize.height}px`,
                 borderRadius: isFullscreen ? 0 : 18,
                 overflow: "hidden",
                 border: isFullscreen ? "none" : `2px solid ${COLORS.red}`,
