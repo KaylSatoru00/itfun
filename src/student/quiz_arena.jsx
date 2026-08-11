@@ -801,25 +801,29 @@ function QuizArena() {
   // loob mismo ng question text (galing sa AI generation) — kaya dito na
   // lang natin ito papalitan ng totoong sagot pagdating ng revealedAnswer,
   // sa halip na maglagay ng hiwalay na "clue" na text sa ibaba.
+  // Matches a blank: two or more underscores, whether written solid ("_____")
+  // or spaced ("_ _ _"). Kept ungated on the detected type so blanks inside
+  // mixed-type quizzes (or any question whose type isn't flagged 'fill') still
+  // render as a clean underline instead of raw underscores.
+  const BLANK_RE = /_(?:\s*_)+/;
   const displayQuestionText = (() => {
     const q = currentQuestion?.question;
-    if (!q) return q;
-    if (isFillBlank) {
-      // Once answered, drop the answer straight into the sentence.
-      if (revealedAnswer) return q.replace(/_{3,}/g, revealedAnswer);
-      // Otherwise render each blank as ONE solid underline of fixed width —
-      // no underscores, so its length can't hint at how long the answer is.
-      const parts = q.split(/_{3,}/);
-      const nodes = [];
-      parts.forEach((part, i) => {
-        if (part) nodes.push(part);
-        if (i < parts.length - 1) {
-          nodes.push(<span key={`blank-${i}`} className="fill-blank" aria-hidden="true" />);
-        }
-      });
-      return nodes;
+    if (!q || !BLANK_RE.test(q)) return q;
+    // Once the answer is known for a fill-in-blank, drop it into the sentence.
+    if (isFillBlank && revealedAnswer) {
+      return q.replace(new RegExp(BLANK_RE.source, 'g'), revealedAnswer);
     }
-    return q;
+    // Otherwise render each blank as ONE solid underline of fixed width —
+    // no underscores, so its length can't hint at how long the answer is.
+    const parts = q.split(new RegExp(BLANK_RE.source, 'g'));
+    const nodes = [];
+    parts.forEach((part, i) => {
+      if (part) nodes.push(part);
+      if (i < parts.length - 1) {
+        nodes.push(<span key={`blank-${i}`} className="fill-blank" aria-hidden="true" />);
+      }
+    });
+    return nodes;
   })();
 
   // Circular timer ring math
