@@ -152,7 +152,7 @@ function RankingBoard({ rankings, prevScores, socketId, reduce }) {
               {initials(player.name)}
             </span>
             <span className="rank-name">
-              {player.id === socketId ? '(YOU)' : player.name}
+              {player.id === socketId ? '(You)' : player.name}
             </span>
             <span className="rank-score">
               <AnimatedScore
@@ -922,7 +922,7 @@ function QuizArena() {
                     {initials(player.name)}
                   </span>
                   <span className="ped-name">
-                    {player.id === socket?.id ? '(YOU)' : player.name}
+                    {player.id === socket?.id ? '(You)' : player.name}
                   </span>
                   <span className="ped-score">{player.score}</span>
                   <div className="ped-block">{rankIdx + 1}</div>
@@ -947,7 +947,7 @@ function QuizArena() {
                     {initials(player.name)}
                   </span>
                   <span className="rank-name">
-                    {player.id === socket?.id ? '(YOU)' : player.name}
+                    {player.id === socket?.id ? '(You)' : player.name}
                   </span>
                   <span className="rank-score">{player.score}</span>
                 </motion.div>
