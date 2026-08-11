@@ -13,6 +13,35 @@ const getAvatarColor = (id = '') => {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 };
 
+// Assign each player a palette color, GUARANTEEING that players who share the
+// exact same display name (e.g. two "Jezter Mangacu" on different accounts)
+// still get different colors — otherwise their identical name + identical
+// color makes them impossible to tell apart. Players with unique names keep a
+// stable per-name hash color. Returns a Map keyed by player id (name fallback).
+const buildAvatarColors = (players = []) => {
+  const groups = new Map(); // nameKey -> [player keys]
+  players.forEach((p) => {
+    const nameKey = (p.name || '').trim().toLowerCase();
+    const key = p.id || p.name || '';
+    if (!groups.has(nameKey)) groups.set(nameKey, []);
+    groups.get(nameKey).push(key);
+  });
+
+  const colorByKey = new Map();
+  groups.forEach((keys, nameKey) => {
+    let hash = 0;
+    for (let i = 0; i < nameKey.length; i++) hash = nameKey.charCodeAt(i) + ((hash << 5) - hash);
+    const base = Math.abs(hash);
+    // Sort so each specific player keeps the same slot even if the list
+    // reorders; +i within a same-name group walks the palette so duplicates
+    // land on distinct colors (up to AVATAR_COLORS.length of them).
+    [...keys].sort().forEach((key, i) => {
+      colorByKey.set(key, AVATAR_COLORS[(base + i) % AVATAR_COLORS.length]);
+    });
+  });
+  return colorByKey;
+};
+
 function WaitingLobby() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -234,6 +263,9 @@ function WaitingLobby() {
     );
   }
 
+  // Distinct-per-duplicate-name avatar colors, recomputed as the roster changes.
+  const avatarColors = buildAvatarColors(players);
+
   return (
     <motion.div
       className="waiting-lobby-panel"
@@ -273,7 +305,7 @@ function WaitingLobby() {
               <div key={player.id || index} className="player-avatar-wrap">
                 <div
                   className="player-avatar"
-                  style={{ background: getAvatarColor(player.id || player.name) }}
+                  style={{ background: avatarColors.get(player.id || player.name) || getAvatarColor(player.id || player.name) }}
                 >
                   {player.name ? player.name.charAt(0).toUpperCase() : '?'}
                 </div>
