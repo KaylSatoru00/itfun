@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { LogOut } from 'lucide-react';
+import { MdExitToApp } from 'react-icons/md';
 import { useSocket } from '../socket_context';
 import { useUser } from '../user_context';
 import kidsImg from '../assets/kids.png';
@@ -897,7 +897,7 @@ function QuizArena() {
             navigate('/pvp-quiz');
           }}
         >
-          <LogOut size={20} />
+          <MdExitToApp size={24} />
         </button>
 
         <div className="results-page results-big">
