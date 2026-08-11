@@ -802,10 +802,24 @@ function QuizArena() {
   // lang natin ito papalitan ng totoong sagot pagdating ng revealedAnswer,
   // sa halip na maglagay ng hiwalay na "clue" na text sa ibaba.
   const displayQuestionText = (() => {
-    if (isFillBlank && revealedAnswer) {
-      return currentQuestion?.question?.replace(/_{3,}/g, revealedAnswer);
+    const q = currentQuestion?.question;
+    if (!q) return q;
+    if (isFillBlank) {
+      // Once answered, drop the answer straight into the sentence.
+      if (revealedAnswer) return q.replace(/_{3,}/g, revealedAnswer);
+      // Otherwise render each blank as ONE solid underline of fixed width —
+      // no underscores, so its length can't hint at how long the answer is.
+      const parts = q.split(/_{3,}/);
+      const nodes = [];
+      parts.forEach((part, i) => {
+        if (part) nodes.push(part);
+        if (i < parts.length - 1) {
+          nodes.push(<span key={`blank-${i}`} className="fill-blank" aria-hidden="true" />);
+        }
+      });
+      return nodes;
     }
-    return currentQuestion?.question;
+    return q;
   })();
 
   // Circular timer ring math

@@ -280,6 +280,17 @@
   text-wrap: balance;
 }
 
+/* Fill-in-the-blank placeholder: one solid underline of fixed width. Replaces
+   the old run of underscores so the blank's length no longer hints at the
+   answer. Inherits the chalk-text color via currentColor. */
+.question-text .fill-blank {
+  display: inline-block;
+  width: 2.4em;
+  border-bottom: 4px solid currentColor;
+  margin: 0 0.14em;
+  vertical-align: -0.02em;
+}
+
 /* ── Options: layout ── */
 .options-grid {
   width: 100%;
