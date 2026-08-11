@@ -654,25 +654,35 @@
   font-family: 'Montserrat', sans-serif;
 }
 
-.exit-btn {
-  margin-top: clamp(24px, 4vh, 34px);
-  padding: clamp(12px, 1.6vw, 15px) clamp(30px, 4.4vw, 42px);
-  background: linear-gradient(135deg, #C8102E, #A50034);
-  color: #fff;
+/* Fixed exit icon (upper-left of the Final Results screen). Position:fixed so
+   it's always reachable regardless of how tall the rankings list gets — the
+   old bottom button could sit below the fold on desktop with many players. */
+.exit-icon-btn {
+  position: fixed;
+  top: clamp(14px, 2.2vh, 22px);
+  left: clamp(14px, 2vw, 26px);
+  z-index: 100;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   border: none;
-  border-radius: 28px;
-  font-size: clamp(14px, 1.5vw, 16px);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, #C8102E, #A50034);
   box-shadow: 0 8px 20px rgba(200, 16, 46, 0.32);
+  cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease;
-  font-family: 'Poppins', sans-serif;
 }
 
-.exit-btn:hover {
+.exit-icon-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 26px rgba(200, 16, 46, 0.4);
+}
+
+.exit-icon-btn:active {
+  transform: translateY(0);
 }
 
 /* ══════════════════════════════════════

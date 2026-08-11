@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { LogOut } from 'lucide-react';
 import { useSocket } from '../socket_context';
 import { useUser } from '../user_context';
 import kidsImg from '../assets/kids.png';
@@ -880,6 +881,26 @@ function QuizArena() {
       >
         <Wordmark />
         <ConfettiCannons reduce={reduce} />
+
+        {/* Fixed top-left exit — stays reachable no matter how long the
+            rankings list is (the centered results page can push a bottom
+            button below the fold on desktop with many players). */}
+        <button
+          type="button"
+          className="exit-icon-btn"
+          aria-label="Exit to PvP Quiz"
+          title="Exit"
+          onClick={() => {
+            localStorage.removeItem('itfun_roomPin');
+            localStorage.removeItem('itfun_playerName');
+            localStorage.removeItem('itfun_isHost');
+            localStorage.removeItem('itfun_sessionTime');
+            navigate('/pvp-quiz');
+          }}
+        >
+          <LogOut size={20} />
+        </button>
+
         <div className="results-page results-big">
           <p className="round-label">FINAL RESULTS</p>
 
@@ -936,18 +957,6 @@ function QuizArena() {
             </div>
           )}
 
-          <button
-            className="exit-btn"
-            onClick={() => {
-              localStorage.removeItem('itfun_roomPin');
-              localStorage.removeItem('itfun_playerName');
-              localStorage.removeItem('itfun_isHost');
-              localStorage.removeItem('itfun_sessionTime');
-              navigate('/pvp-quiz');
-            }}
-          >
-            Exit
-          </button>
         </div>
       </motion.div>
     );
