@@ -100,6 +100,38 @@
   margin-bottom: 8px;
 }
 
+/* ── Title / Quiz Type / Host meta rows inside the sidebar card ── */
+.lobby-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.lobby-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lobby-meta-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #A50034;
+}
+
+.lobby-meta-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #3a3033;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
 .module-card-text {
   font-size: 12.5px;
   color: #4a3f40;

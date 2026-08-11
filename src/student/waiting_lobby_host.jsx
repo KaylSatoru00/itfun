@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
 import { useSocket } from '../socket_context';
+import { moduleLabelFromId, quizTypeLabelFromId } from './quiz_meta';
 import './waiting_lobby.css';
 
 // Same multi-color avatar palette pattern used on the faculty-class page
@@ -70,6 +71,12 @@ function WaitingLobby() {
   const moduleId = state.module?.id || '';
   const quizType = state.quizType?.id || '';
   const questions = state.questions || [];
+
+  // Module title + quiz-type name shown on the sidebar card. Seeded from the
+  // picks carried in navigation state; on a rejoin (where location.state is
+  // empty) they're refilled from the room summary the server returns.
+  const [moduleLabel, setModuleLabel] = useState(state.module?.label || moduleLabelFromId(moduleId));
+  const [quizTypeLabel, setQuizTypeLabel] = useState(state.quizType?.label || quizTypeLabelFromId(quizType));
 
   useEffect(() => {
     // KRITIKAL: hintayin munang matapos ang Firebase auth restore
@@ -144,6 +151,10 @@ function WaitingLobby() {
           roomPinRef.current = savedPin;
           setPlayers(response.state.players);
           setHostName(playerDisplayName);
+          // location.state is empty on a rejoin — refill the card from the
+          // server's room summary.
+          if (response.room?.moduleId) setModuleLabel(moduleLabelFromId(response.room.moduleId));
+          if (response.room?.quizType) setQuizTypeLabel(quizTypeLabelFromId(response.room.quizType));
 
           // Kung nagsimula na pala yung quiz habang naka-refresh, deretso na
           if (response.state.question || response.state.finished) {
@@ -295,9 +306,20 @@ function WaitingLobby() {
 
           <div className="module-card">
             <div className="module-card-img">🖥️</div>
-            <p className="module-card-text">
-              {state.module?.label || 'Test Your Knowledge in IT Fundamentals'}
-            </p>
+            <div className="lobby-meta">
+              <div className="lobby-meta-row">
+                <span className="lobby-meta-label">Title</span>
+                <span className="lobby-meta-value">{moduleLabel || 'IT Fundamentals'}</span>
+              </div>
+              <div className="lobby-meta-row">
+                <span className="lobby-meta-label">Quiz Type</span>
+                <span className="lobby-meta-value">{quizTypeLabel || '—'}</span>
+              </div>
+              <div className="lobby-meta-row">
+                <span className="lobby-meta-label">Host</span>
+                <span className="lobby-meta-value">You</span>
+              </div>
+            </div>
           </div>
         </div>
 
