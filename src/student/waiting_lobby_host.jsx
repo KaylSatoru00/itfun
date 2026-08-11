@@ -317,7 +317,7 @@ function WaitingLobby() {
               </div>
               <div className="lobby-meta-row">
                 <span className="lobby-meta-label">Host</span>
-                <span className="lobby-meta-value">You</span>
+                <span className="lobby-meta-value">(You)</span>
               </div>
             </div>
           </div>
