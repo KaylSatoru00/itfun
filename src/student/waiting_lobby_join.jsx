@@ -6,7 +6,15 @@ import { useSocket } from '../socket_context';
 import './waiting_lobby.css';
 
 // Same multi-color avatar palette pattern used on the faculty-class page
-const AVATAR_COLORS = ['#7c3aed', '#0891b2', '#16a34a', '#ea580c', '#A50034', '#2563eb'];
+// 24 distinct, saturated colors — all dark enough for the white initial to
+// stay legible. A larger palette means far fewer color repeats overall and
+// lets bigger same-name groups each keep a unique color.
+const AVATAR_COLORS = [
+  '#7c3aed', '#0891b2', '#16a34a', '#ea580c', '#A50034', '#2563eb',
+  '#C8102E', '#db2777', '#0d9488', '#9333ea', '#d97706', '#4f46e5',
+  '#059669', '#dc2626', '#0284c7', '#c026d3', '#4d7c0f', '#e11d48',
+  '#7e22ce', '#b45309', '#1d4ed8', '#be123c', '#15803d', '#a16207',
+];
 const getAvatarColor = (id = '') => {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
