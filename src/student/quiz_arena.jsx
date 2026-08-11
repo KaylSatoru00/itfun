@@ -117,6 +117,8 @@ function RankingBoard({ rankings, prevScores, socketId, reduce }) {
   );
   const [order, setOrder] = useState(oldOrder);
   const [revealed, setRevealed] = useState(false);
+  const listRef = useRef(null);
+  const youRef = useRef(null);
 
   // Hold on the old standings for a beat, then flip to the new order so the
   // slide + count-up read as a deliberate "ranking change" moment.
@@ -128,8 +130,22 @@ function RankingBoard({ rankings, prevScores, socketId, reduce }) {
     return () => clearTimeout(t);
   }, [rankings, oldOrder, reduce]);
 
+  // Auto-focus: keep the current player's row centered in the scrollable list
+  // as the standings reshuffle, so they never have to scroll to find where
+  // they stand. Scrolls only the list container (not the page).
+  useEffect(() => {
+    const list = listRef.current;
+    const you = youRef.current;
+    if (!list || !you) return;
+    const id = requestAnimationFrame(() => {
+      const target = you.offsetTop - list.clientHeight / 2 + you.offsetHeight / 2;
+      list.scrollTo({ top: Math.max(0, target), behavior: reduce ? 'auto' : 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [order, revealed, reduce]);
+
   return (
-    <div className="rankings-list medal-rows">
+    <div className="rankings-list medal-rows" ref={listRef}>
       {order.map((player) => {
         const pos = order.findIndex((p) => p.id === player.id);
         const tier = pos === 0 ? 'gold' : pos === 1 ? 'silver' : pos === 2 ? 'bronze' : '';
@@ -138,6 +154,7 @@ function RankingBoard({ rankings, prevScores, socketId, reduce }) {
         return (
           <motion.div
             key={player.id}
+            ref={player.id === socketId ? youRef : undefined}
             layout={reduce ? false : 'position'}
             transition={{ layout: { type: 'spring', stiffness: 520, damping: 34 } }}
             className={`rank-row ${tier ? `medal ${tier}` : ''} ${player.id === socketId ? 'is-you' : ''}`}
@@ -287,10 +304,28 @@ function QuizArena() {
   const [gameFinished, setGameFinished] = useState(false);
   const [finalRankings, setFinalRankings] = useState([]);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // Refs for auto-centering the current player's row in the final rankings list.
+  const finalListRef = useRef(null);
+  const finalYouRef = useRef(null);
   // Read inside the popstate handler (which is registered once) so it always
   // sees the latest "is the quiz over?" value without re-binding the listener.
   const gameFinishedRef = useRef(false);
   useEffect(() => { gameFinishedRef.current = gameFinished; }, [gameFinished]);
+
+  // Auto-focus: when the final results render, center the current player's row
+  // in the scrollable rankings list (4th place and below). If they finished in
+  // the top 3 they're on the podium, so there's nothing in the list to center.
+  useEffect(() => {
+    if (!gameFinished) return;
+    const list = finalListRef.current;
+    const you = finalYouRef.current;
+    if (!list || !you) return;
+    const id = requestAnimationFrame(() => {
+      const target = you.offsetTop - list.clientHeight / 2 + you.offsetHeight / 2;
+      list.scrollTo({ top: Math.max(0, target), behavior: reduce ? 'auto' : 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [gameFinished, finalRankings, reduce]);
 
   // Leave the quiz. Tell the server (keeps our slot, marked disconnected, so
   // we can rejoin by PIN while the session runs) and clear the saved session.
@@ -951,11 +986,12 @@ function QuizArena() {
 
           {/* Everyone from 4th place down */}
           {finalRankings.length > 3 && (
-            <div className="rankings-list">
+            <div className="rankings-list" ref={finalListRef}>
               {finalRankings.slice(3).map((player, i) => (
                 <motion.div
                   key={player.id}
-                  className="rank-row"
+                  ref={player.id === socket?.id ? finalYouRef : undefined}
+                  className={`rank-row ${player.id === socket?.id ? 'is-you' : ''}`}
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + i * 0.06 }}
