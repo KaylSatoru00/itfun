@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '../user_context';
 import { useSocket } from '../socket_context';
+import { moduleLabelFromId, quizTypeLabelFromId } from './quiz_meta';
 import './waiting_lobby.css';
 
 // Same multi-color avatar palette pattern used on the faculty-class page
@@ -58,8 +59,18 @@ function WaitingLobbyJoin() {
 
   const [players, setPlayers] = useState([]);
   const [hostName, setHostName] = useState('');
+  const [moduleLabel, setModuleLabel] = useState('');
+  const [quizTypeLabel, setQuizTypeLabel] = useState('');
   const [error, setError] = useState('');
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  // Fill the sidebar card's Title / Quiz Type from the room the server sends
+  // back (the joiner never carries the host's module/type picks in nav state).
+  const applyRoomMeta = (room) => {
+    if (!room) return;
+    if (room.moduleId) setModuleLabel(moduleLabelFromId(room.moduleId));
+    if (room.quizType) setQuizTypeLabel(quizTypeLabelFromId(room.quizType));
+  };
 
   const roomPinRef = useRef('');
 
@@ -102,6 +113,7 @@ function WaitingLobbyJoin() {
           if (response.state) {
             setPlayers(response.state.players);
             setHostName(response.room?.hostName || hostName);
+            applyRoomMeta(response.room);
 
             localStorage.setItem('itfun_roomPin', pin);
             localStorage.setItem('itfun_playerName', playerDisplayName);
@@ -124,6 +136,7 @@ function WaitingLobbyJoin() {
 
           setPlayers(response.room.players);
           setHostName(response.room.hostName);
+          applyRoomMeta(response.room);
 
           localStorage.setItem('itfun_roomPin', pin);
           localStorage.setItem('itfun_playerName', playerDisplayName);
@@ -169,6 +182,7 @@ function WaitingLobbyJoin() {
           }
           setPlayers(response.state.players);
           setHostName(response.room?.hostName || hostName);
+          applyRoomMeta(response.room);
 
           if (response.state.finished || response.state.question) {
             navigate(`/quiz-arena?pin=${pin}`);
@@ -313,9 +327,20 @@ function WaitingLobbyJoin() {
 
           <div className="module-card">
             <div className="module-card-img">🖥️</div>
-            <p className="module-card-text">
-              Host: <strong>{hostName || '...'}</strong>
-            </p>
+            <div className="lobby-meta">
+              <div className="lobby-meta-row">
+                <span className="lobby-meta-label">Title</span>
+                <span className="lobby-meta-value">{moduleLabel || 'IT Fundamentals'}</span>
+              </div>
+              <div className="lobby-meta-row">
+                <span className="lobby-meta-label">Quiz Type</span>
+                <span className="lobby-meta-value">{quizTypeLabel || '—'}</span>
+              </div>
+              <div className="lobby-meta-row">
+                <span className="lobby-meta-label">Host</span>
+                <span className="lobby-meta-value">{hostName || '…'}</span>
+              </div>
+            </div>
           </div>
         </div>
 
