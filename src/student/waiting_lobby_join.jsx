@@ -361,7 +361,7 @@ function WaitingLobbyJoin() {
                   {player.name ? player.name.charAt(0).toUpperCase() : '?'}
                 </div>
                 <span className="player-avatar-name">
-                  {player.id === socket?.id ? '(YOU)' : player.name}
+                  {player.id === socket?.id ? '(You)' : player.name}
                 </span>
               </div>
             ))}
