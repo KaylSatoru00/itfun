@@ -328,7 +328,7 @@
 }
 .fc-panel .fc-student-ring { display: flex; justify-content: center; }
 .fc-panel .fc-student-hint {
-  margin-top: 10px;
+  margin-top: 6px;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
@@ -338,18 +338,30 @@
 }
 .fc-panel .fc-student-card:hover .fc-student-hint { opacity: 1; }
 .fc-panel .fc-student-unenroll {
-  position: absolute;
-  top: 10px;
-  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px auto 0;
+  padding: 7px 20px;
   border: none;
-  background: transparent;
-  color: #cba;
-  font-size: 1.2rem;
+  border-radius: 999px;
+  background: #C8102E;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   line-height: 1;
   cursor: pointer;
-  transition: color 0.2s, transform 0.2s;
+  box-shadow: 0 6px 14px rgba(200, 16, 46, 0.28);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
-.fc-panel .fc-student-unenroll:hover { color: #C8102E; transform: scale(1.15); }
+.fc-panel .fc-student-unenroll:hover {
+  background: #A50034;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(200, 16, 46, 0.34);
+}
+.fc-panel .fc-student-unenroll:active { transform: translateY(0); }
 
 .fc-panel .fc-empty {
   display: flex;
