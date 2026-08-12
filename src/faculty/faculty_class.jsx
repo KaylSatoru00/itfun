@@ -542,6 +542,7 @@ function FacultyClass() {
             {activeClass && (
               <motion.div
                 key="insideclass"
+                className="fc-inside-view"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -576,6 +577,9 @@ function FacultyClass() {
                   </div>
                 </div>
 
+                <div className="fc-inside-divider" />
+
+                <div className="fc-student-scroll">
                 {loadingStudents ? (
                   <p className="fc-loading">Loading students...</p>
                 ) : filteredStudents.length === 0 ? (
@@ -623,6 +627,7 @@ function FacultyClass() {
                     })}
                   </motion.div>
                 )}
+                </div>
               </motion.div>
             )}
 
