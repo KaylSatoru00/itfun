@@ -289,3 +289,47 @@
 .af-signup-btn:hover:not(:disabled) { background: #8a0029; }
 .af-signup-btn:active:not(:disabled) { transform: translateY(1px); }
 .af-signup-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ═══════════ Sign-up compaction ═══════════
+   The signup form is the tallest screen. Tighten its vertical rhythm so the
+   whole card fits within a normal viewport instead of scrolling. Scoped to
+   .af-signup (and its card) so login / OTP / reset are unaffected. */
+.af-card:has(.af-signup) {
+  --af-pad: clamp(1.1rem, 2.2vw, 1.6rem);
+}
+.af-signup {
+  gap: 0.55rem !important; /* overrides Bootstrap's .gap-3 (1rem !important) */
+}
+.af-signup .af-signup-logo {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.35rem;
+}
+.af-signup .af-signup-sub {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+}
+.af-signup .af-label {
+  margin-bottom: 0.2rem;
+}
+.af-signup .af-field .form-control {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+/* Password requirements: lay the six checks out in two columns so the box
+   costs ~3 lines instead of ~6. */
+.af-signup .af-checklist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 0.9rem;
+  row-gap: 0.05rem;
+  padding: 0.55rem 0.75rem;
+}
+.af-signup .af-checklist-title {
+  grid-column: 1 / -1;
+  margin-bottom: 0.25rem;
+}
+.af-signup .af-check-item {
+  font-size: 0.74rem;
+  margin-bottom: 0;
+}
