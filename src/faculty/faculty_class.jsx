@@ -604,11 +604,6 @@ function FacultyClass() {
                           whileHover={{ y: -5 }}
                           onClick={() => setSelectedStudent(s)}
                         >
-                          <button
-                            className="fc-student-unenroll"
-                            onClick={e => { e.stopPropagation(); handleRemoveStudent(s.enrollmentDocId); }}
-                            title="Unenroll student"
-                          >×</button>
                           <div className="fc-student-avatar" style={{ background: avatarColor(s.studentId) }}>
                             {getInitials(s.studentName)}
                           </div>
@@ -617,6 +612,11 @@ function FacultyClass() {
                           <div className="fc-student-ring">
                             <DonutChart percent={pct} size={74} strokeWidth={8} showSub={false} />
                           </div>
+                          <button
+                            className="fc-student-unenroll"
+                            onClick={e => { e.stopPropagation(); handleRemoveStudent(s.enrollmentDocId); }}
+                            title="Unenroll student"
+                          >Unenroll</button>
                           <div className="fc-student-hint">View progress →</div>
                         </motion.div>
                       );
