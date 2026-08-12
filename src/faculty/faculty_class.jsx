@@ -756,7 +756,7 @@ function FacultyClass() {
               {/* ── LEFT: form ── */}
               <div className="ccm-form">
                 <h3 className="ccm-title">Create a Class</h3>
-                <p className="ccm-sub">Pick a section — watch your class come to life →</p>
+                <p className="ccm-sub">Pick a section</p>
 
                 <div className="ccm-lbl">Class Section</div>
                 <div className="ccm-chips">
@@ -804,7 +804,7 @@ function FacultyClass() {
                   onClick={handleGenerateCode}
                   disabled={!selectedSection}
                 >
-                  ✦ Generate Access Code
+                  Generate Access Code
                 </button>
               </div>
 
