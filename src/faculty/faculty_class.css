@@ -289,6 +289,54 @@
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 18px;
 }
+
+/* pagination */
+.fc-panel .fc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 26px 0 8px;
+}
+.fc-panel .fc-page-btn,
+.fc-panel .fc-page-num {
+  border: 1px solid rgba(200, 16, 46, 0.28);
+  background: #fff;
+  color: #C8102E;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.fc-panel .fc-page-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+}
+.fc-panel .fc-page-num {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: 50%;
+}
+.fc-panel .fc-page-btn:hover:not(:disabled),
+.fc-panel .fc-page-num:hover:not(.active) {
+  background: rgba(200, 16, 46, 0.08);
+  border-color: rgba(200, 16, 46, 0.5);
+}
+.fc-panel .fc-page-num.active {
+  background: #C8102E;
+  border-color: #C8102E;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(200, 16, 46, 0.28);
+}
+.fc-panel .fc-page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #aaa;
+}
 .fc-panel .fc-student-card {
   position: relative;
   background: #fff;

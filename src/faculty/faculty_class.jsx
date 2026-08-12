@@ -164,6 +164,8 @@ function FacultyClass() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [confirmRemoveStudentId, setConfirmRemoveStudentId] = useState(null);
   const [studentSearch, setStudentSearch] = useState('');
+  const [studentPage, setStudentPage] = useState(1);
+  const STUDENTS_PER_PAGE = 10;
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -417,6 +419,22 @@ function FacultyClass() {
 
   const filteredStudents = getFilteredAndSortedStudents();
 
+  // ── Pagination (10 students per page) ──
+  const totalStudentPages = Math.max(1, Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE));
+  const safeStudentPage = Math.min(studentPage, totalStudentPages);
+  const pagedStudents = filteredStudents.slice(
+    (safeStudentPage - 1) * STUDENTS_PER_PAGE,
+    safeStudentPage * STUDENTS_PER_PAGE
+  );
+
+  // Reset to the first page whenever the search or active class changes.
+  useEffect(() => { setStudentPage(1); }, [studentSearch, activeClass]);
+
+  // Keep the page in range if the list shrinks (e.g. after unenrolling).
+  useEffect(() => {
+    if (studentPage > totalStudentPages) setStudentPage(totalStudentPages);
+  }, [studentPage, totalStudentPages]);
+
   function avatarColor(uid = '') {
     let hash = 0;
     for (let i = 0; i < uid.length; i++) hash = uid.charCodeAt(i) + ((hash << 5) - hash);
@@ -588,13 +606,15 @@ function FacultyClass() {
                     </p>
                   </div>
                 ) : (
+                  <>
                   <motion.div
+                    key={safeStudentPage}
                     className="fc-student-grid"
                     initial="hidden"
                     animate="show"
                     variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
                   >
-                    {filteredStudents.map(s => {
+                    {pagedStudents.map(s => {
                       const pct = Math.round(allStudentsProgress[s.studentId] ?? 0);
                       return (
                         <motion.div
@@ -622,6 +642,29 @@ function FacultyClass() {
                       );
                     })}
                   </motion.div>
+
+                  {totalStudentPages > 1 && (
+                    <div className="fc-pagination">
+                      <button
+                        className="fc-page-btn"
+                        onClick={() => setStudentPage(p => Math.max(1, p - 1))}
+                        disabled={safeStudentPage === 1}
+                      >← Prev</button>
+                      {Array.from({ length: totalStudentPages }, (_, i) => i + 1).map(n => (
+                        <button
+                          key={n}
+                          className={`fc-page-num ${n === safeStudentPage ? 'active' : ''}`}
+                          onClick={() => setStudentPage(n)}
+                        >{n}</button>
+                      ))}
+                      <button
+                        className="fc-page-btn"
+                        onClick={() => setStudentPage(p => Math.min(totalStudentPages, p + 1))}
+                        disabled={safeStudentPage === totalStudentPages}
+                      >Next →</button>
+                    </div>
+                  )}
+                  </>
                 )}
               </motion.div>
             )}
