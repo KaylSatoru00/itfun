@@ -748,89 +748,109 @@ function FacultyClass() {
             onClick={() => { setShowCreateModal(false); setSelectedSection(''); setGeneratedCode(''); setEndDate(''); }}
           >
             <motion.div
-              className="create-class-modal"
+              className="create-class-modal ccm-split"
               initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="modal-heading">Create a Class</h3>
-              <p className="modal-subheading">Pick a section and generate an access code</p>
+              {/* ── LEFT: form ── */}
+              <div className="ccm-form">
+                <h3 className="ccm-title">Create a Class</h3>
+                <p className="ccm-sub">Pick a section — watch your class come to life →</p>
 
-              <label className="modal-label">Class Section</label>
-              <select
-                className="modal-section-select"
-                value={selectedSection}
-                onChange={e => setSelectedSection(e.target.value)}
-              >
-                <option value="">Select Section</option>
-                {SECTIONS.map(sec => {
-                  const taken = classes.some(c => c.name === sec);
-                  return (
-                    <option key={sec} value={sec} disabled={taken}>
-                      {taken ? `${sec} (Already Created)` : sec}
-                    </option>
-                  );
-                })}
-              </select>
-
-              {selectedSection && (
-                <div className="modal-selected-label">
-                  Selected: <strong>{selectedSection}</strong>
+                <div className="ccm-lbl">Class Section</div>
+                <div className="ccm-chips">
+                  {SECTIONS.map(sec => {
+                    const taken = classes.some(c => c.name === sec);
+                    const sel = selectedSection === sec;
+                    return (
+                      <button
+                        key={sec}
+                        type="button"
+                        className={`ccm-chip ${sel ? 'sel' : ''} ${taken ? 'taken' : ''}`}
+                        disabled={taken}
+                        onClick={() => setSelectedSection(sec)}
+                        title={taken ? `${sec} — already created` : sec}
+                      >
+                        {sel ? sec : sec.replace('BSIT-', '')}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
 
-              <label className="modal-label" style={{ marginTop: '16px' }}>Class Duration</label>
-              <div className="modal-date-row">
-                <span className="modal-date-tag">Start</span>
-                <div className="modal-date-field locked">
-                  <span>{todayLabel}</span>
-                  <span className="modal-date-ico" aria-hidden="true">🔒</span>
+                <div className="ccm-lbl">Class Duration</div>
+                <div className="ccm-drow">
+                  <div className="ccm-dfield lock">
+                    <span className="ccm-dtag">Start <span aria-hidden="true">🔒</span></span>
+                    <div className="ccm-dval">{todayLabel}</div>
+                  </div>
+                  <div className={`ccm-dfield end ${endDate ? 'filled' : ''}`}>
+                    <span className="ccm-dtag">End <span aria-hidden="true">📅</span></span>
+                    <input
+                      type="date"
+                      className="ccm-dinput"
+                      min={tomorrowStr}
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      onKeyDown={e => { if (e.key !== 'Tab') e.preventDefault(); }}
+                      onClick={e => e.currentTarget.showPicker?.()}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="modal-date-row">
-                <span className="modal-date-tag">End</span>
-                <div className={`modal-date-field end ${endDate ? 'filled' : ''}`}>
-                  <input
-                    type="date"
-                    className="modal-date-input"
-                    min={tomorrowStr}
-                    value={endDate}
-                    onChange={e => setEndDate(e.target.value)}
-                    onKeyDown={e => { if (e.key !== 'Tab') e.preventDefault(); }}
-                    onClick={e => e.currentTarget.showPicker?.()}
-                  />
-                </div>
-              </div>
-              <p className="modal-date-help">The class ends on this date. The earliest end date is tomorrow.</p>
+                <p className="ccm-help">The class ends on this date. The earliest end date is tomorrow.</p>
 
-              <button
-                className="modal-generate-btn"
-                onClick={handleGenerateCode}
-                disabled={!selectedSection}
-              >
-                Generate Access Code
-              </button>
-
-              <AnimatePresence>
-                {generatedCode && (
-                  <motion.div
-                    className="modal-code-display"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 20 }}
-                  >
-                    {generatedCode}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="modal-create-row">
                 <button
-                  className="modal-create-btn"
+                  className="ccm-gen"
+                  onClick={handleGenerateCode}
+                  disabled={!selectedSection}
+                >
+                  ✦ {generatedCode ? 'Regenerate Access Code' : 'Generate Access Code'}
+                </button>
+              </div>
+
+              {/* ── RIGHT: live preview ── */}
+              <div className="ccm-preview">
+                <div className="ccm-prevlbl">Live Preview</div>
+                <div className="ccm-pcard">
+                  <div className="ccm-psub">IT 11 · IT Fundamentals</div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={selectedSection || 'placeholder'}
+                      className={`ccm-pname ${selectedSection ? '' : 'is-empty'}`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {selectedSection || 'Your section'}
+                    </motion.div>
+                  </AnimatePresence>
+                  <div className="ccm-pschool">Dominican College of Tarlac</div>
+                  <div className="ccm-pcode">
+                    Access Code
+                    <AnimatePresence mode="wait">
+                      <motion.b
+                        key={generatedCode || 'nocode'}
+                        className={generatedCode ? '' : 'is-empty'}
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.85 }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+                      >
+                        {generatedCode || '— — — — — —'}
+                      </motion.b>
+                    </AnimatePresence>
+                  </div>
+                  <div className="ccm-pdur">
+                    {todayLabel} → {endDate ? fmtDate(endDate) : 'end date'}
+                  </div>
+                </div>
+                <button
+                  className="ccm-create"
                   onClick={handleCreateClass}
                   disabled={creating || !selectedSection || !generatedCode || !endDate}
                 >
-                  {creating ? 'Creating...' : 'Create Class'}
+                  {creating ? 'Creating…' : 'Create Class'}
                 </button>
               </div>
             </motion.div>

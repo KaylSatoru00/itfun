@@ -629,6 +629,141 @@
 .fc-panel .modal-create-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(200, 16, 46, 0.45); }
 .fc-panel .modal-create-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
+/* ════════ Create Class — split modal with live preview ════════ */
+.fc-panel .create-class-modal.ccm-split {
+  width: min(760px, 100%);
+  padding: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+}
+/* Left column: the form */
+.fc-panel .ccm-form { padding: 26px 26px 24px; min-width: 0; }
+.fc-panel .ccm-title { font-weight: 800; font-size: 1.24rem; color: #111; margin: 0; }
+.fc-panel .ccm-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.76rem; color: #8a6a70; margin: 3px 0 18px;
+}
+.fc-panel .ccm-lbl {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #8a6a70; margin: 0 0 9px;
+}
+.fc-panel .ccm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.fc-panel .ccm-chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid #ecd7dc;
+  background: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700; font-size: 0.82rem; color: #3a2228;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.fc-panel .ccm-chip:hover:not(.sel):not(.taken) { border-color: #C8102E; color: #C8102E; }
+.fc-panel .ccm-chip.sel {
+  border-color: #C8102E;
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(200, 16, 46, 0.28);
+}
+.fc-panel .ccm-chip.taken {
+  opacity: 0.4; cursor: not-allowed;
+  text-decoration: line-through; text-decoration-color: rgba(200,16,46,0.5);
+  background: #f6f2f3;
+}
+/* Duration */
+.fc-panel .ccm-drow { display: flex; gap: 10px; margin-bottom: 8px; }
+.fc-panel .ccm-dfield {
+  flex: 1; min-width: 0;
+  border: 1.5px solid #e7d7db; border-radius: 12px;
+  padding: 9px 12px;
+}
+.fc-panel .ccm-dfield.lock { background: #f7f2f3; }
+.fc-panel .ccm-dfield.end { border-color: #C8102E; box-shadow: 0 0 0 3px rgba(200,16,46,0.07); }
+.fc-panel .ccm-dfield.end.filled { box-shadow: none; }
+.fc-panel .ccm-dtag {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase; color: #b5808f;
+}
+.fc-panel .ccm-dval {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem; font-weight: 700; color: #9a8388; margin-top: 2px;
+}
+.fc-panel .ccm-dinput {
+  width: 100%; border: none; outline: none; background: transparent;
+  font-family: 'Montserrat', sans-serif; font-size: 0.86rem; font-weight: 700;
+  color: #C8102E; cursor: pointer; margin-top: 1px; padding: 0;
+}
+.fc-panel .ccm-dinput::-webkit-calendar-picker-indicator {
+  cursor: pointer; opacity: 0.85;
+  filter: invert(18%) sepia(90%) saturate(4000%) hue-rotate(338deg) brightness(80%);
+}
+.fc-panel .ccm-help {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.66rem; color: #a294a0; margin: 8px 2px 0; line-height: 1.4;
+}
+.fc-panel .ccm-gen {
+  width: 100%; margin-top: 16px;
+  padding: 12px; border-radius: 12px;
+  border: 1.5px dashed #C8102E; background: #fff; color: #C8102E;
+  font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 0.84rem;
+  cursor: pointer; transition: background 0.2s, color 0.2s;
+}
+.fc-panel .ccm-gen:hover:not(:disabled) { background: #fff3f5; }
+.fc-panel .ccm-gen:disabled { opacity: 0.45; cursor: not-allowed; border-style: solid; border-color: #e0cdd2; color: #b7a2a8; }
+/* Right column: live preview */
+.fc-panel .ccm-preview {
+  background: linear-gradient(160deg, #fbe9ee, #f4d3dc);
+  border-left: 1px solid #f0dfe3;
+  padding: 24px 22px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.fc-panel .ccm-prevlbl {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #a2596c;
+}
+.fc-panel .ccm-pcard {
+  position: relative; overflow: hidden;
+  background: #fff; border-radius: 18px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 14px 30px rgba(120, 20, 45, 0.14);
+}
+.fc-panel .ccm-pcard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, #C8102E, #A50034);
+}
+.fc-panel .ccm-psub { font-size: 0.66rem; font-weight: 700; color: #C8102E; margin-top: 6px; }
+.fc-panel .ccm-pname { font-size: 1.5rem; font-weight: 800; color: #111; line-height: 1.05; margin: 4px 0 2px; }
+.fc-panel .ccm-pname.is-empty { color: #cdaab3; font-weight: 700; }
+.fc-panel .ccm-pschool { font-family: 'Montserrat', sans-serif; font-size: 0.72rem; color: #8a6a70; }
+.fc-panel .ccm-pcode {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid #f2e2e5;
+  font-family: 'Montserrat', sans-serif; font-size: 0.72rem; color: #666;
+  display: flex; align-items: center; gap: 6px;
+}
+.fc-panel .ccm-pcode b { color: #A50034; letter-spacing: 0.14em; font-family: 'Montserrat', monospace; }
+.fc-panel .ccm-pcode b.is-empty { color: #cbb3ba; letter-spacing: 0.1em; }
+.fc-panel .ccm-pdur { margin-top: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.68rem; color: #8a6a70; }
+.fc-panel .ccm-create {
+  margin-top: auto;
+  padding: 13px; border: none; border-radius: 14px;
+  background: linear-gradient(135deg, #C8102E, #A50034); color: #fff;
+  font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 0.9rem;
+  cursor: pointer; box-shadow: 0 10px 22px rgba(200, 16, 46, 0.34);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.fc-panel .ccm-create:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(200, 16, 46, 0.45); }
+.fc-panel .ccm-create:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+/* Stack on narrow screens */
+@media (max-width: 640px) {
+  .fc-panel .create-class-modal.ccm-split { grid-template-columns: 1fr; max-height: 88vh; overflow-y: auto; }
+  .fc-panel .ccm-preview { border-left: none; border-top: 1px solid #f0dfe3; }
+}
+
 /* ── Confirm remove modal ── */
 .fc-panel .confirm-remove-modal {
   width: min(360px, 100%);
