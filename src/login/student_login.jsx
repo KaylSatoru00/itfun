@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import {
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -12,7 +11,7 @@ import AuthShell from './auth_shell.jsx';
 import itfunLogo from '../assets/LOGO_NAMEN.png';
 import {
   toPascalCase, passwordRules, PasswordChecklist,
-  RequiredLabel, PasswordInput, screenVariants,
+  RequiredLabel, PasswordInput, screenVariants, isGmailAddress,
 } from './auth_form_kit.jsx';
 
 function StudentLogin() {
@@ -141,6 +140,10 @@ function StudentLogin() {
       setError('Please fill in all fields.');
       return;
     }
+    if (!isGmailAddress(signupEmail)) {
+      setError('Only @gmail.com email addresses are allowed.');
+      return;
+    }
     if (!passwordValid) {
       setError('Password does not meet all requirements.');
       return;
@@ -151,34 +154,33 @@ function StudentLogin() {
     }
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
-      const uid = userCredential.user.uid;
-      await setDoc(doc(db, 'students', uid), {
-        uid, firstName, lastName, email: signupEmail,
-        role: 'student', createdAt: new Date().toISOString(),
-      });
-      await auth.signOut();
-      await sendSignupOtp(signupEmail);
+      // No account is created yet. The backend emails a 6-digit code and
+      // holds the pending signup for 10 minutes; the account is only created
+      // once the code from the real inbox is verified. A non-existent Gmail
+      // never receives the code, so it can never register.
+      await sendSignupOtp();
       setOtpCode('');
       setOtpTouched(false);
       setScreen('verify');
     } catch (err) {
-      if (err.code === 'auth/email-already-in-use') {
-        setError('This email is already registered. Please log in instead.');
-      } else {
-        setError('Failed to create account. Please try again.');
-      }
+      setError(err.message || 'Failed to start signup. Please try again.');
     }
     setLoading(false);
   };
 
-  // Calls the backend to generate a fresh 6-digit code and email it via
-  // Brevo. Reused by both the initial signup and the "Resend" link.
-  const sendSignupOtp = async (email) => {
+  // Asks the backend to generate a fresh 6-digit code, stash the pending
+  // signup, and email the code via Brevo. Reused by the initial signup and
+  // the "Resend" link. The account itself is created later, on OTP verify.
+  const sendSignupOtp = async () => {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/send-signup-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({
+        email: signupEmail.trim(),
+        password: signupPassword,
+        firstName, lastName,
+        role: 'student',
+      }),
     });
     const data = await res.json();
     if (!res.ok || !data.success) {
@@ -190,11 +192,11 @@ function StudentLogin() {
     setError('');
     setLoading(true);
     try {
-      await sendSignupOtp(signupEmail);
+      await sendSignupOtp();
       setOtpCode('');
       alert('A new code was sent! Check your inbox.');
     } catch (err) {
-      setError('Failed to resend code. Please try again.');
+      setError(err.message || 'Failed to resend code. Please try again.');
     }
     setLoading(false);
   };
@@ -482,12 +484,15 @@ function StudentLogin() {
               <RequiredLabel label="Email" touched={signupTouched.email} value={signupEmail} />
               <input
                 type="email"
-                className={`form-control ${signupTouched.email && !signupEmail ? 'is-invalid' : ''}`}
+                className={`form-control ${signupTouched.email && (!signupEmail || !isGmailAddress(signupEmail)) ? 'is-invalid' : ''}`}
                 placeholder="example@gmail.com"
                 value={signupEmail}
                 onChange={e => setSignupEmail(e.target.value)}
                 onBlur={() => setSignupTouched(t => ({ ...t, email: true }))}
               />
+              {signupTouched.email && signupEmail && !isGmailAddress(signupEmail) && (
+                <p className="af-field-hint">Only <strong>@gmail.com</strong> addresses are allowed.</p>
+              )}
             </div>
 
             <div className="af-signup-divider" />

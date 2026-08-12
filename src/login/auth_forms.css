@@ -45,6 +45,13 @@
 .af-label.af-missing {
   color: #c8102e;
 }
+.af-field-hint {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  color: #c8102e;
+  margin: 0.3rem 0 0;
+  line-height: 1.35;
+}
 
 .af-section-heading {
   font-family: 'Poppins', sans-serif;
