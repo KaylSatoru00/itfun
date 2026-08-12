@@ -9,6 +9,12 @@ export function toPascalCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// Only @gmail.com addresses are accepted for signup. One local part, no
+// spaces, and the domain must be exactly gmail.com (case-insensitive).
+export function isGmailAddress(email) {
+  return /^[^\s@]+@gmail\.com$/i.test((email || '').trim());
+}
+
 export const passwordRules = [
   { id: 'length',    label: 'At least 8 characters',              test: p => p.length >= 8 },
   { id: 'upper',     label: 'At least one uppercase letter (A–Z)', test: p => /[A-Z]/.test(p) },

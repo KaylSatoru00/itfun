@@ -109,6 +109,12 @@ function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
 }
 
+// Signup is restricted to real Gmail addresses only. One local part, no
+// spaces, and the domain must be exactly gmail.com (case-insensitive).
+function isGmailAddress(email) {
+  return /^[^\s@]+@gmail\.com$/i.test(String(email || '').trim());
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -221,21 +227,58 @@ app.post('/api/send-signup-otp', async (req, res) => {
   console.log('📨 Received send-signup-otp request');
 
   try {
-    const { email } = req.body;
+    const { email, password, firstName, lastName, role } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email is required' });
+    if (!email || !password || !firstName || !lastName || !role) {
+      return res.status(400).json({ success: false, error: 'Missing required signup details.' });
+    }
+
+    // Only real Gmail addresses may register.
+    if (!isGmailAddress(email)) {
+      return res.status(400).json({ success: false, error: 'Only @gmail.com email addresses are allowed.' });
+    }
+
+    if (role !== 'student' && role !== 'faculty') {
+      return res.status(400).json({ success: false, error: 'Invalid account role.' });
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password does not meet the requirements.' });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // Reject emails that are already registered BEFORE emailing a code, so
+    // the user finds out immediately instead of after verifying.
+    try {
+      await adminAuth.getUserByEmail(normalizedEmail);
+      return res.status(409).json({
+        success: false,
+        error: 'This email is already registered. Please log in instead.',
+      });
+    } catch (lookupErr) {
+      if (lookupErr.code !== 'auth/user-not-found') throw lookupErr;
+      // Not found → good, the email is free to register.
     }
 
     const otp = generateOtp();
-    signupOtps.set(email, {
+    // Stash the whole pending signup alongside the code. The account is only
+    // created once this code (delivered to the real inbox) is verified.
+    signupOtps.set(normalizedEmail, {
       otp,
       expiresAt: Date.now() + OTP_EXPIRY_MS,
       attempts: 0,
+      pending: {
+        email: normalizedEmail,
+        password,
+        firstName: String(firstName).trim(),
+        lastName: String(lastName).trim(),
+        role,
+      },
     });
 
-    await sendOtpEmail(email, otp);
-    console.log(`✅ Signup OTP sent to ${email}`);
+    await sendOtpEmail(normalizedEmail, otp);
+    console.log(`✅ Signup OTP sent to ${normalizedEmail}`);
 
     res.json({ success: true });
   } catch (error) {
@@ -260,7 +303,8 @@ app.post('/api/verify-signup-otp', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and code are required' });
     }
 
-    const entry = signupOtps.get(email);
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const entry = signupOtps.get(normalizedEmail);
 
     if (!entry) {
       return res.status(400).json({
@@ -270,7 +314,7 @@ app.post('/api/verify-signup-otp', async (req, res) => {
     }
 
     if (Date.now() > entry.expiresAt) {
-      signupOtps.delete(email);
+      signupOtps.delete(normalizedEmail);
       return res.status(400).json({
         success: false,
         error: 'This code has expired. Please request a new one.',
@@ -279,7 +323,7 @@ app.post('/api/verify-signup-otp', async (req, res) => {
 
     entry.attempts += 1;
     if (entry.attempts > MAX_OTP_ATTEMPTS) {
-      signupOtps.delete(email);
+      signupOtps.delete(normalizedEmail);
       return res.status(400).json({
         success: false,
         error: 'Too many incorrect attempts. Please request a new code.',
@@ -290,14 +334,50 @@ app.post('/api/verify-signup-otp', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Incorrect code. Please try again.' });
     }
 
-    // Code is correct — mark the account as verified in actual Firebase
-    // Auth (not just our own tracking), so the existing login check
-    // (userCredential.user.emailVerified) keeps working unchanged.
-    const userRecord = await adminAuth.getUserByEmail(email);
-    await adminAuth.updateUser(userRecord.uid, { emailVerified: true });
+    // Code is correct — NOW create the account. Nothing was persisted until
+    // this point, so a non-existent inbox (which never received the code)
+    // can never register. The user is created already email-verified, so the
+    // existing login check (userCredential.user.emailVerified) keeps working.
+    const { password, firstName, lastName, role } = entry.pending || {};
+    if (!password || !firstName || !lastName || !role) {
+      signupOtps.delete(normalizedEmail);
+      return res.status(400).json({
+        success: false,
+        error: 'Signup session expired. Please start again.',
+      });
+    }
 
-    signupOtps.delete(email);
-    console.log(`✅ Signup OTP verified for ${email}`);
+    let userRecord;
+    try {
+      userRecord = await adminAuth.createUser({
+        email: normalizedEmail,
+        password,
+        emailVerified: true,
+        displayName: `${firstName} ${lastName}`.trim(),
+      });
+    } catch (createErr) {
+      if (createErr.code === 'auth/email-already-exists') {
+        signupOtps.delete(normalizedEmail);
+        return res.status(409).json({
+          success: false,
+          error: 'This email is already registered. Please log in instead.',
+        });
+      }
+      throw createErr;
+    }
+
+    const collection = role === 'faculty' ? 'faculty' : 'students';
+    await adminDb.collection(collection).doc(userRecord.uid).set({
+      uid: userRecord.uid,
+      firstName,
+      lastName,
+      email: normalizedEmail,
+      role,
+      createdAt: new Date().toISOString(),
+    });
+
+    signupOtps.delete(normalizedEmail);
+    console.log(`✅ Signup verified & account created for ${normalizedEmail} (${role})`);
 
     res.json({ success: true });
   } catch (error) {
