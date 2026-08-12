@@ -229,7 +229,11 @@
   flex: 1 1 48%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* NOTE: no `justify-content: center` here. Centering a taller-than-viewport
+     card with justify-content + overflow clips the top out of the scroll
+     range (you can't scroll up to it). Instead we center with auto margins on
+     the card itself: it sits centered when there's room, and falls back to
+     top-aligned + fully scrollable when the content is taller than the side. */
   align-items: center;
   gap: 1.25rem;
   padding: clamp(1.5rem, 4vw, 4rem);
@@ -238,6 +242,11 @@
   border-bottom-left-radius: 2rem;
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.45);
   overflow-y: auto;
+}
+.as-side > * {
+  margin-top: auto;
+  margin-bottom: auto;
+  flex-shrink: 0;
 }
 
 /* ── Responsive: stack on tablets/phones ── */
@@ -273,6 +282,12 @@
     margin-top: -1.5rem;
     padding-top: 2rem;
     box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.45);
+  }
+  /* On mobile the whole wrapper scrolls and the card sits just under the
+     brand panel — no vertical auto-centering. */
+  .as-side > * {
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 
