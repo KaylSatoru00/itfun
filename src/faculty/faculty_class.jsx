@@ -804,7 +804,7 @@ function FacultyClass() {
                   onClick={handleGenerateCode}
                   disabled={!selectedSection}
                 >
-                  ✦ {generatedCode ? 'Regenerate Access Code' : 'Generate Access Code'}
+                  ✦ Generate Access Code
                 </button>
               </div>
 
