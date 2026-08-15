@@ -7,7 +7,7 @@
   </head>
   <body style="text-align: center; padding: 0; border: 0; margin: 0;">
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
-    <script src="Build/mod 2 game v2.loader.js"></script>
+    <script src="Build/module2v2.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
@@ -27,9 +27,9 @@
 
       createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
-        dataUrl: "Build/mod 2 game v2.data.br",
-        frameworkUrl: "Build/mod 2 game v2.framework.js.br",
-        codeUrl: "Build/mod 2 game v2.wasm.br",
+        dataUrl: "Build/module2v2.data.br",
+        frameworkUrl: "Build/module2v2.framework.js.br",
+        codeUrl: "Build/module2v2.wasm.br",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "ComputerTypeQuiz",
