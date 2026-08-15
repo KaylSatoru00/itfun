@@ -302,12 +302,27 @@ export default function Gamified4() {
           src="/games/activity/pc.html"
           title="ITFun PC Building Simulation"
           scrolling="no"
-          style={{
-            display: "block",
-            width: "100%",
-            height: "100%",
-            border: "0",
-          }}
+          style={
+            // Fullscreen / rotated: let the game fill the screen and re-flow.
+            // Embedded (non-fullscreen): render the game at its fixed desktop
+            // size and CSS-scale it to fit the panel. This keeps the full
+            // landscape layout visible + proportional on phones, instead of
+            // the game switching to its tall mobile layout and getting
+            // clipped by the shorter 16:10 panel.
+            isFullscreen || useRotatedLayout
+              ? { display: "block", width: "100%", height: "100%", border: "0" }
+              : {
+                  display: "block",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: `${GAME_WIDTH}px`,
+                  height: `${GAME_HEIGHT}px`,
+                  transform: `scale(${panelSize.width / GAME_WIDTH})`,
+                  transformOrigin: "top left",
+                  border: "0",
+                }
+          }
           allow="autoplay; fullscreen"
           allowFullScreen
         />
