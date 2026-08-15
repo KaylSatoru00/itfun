@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Volume2, VolumeX, ArrowLeft, Maximize, Minimize } from "lucide-react";
+import { ArrowLeft, Maximize, Minimize } from "lucide-react";
 
 // Brand palette
 const COLORS = {
@@ -17,34 +17,12 @@ const GAME_HEIGHT = 600;
 
 export default function Gamified4() {
   const navigate = useNavigate();
-  const [muted, setMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
   const [panelSize, setPanelSize] = useState({ width: GAME_WIDTH, height: GAME_HEIGHT });
   const iframeRef = useRef(null);
   const panelRef = useRef(null);
   const topRowRef = useRef(null);
-
-  const toggleMute = () => {
-    setMuted((prev) => {
-      const next = !prev;
-      if (iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          { type: "SET_MUTE", value: next },
-          "*"
-        );
-      }
-      // Return keyboard focus to the game so a focus-pausing build keeps running.
-      try {
-        const win = iframeRef.current?.contentWindow;
-        win?.focus?.();
-        win?.document?.getElementById("unity-canvas")?.focus?.();
-      } catch (_) {
-        // cross-origin or not ready — ignore
-      }
-      return next;
-    });
-  };
 
   // Detect whether the real Fullscreen API is actually usable on this device.
   // iOS Safari exposes no requestFullscreen on regular elements at all.
@@ -280,29 +258,6 @@ export default function Gamified4() {
           >
             <ArrowLeft size={16} />
             Back
-          </button>
-
-          <button
-            onClick={toggleMute}
-            // Keep keyboard focus on the game canvas — some builds pause when
-            // they lose focus, so don't let the button grab it.
-            onMouseDown={(e) => e.preventDefault()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 38,
-              height: 38,
-              flexShrink: 0,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.85)",
-              color: COLORS.maroon,
-              border: `1px solid ${COLORS.rose}`,
-              backdropFilter: "blur(8px)",
-              cursor: "pointer",
-            }}
-          >
-            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
           </div>
         </div>
