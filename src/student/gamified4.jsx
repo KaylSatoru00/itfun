@@ -20,6 +20,10 @@ export default function Gamified4() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
   const [panelSize, setPanelSize] = useState({ width: GAME_WIDTH, height: GAME_HEIGHT });
+  const [viewport, setViewport] = useState(() => ({
+    w: typeof window !== "undefined" ? window.innerWidth : GAME_WIDTH,
+    h: typeof window !== "undefined" ? window.innerHeight : GAME_HEIGHT,
+  }));
   const iframeRef = useRef(null);
   const panelRef = useRef(null);
   const topRowRef = useRef(null);
@@ -110,6 +114,23 @@ export default function Gamified4() {
 
   const useRotatedLayout = isPseudoFullscreen;
 
+  // Track the viewport so the fullscreen / rotated fit can be recomputed on
+  // resize + orientation changes (the game is rendered at a fixed size and
+  // scaled to fit, so it needs the live viewport dimensions).
+  useEffect(() => {
+    const onResize = () =>
+      setViewport({ w: window.innerWidth, h: window.innerHeight });
+    onResize();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    document.addEventListener("fullscreenchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      document.removeEventListener("fullscreenchange", onResize);
+    };
+  }, []);
+
   // Dynamically fit the panel to available viewport space while preserving
   // the 960:600 (16:10) aspect ratio.
   useEffect(() => {
@@ -153,6 +174,21 @@ export default function Gamified4() {
       window.removeEventListener("orientationchange", computeSize);
     };
   }, [isFullscreen, useRotatedLayout]);
+
+  // The game is always rendered at its fixed 960×600 desktop size and scaled
+  // to fit the current display box, so it keeps its full landscape layout
+  // (never reflowing to the game's tall mobile layout) in every mode:
+  //   • embedded          → box = the computed 16:10 panel (exact fit)
+  //   • real fullscreen   → box = the viewport (contain, centered)
+  //   • rotated (iOS)     → box = the rotated viewport: width axis is 100vh
+  const fitBox = useRotatedLayout
+    ? { w: viewport.h, h: viewport.w }
+    : isFullscreen
+    ? { w: viewport.w, h: viewport.h }
+    : { w: panelSize.width, h: panelSize.height };
+  const fitScale = Math.min(fitBox.w / GAME_WIDTH, fitBox.h / GAME_HEIGHT);
+  const fitOffsetX = (fitBox.w - GAME_WIDTH * fitScale) / 2;
+  const fitOffsetY = (fitBox.h - GAME_HEIGHT * fitScale) / 2;
 
   return (
     <div
@@ -302,27 +338,17 @@ export default function Gamified4() {
           src="/games/activity/pc.html"
           title="ITFun PC Building Simulation"
           scrolling="no"
-          style={
-            // Fullscreen / rotated: let the game fill the screen and re-flow.
-            // Embedded (non-fullscreen): render the game at its fixed desktop
-            // size and CSS-scale it to fit the panel. This keeps the full
-            // landscape layout visible + proportional on phones, instead of
-            // the game switching to its tall mobile layout and getting
-            // clipped by the shorter 16:10 panel.
-            isFullscreen || useRotatedLayout
-              ? { display: "block", width: "100%", height: "100%", border: "0" }
-              : {
-                  display: "block",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: `${GAME_WIDTH}px`,
-                  height: `${GAME_HEIGHT}px`,
-                  transform: `scale(${panelSize.width / GAME_WIDTH})`,
-                  transformOrigin: "top left",
-                  border: "0",
-                }
-          }
+          style={{
+            display: "block",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: `${GAME_WIDTH}px`,
+            height: `${GAME_HEIGHT}px`,
+            transform: `translate(${fitOffsetX}px, ${fitOffsetY}px) scale(${fitScale})`,
+            transformOrigin: "top left",
+            border: "0",
+          }}
           allow="autoplay; fullscreen"
           allowFullScreen
         />
