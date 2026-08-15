@@ -4,164 +4,26 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | Bookw</title>
-
-    <!-- ── Audio capture (must run BEFORE the Unity loader) ──
-         Wrap the AudioContext constructor so we get a reference to every
-         context Unity creates, no matter where Unity stashes it. The ITFun
-         page toggles mute via postMessage; we suspend/resume the captured
-         contexts to silence / restore ALL game audio. -->
-    <script>
-      (function () {
-        window.__itfunCtxs = [];
-        window.__itfunMuted = false;
-        var Native = window.AudioContext || window.webkitAudioContext;
-        if (!Native) return;
-
-        function reapply(ctx) {
-          try {
-            if (window.__itfunMuted) {
-              if (ctx.state === "running") ctx.suspend();
-            } else {
-              if (ctx.state === "suspended") ctx.resume();
-            }
-          } catch (e) {}
-        }
-
-        function Patched() {
-          var ctx = Reflect.construct(Native, arguments);
-          window.__itfunCtxs.push(ctx);
-          reapply(ctx);
-          ctx.addEventListener("statechange", function () {
-            if (window.__itfunMuted && ctx.state === "running") {
-              try { ctx.suspend(); } catch (e) {}
-            }
-          });
-          return ctx;
-        }
-        Patched.prototype = Native.prototype;
-        window.AudioContext = Patched;
-        window.webkitAudioContext = Patched;
-
-        window.__itfunApplyMute = function () {
-          window.__itfunCtxs.forEach(reapply);
-        };
-      })();
-    </script>
-
-    <style>
-      html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        overflow: hidden;
-        background: #231F20;
-      }
-      #unity-canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        background: #231F20;
-      }
-
-      /* ── ITFun loading screen (shown while the game downloads, before
-            Unity's own "Made with Unity" splash) ── */
-      #itfun-loading {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 22px;
-        background: radial-gradient(circle at 50% 38%, #2a1218 0%, #171011 70%);
-        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        z-index: 10;
-        transition: opacity 0.45s ease;
-      }
-      #itfun-loading.hide { opacity: 0; pointer-events: none; }
-      .il-brand {
-        font-size: clamp(40px, 9vw, 60px);
-        font-weight: 800;
-        letter-spacing: 1px;
-        color: #ffffff;
-        line-height: 1;
-      }
-      .il-brand span { color: #e11d3d; text-shadow: 0 0 26px rgba(200, 16, 46, 0.55); }
-      .il-tag {
-        margin-top: -10px;
-        font-size: 13px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        color: rgba(255, 255, 255, 0.55);
-      }
-      .il-track {
-        width: min(280px, 70vw);
-        height: 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.12);
-        overflow: hidden;
-      }
-      .il-fill {
-        width: 0%;
-        height: 100%;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #C8102E, #A50034);
-        transition: width 0.2s ease;
-      }
-      .il-pct {
-        font-size: 13px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.7);
-        letter-spacing: 0.5px;
-      }
-      .il-spinner {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        border: 3px solid rgba(255, 255, 255, 0.15);
-        border-top-color: #e11d3d;
-        animation: il-spin 0.8s linear infinite;
-      }
-      @keyframes il-spin { to { transform: rotate(360deg); } }
-    </style>
   </head>
-  <body>
-    <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-
-    <div id="itfun-loading">
-      <div class="il-brand">IT<span>Fun</span></div>
-      <div class="il-tag">IT Fundamentals Made Fun</div>
-      <div class="il-track"><div id="il-fill" class="il-fill"></div></div>
-      <div id="il-pct" class="il-pct">Loading&hellip; 0%</div>
-      <div class="il-spinner"></div>
-    </div>
-
+  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
+    <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
     <script src="Build/module6.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
         document.getElementsByTagName('head')[0].appendChild(meta);
 
         var canvas = document.querySelector("#unity-canvas");
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
         canvas.style.position = "fixed";
+
+        document.body.style.textAlign = "left";
+
       }
-
-      // Mute bridge: parent posts { type: "SET_MUTE", value } on speaker click.
-      window.addEventListener("message", function (e) {
-        var d = e.data;
-        if (d && d.type === "SET_MUTE") {
-          window.__itfunMuted = !!d.value;
-          if (window.__itfunApplyMute) window.__itfunApplyMute();
-        }
-      });
-
-      var loadingEl = document.getElementById("itfun-loading");
-      var fillEl = document.getElementById("il-fill");
-      var pctEl = document.getElementById("il-pct");
 
       createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
@@ -172,18 +34,9 @@
         companyName: "DefaultCompany",
         productName: "Bookw",
         productVersion: "1.0",
-      }, function (progress) {
-        // Unity reports 0 → 1 as the build downloads and initializes.
-        var p = Math.round(progress * 100);
-        if (fillEl) fillEl.style.width = p + "%";
-        if (pctEl) pctEl.textContent = "Loading… " + p + "%";
+        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
+        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
       }).then((unityInstance) => {
-        // Fade the loading screen out; Unity's own splash plays next.
-        if (loadingEl) {
-          loadingEl.classList.add("hide");
-          setTimeout(function () { loadingEl.style.display = "none"; }, 500);
-        }
-        if (window.__itfunApplyMute) window.__itfunApplyMute();
       }).catch((message) => {
         alert(message);
       });
