@@ -3,27 +3,168 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | ComputerTypeQuiz</title>
+    <title>Unity Web Player | Language &amp; Types of Computers with Their Uses</title>
+
+    <!-- ── Audio capture + master-gain mute (must run BEFORE the Unity loader) ──
+         Route everything that would reach the speakers through a master gain
+         node we control. The ITFun page toggles mute via postMessage; muting
+         sets the gain to 0 — the audio context keeps RUNNING, so the game
+         never pauses (unlike suspending it). -->
+    <script>
+      (function () {
+        window.__itfunGains = [];
+        window.__itfunMuted = false;
+        var Native = window.AudioContext || window.webkitAudioContext;
+        if (!Native) return;
+
+        var origConnect = AudioNode.prototype.connect;
+        AudioNode.prototype.connect = function () {
+          try {
+            var dest = arguments[0];
+            if (dest && dest.context && dest === dest.context.destination) {
+              var g = dest.context.__itfunGain;
+              if (g && this !== g) arguments[0] = g; // reroute to master gain
+            }
+          } catch (e) {}
+          return origConnect.apply(this, arguments);
+        };
+
+        function Patched() {
+          var ctx = Reflect.construct(Native, arguments);
+          try {
+            var gain = ctx.createGain();
+            gain.gain.value = window.__itfunMuted ? 0 : 1;
+            gain.connect(ctx.destination);
+            ctx.__itfunGain = gain;
+            window.__itfunGains.push(gain);
+          } catch (e) {}
+          return ctx;
+        }
+        Patched.prototype = Native.prototype;
+        window.AudioContext = Patched;
+        window.webkitAudioContext = Patched;
+
+        window.__itfunApplyMute = function () {
+          window.__itfunGains.forEach(function (g) {
+            try { g.gain.value = window.__itfunMuted ? 0 : 1; } catch (e) {}
+          });
+        };
+      })();
+    </script>
+
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        overflow: hidden;
+        background: #231F20;
+      }
+      #unity-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: #231F20;
+      }
+
+      /* ── ITFun loading screen ── */
+      #itfun-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: radial-gradient(circle at 50% 38%, #2a1218 0%, #171011 70%);
+        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        z-index: 10;
+        transition: opacity 0.45s ease;
+      }
+      #itfun-loading.hide { opacity: 0; pointer-events: none; }
+      .il-brand {
+        font-size: clamp(40px, 9vw, 60px);
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #ffffff;
+        line-height: 1;
+      }
+      .il-brand span { color: #e11d3d; text-shadow: 0 0 26px rgba(200, 16, 46, 0.55); }
+      .il-tag {
+        margin-top: -10px;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .il-track {
+        width: min(280px, 70vw);
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+      .il-fill {
+        width: 0%;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #C8102E, #A50034);
+        transition: width 0.2s ease;
+      }
+      .il-pct {
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+        letter-spacing: 0.5px;
+      }
+      .il-spinner {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: #e11d3d;
+        animation: il-spin 0.8s linear infinite;
+      }
+      @keyframes il-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
-  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
-    <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
+  <body>
+    <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+
+    <div id="itfun-loading">
+      <div class="il-brand">IT<span>Fun</span></div>
+      <div class="il-tag">IT Fundamentals Made Fun</div>
+      <div class="il-track"><div id="il-fill" class="il-fill"></div></div>
+      <div id="il-pct" class="il-pct">Loading&hellip; 0%</div>
+      <div class="il-spinner"></div>
+    </div>
+
     <script src="Build/module2v2.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
         var meta = document.createElement('meta');
         meta.name = 'viewport';
         meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
         document.getElementsByTagName('head')[0].appendChild(meta);
 
         var canvas = document.querySelector("#unity-canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
         canvas.style.position = "fixed";
-
-        document.body.style.textAlign = "left";
-
       }
+
+      // Mute bridge: parent posts { type: "SET_MUTE", value } on speaker click.
+      window.addEventListener("message", function (e) {
+        var d = e.data;
+        if (d && d.type === "SET_MUTE") {
+          window.__itfunMuted = !!d.value;
+          if (window.__itfunApplyMute) window.__itfunApplyMute();
+        }
+      });
+
+      var loadingEl = document.getElementById("itfun-loading");
+      var fillEl = document.getElementById("il-fill");
+      var pctEl = document.getElementById("il-pct");
 
       createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
@@ -32,11 +173,18 @@
         codeUrl: "Build/module2v2.wasm.br",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
-        productName: "ComputerTypeQuiz",
+        productName: "Module2Quiz",
         productVersion: "1.0",
-        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+      }, function (progress) {
+        var p = Math.round(progress * 100);
+        if (fillEl) fillEl.style.width = p + "%";
+        if (pctEl) pctEl.textContent = "Loading… " + p + "%";
       }).then((unityInstance) => {
+        if (loadingEl) {
+          loadingEl.classList.add("hide");
+          setTimeout(function () { loadingEl.style.display = "none"; }, 500);
+        }
+        if (window.__itfunApplyMute) window.__itfunApplyMute();
       }).catch((message) => {
         alert(message);
       });
