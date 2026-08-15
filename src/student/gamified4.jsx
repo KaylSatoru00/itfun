@@ -175,17 +175,23 @@ export default function Gamified4() {
     };
   }, [isFullscreen, useRotatedLayout]);
 
-  // The game is always rendered at its fixed 960×600 desktop size and scaled
-  // to fit the current display box, so it keeps its full landscape layout
-  // (never reflowing to the game's tall mobile layout) in every mode:
-  //   • embedded          → box = the computed 16:10 panel (exact fit)
-  //   • real fullscreen   → box = the viewport (contain, centered)
-  //   • rotated (iOS)     → box = the rotated viewport: width axis is 100vh
+  // Work out the box the game is displayed in for the current mode:
+  //   • embedded          → the computed 16:10 panel
+  //   • real fullscreen   → the viewport
+  //   • rotated (iOS)      → the rotated viewport: its width axis is 100vh
   const fitBox = useRotatedLayout
     ? { w: viewport.h, h: viewport.w }
     : isFullscreen
     ? { w: viewport.w, h: viewport.h }
     : { w: panelSize.width, h: panelSize.height };
+
+  // If the box is at least as wide as the game's desktop design, the game's
+  // own responsive layout looks right — let the iframe FILL it (no letterbox),
+  // e.g. desktop fullscreen. If the box is narrower (phones, embedded on
+  // mobile), the game would reflow to its tall mobile layout and get clipped,
+  // so instead render it at the fixed 960×600 desktop size and scale it down
+  // to fit (contain, centered) — keeping the full landscape layout visible.
+  const fillNative = fitBox.w >= GAME_WIDTH;
   const fitScale = Math.min(fitBox.w / GAME_WIDTH, fitBox.h / GAME_HEIGHT);
   const fitOffsetX = (fitBox.w - GAME_WIDTH * fitScale) / 2;
   const fitOffsetY = (fitBox.h - GAME_HEIGHT * fitScale) / 2;
@@ -338,17 +344,29 @@ export default function Gamified4() {
           src="/games/activity/pc.html"
           title="ITFun PC Building Simulation"
           scrolling="no"
-          style={{
-            display: "block",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: `${GAME_WIDTH}px`,
-            height: `${GAME_HEIGHT}px`,
-            transform: `translate(${fitOffsetX}px, ${fitOffsetY}px) scale(${fitScale})`,
-            transformOrigin: "top left",
-            border: "0",
-          }}
+          style={
+            fillNative
+              ? {
+                  display: "block",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: "0",
+                }
+              : {
+                  display: "block",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: `${GAME_WIDTH}px`,
+                  height: `${GAME_HEIGHT}px`,
+                  transform: `translate(${fitOffsetX}px, ${fitOffsetY}px) scale(${fitScale})`,
+                  transformOrigin: "top left",
+                  border: "0",
+                }
+          }
           allow="autoplay; fullscreen"
           allowFullScreen
         />
