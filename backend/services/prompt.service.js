@@ -16,7 +16,7 @@ function buildPrompt({ lessonContent, quizType, questionCount = 15 }) {
       - Avoid ambiguous statements.
       - The "correctAnswer" MUST be the exact word "True" or "False" (capitalized) — never "T", "F", "yes", "no", or lowercase.
       - Keep ALL questions BASIC and beginner-friendly — these are for 1st year students. NO trick questions.
-      - About 50% should be true and 50% false.`,
+      - IMPORTANT — VARY THE ANSWERS: roughly HALF of the ${questionCount} answers must be "True" and half "False", decided INDEPENDENTLY per question. Do NOT make most or all of them the same answer, and do NOT follow a fixed/repeating pattern or long runs of the same value (e.g. not all "True", not True,True,True,...). Mix them up unpredictably across the whole set.`,
 
     identification: `Generate EXACTLY ${questionCount} identification questions.
       - Each question MUST ask for a specific term, name, or concept from the lesson.
