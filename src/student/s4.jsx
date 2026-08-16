@@ -373,7 +373,7 @@ function Chapter4() {
         </button>
         <div className="chap-header-title">
           <span className="chap-chapter-label">LEARNING MODULE 4</span>
-          <h1 className="chap-title">Hardware Components & I/O Devices</h1>
+          <h1 className="chap-title">Hardware Components, Input and Output Devices & Basic PC-Building</h1>
         </div>
         {/* progress bar naka-pin sa ilalim ng sticky header */}
         <div className="ao-progress">
