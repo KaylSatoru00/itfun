@@ -37,6 +37,18 @@ function wordCount(s) {
   return cleanStr(s).split(' ').filter(Boolean).length;
 }
 
+// Fisher-Yates shuffle → returns a new array. Used to randomize the position
+// of a multiple-choice question's options so the correct answer doesn't keep
+// landing in the same slot (e.g. always "A") across a whole round.
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function looksMultiAnswer(questionText) {
   return AMBIGUOUS_PATTERNS.some((re) => re.test(questionText));
 }
@@ -62,7 +74,11 @@ function validateAndFixQuestion(raw) {
     // option's exact string so the frontend's button click compares equal.
     const match = options.find((o) => o.toLowerCase() === correctAnswer.toLowerCase());
     if (!match) return null; // paraphrased answer that matches no option → drop
-    return { ...raw, question, options, correctAnswer: match, type };
+    // Randomize the correct answer's slot PER QUESTION. The model tends to
+    // place the correct option first, so without this a whole round can come
+    // out all "A". Grading is by exact string match (not index), so shuffling
+    // the option order is safe — `match` is still the correct string.
+    return { ...raw, question, options: shuffle(options), correctAnswer: match, type };
   }
 
   // ── True / False ──
