@@ -1,6 +1,6 @@
 // backend/services/gemini.service.js
 
-// Hindi laging sinusunod ng LLM (ngayon: NaraRouter/mistral-large) nang
+// Hindi laging sinusunod ng LLM (ngayon: NaraRouter/agnes-2.0-flash) nang
 // eksakto yung type string na hiniling natin sa prompt.service.js (hal.
 // "fill-in-blank"). Minsan nagbabalik ito ng "Fill in the Blank",
 // "fillInBlank", "FILL_IN_BLANK", atbp. — magkaparehong klase ng tanong
@@ -25,6 +25,12 @@ function normalizeQuestionType(rawType) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// How long to wait for a single NaraRouter response before giving up on
+// that attempt and letting the retry loop try again. Without this, a
+// hung request (we've seen 80+ seconds) eats the whole request budget
+// on one dead attempt instead of failing fast and retrying.
+const REQUEST_TIMEOUT_MS = 25000;
+
 // HTTP statuses that mean "try again shortly" rather than "this request is
 // broken" — transient upstream/model outages, rate limits, gateway hiccups.
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504, 529]);
@@ -42,6 +48,10 @@ function isTransient(status, data) {
 }
 
 function isTransientNetworkError(error) {
+  // AbortController firing (our own REQUEST_TIMEOUT_MS) surfaces as
+  // AbortError with a generic message — treat it as transient explicitly
+  // rather than relying on the message text matching below.
+  if (error?.name === 'AbortError') return true;
   // A thrown fetch (no HTTP response at all) — DNS, reset, abort, etc.
   return /fetch failed|network|econn|etimedout|socket hang up|timeout|und_err/i.test(
     String(error?.message || '')
@@ -67,6 +77,9 @@ function getGeminiService() {
       let lastError;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
         try {
           console.log(`📤 Sending prompt to NaraRouter (attempt ${attempt}/${MAX_ATTEMPTS})...`);
 
@@ -79,15 +92,18 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'deepseek-v4-flash-free',
+                model: 'agnes-2.0-flash',
                 messages: [
                   { role: 'user', content: prompt }
                 ],
                 temperature: 0.7,
                 max_tokens: 8192,
               }),
+              signal: controller.signal,
             }
           );
+
+          clearTimeout(timeoutId);
 
           const data = await response.json();
 
@@ -102,10 +118,27 @@ function getGeminiService() {
             throw new Error(JSON.stringify(data));
           }
 
-          const text = data.choices[0].message.content;
-          console.log('📥 Raw response (first 300 chars):', text.substring(0, 300));
+          // Guard: response was HTTP 200 but the body doesn't actually have
+          // the `choices` shape we expect (this is the exact crash we hit
+          // with mistral-large — a 200 with a malformed/empty body). Treat
+          // this the same as a transient error and retry, instead of
+          // letting `data.choices[0]` throw an unhandled TypeError.
+          const content = data?.choices?.[0]?.message?.content;
+          if (!content) {
+            const bodyPreview = JSON.stringify(data).slice(0, 500);
+            console.warn(`⚠️ NaraRouter returned 200 but no usable choices — raw body: ${bodyPreview}`);
+            lastError = new Error(`Malformed response body: ${bodyPreview}`);
+            if (attempt < MAX_ATTEMPTS) {
+              const wait = Math.round(700 * 2 ** (attempt - 1) + Math.random() * 400);
+              await sleep(wait);
+              continue;
+            }
+            break;
+          }
 
-          let cleanedContent = text.trim();
+          console.log('📥 Raw response (first 300 chars):', content.substring(0, 300));
+
+          let cleanedContent = content.trim();
           if (cleanedContent.startsWith('```json')) {
             cleanedContent = cleanedContent.replace(/```json/g, '').replace(/```/g, '').trim();
           } else if (cleanedContent.startsWith('```')) {
@@ -126,8 +159,10 @@ function getGeminiService() {
           return normalizedQuestions;
 
         } catch (error) {
+          clearTimeout(timeoutId);
           lastError = error;
-          // A thrown fetch (no response) can also be a transient blip — retry.
+          // A thrown fetch (no response), or our own timeout abort, can
+          // also be a transient blip — retry.
           if (isTransientNetworkError(error) && attempt < MAX_ATTEMPTS) {
             const wait = Math.round(700 * 2 ** (attempt - 1) + Math.random() * 400);
             console.warn(`⚠️ NaraRouter network error — retrying in ${wait}ms: ${error.message}`);
@@ -140,7 +175,7 @@ function getGeminiService() {
       }
 
       console.error('❌ NaraRouter service error:', lastError?.message);
-      throw new Error(`NaraRouter failed: ${lastError?.message}`);
+      throw new Error(`NaraRouter failed after ${MAX_ATTEMPTS} attempts: ${lastError?.message || 'unknown error'}`);
     },
   };
 }
