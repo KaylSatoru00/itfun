@@ -79,7 +79,7 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'mistral-large',
+                model: 'deepseek-v4-flash-free',
                 messages: [
                   { role: 'user', content: prompt }
                 ],
