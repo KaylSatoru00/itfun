@@ -493,12 +493,12 @@
   text-align: center;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 500;
+  font-style: italic;
   color: #FFFFFF;
   text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.85),
-    0 0 6px rgba(0, 0, 0, 0.6),
-    0 0 12px rgba(0, 0, 0, 0.4);
+    0 1px 2px rgba(60, 10, 20, 0.5),
+    0 0 3px rgba(255, 255, 255, 0.3);
   margin: 14px 16px 0;
 }
 
