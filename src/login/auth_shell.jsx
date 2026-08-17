@@ -6,14 +6,15 @@ import kidImg from '../assets/kid.png';
 import previewModules from '../assets/first.png';
 import previewArena from '../assets/second.png';
 import game1 from '../assets/m1.png';
-import game2 from '../assets/m2.png';
-import game3 from '../assets/m3.png';
-import game4 from '../assets/m4.png';
-import game5 from '../assets/m5.png';
-import game6 from '../assets/m6.png';
-import game7 from '../assets/m7.png';
+import game2 from '../assets/m3.png';
+import game3 from '../assets/m5.png';
+import game4 from '../assets/m7.png';
+import game5 from '../assets/m8.png';
+import game6 from '../assets/m2.png';
+import game7 from '../assets/m4.png';
+import game8 from '../assets/m6.png';
 
-const GAME_PREVIEWS = [game1, game2, game3, game4, game5, game6, game7];
+const GAME_PREVIEWS = [game1, game2, game3, game4, game5, game6, game7, game8];
 
 /**
  * Shared split-screen auth layout: animated dark brand panel on the left,
