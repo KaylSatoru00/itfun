@@ -373,7 +373,7 @@ function FacultyClass() {
   };
 
   // ── Finish an ended class: delete it (and its enrollments) so the section
-  //    frees up again in the Create Class dropdown. ──
+  //    frees up again in the Add Class dropdown. ──
   const handleFinishClass = (id) => setConfirmFinishId(id);
 
   const handleConfirmFinish = async () => {
@@ -531,7 +531,7 @@ function FacultyClass() {
                       onClick={() => setShowCreateModal(true)}
                     >
                       <span className="fc-add-icon">+</span>
-                      <span className="fc-add-text">Create Class</span>
+                      <span className="fc-add-text">Add Class</span>
                     </motion.div>
                   </motion.div>
                 )}
@@ -755,7 +755,7 @@ function FacultyClass() {
             >
               {/* ── LEFT: form ── */}
               <div className="ccm-form">
-                <h3 className="ccm-title">Create a Class</h3>
+                <h3 className="ccm-title">Add a Class</h3>
                 <p className="ccm-sub">Pick a section</p>
 
                 <div className="ccm-lbl">Class Section</div>
@@ -850,7 +850,7 @@ function FacultyClass() {
                   onClick={handleCreateClass}
                   disabled={creating || !selectedSection || !generatedCode || !endDate}
                 >
-                  {creating ? 'Creating…' : 'Create Class'}
+                  {creating ? 'Adding…' : 'Add Class'}
                 </button>
               </div>
             </motion.div>
