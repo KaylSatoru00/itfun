@@ -495,10 +495,13 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: #FFFFFF;
+  -webkit-text-stroke: 0.6px #A50034;
   text-shadow:
-    0 0 6px rgba(255, 255, 255, 0.9),
-    0 0 14px rgba(255, 255, 255, 0.7),
-    0 0 24px rgba(255, 255, 255, 0.5);
+    1px 1px 0 #A50034,
+    -1px 1px 0 #A50034,
+    1px -1px 0 #A50034,
+    -1px -1px 0 #A50034,
+    0 2px 4px rgba(165, 0, 52, 0.4);
   margin: 14px 16px 0;
 }
 
