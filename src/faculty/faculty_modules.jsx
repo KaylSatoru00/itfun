@@ -424,7 +424,6 @@ function FacultyModules() {
                     <button className="stk-nav stk-next" onClick={goNext} aria-label="Next module">▷</button>
                   </div>
                 </div>
-                <p className="fm-caption">All 9 modules unlocked — swipe to browse the curriculum.</p>
               </motion.div>
             ) : (
               <motion.div

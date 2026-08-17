@@ -488,7 +488,7 @@
 .fm-panel .stk-nav:hover { transform: scale(1.1); background: #C8102E; color: #fff; border-color: #C8102E; }
 .fm-panel .stk-nav:active { transform: scale(1.02); }
 
-/* caption below carousel */
+/* fm-caption removed
 .fm-panel .fm-caption {
   text-align: center;
   font-family: 'Montserrat', sans-serif;
