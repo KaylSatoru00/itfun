@@ -92,7 +92,7 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'agnes-2.0-flash',
+                model: 'mistral-large',
                 messages: [
                   { role: 'user', content: prompt }
                 ],
