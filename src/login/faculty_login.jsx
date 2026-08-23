@@ -11,7 +11,7 @@ import AuthShell from './auth_shell.jsx';
 import itfunLogo from '../assets/LOGO_NAMEN.png';
 import {
   toPascalCase, passwordRules, PasswordChecklist,
-  RequiredLabel, PasswordInput, screenVariants, isGmailAddress,
+  RequiredLabel, PasswordInput, screenVariants, isGmailAddress, maskEmail,
 } from './auth_form_kit.jsx';
 
 function FacultyLogin() {
@@ -285,7 +285,7 @@ function FacultyLogin() {
             <h1 className="af-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
             <p className="af-note">
               A 6-digit verification code was sent to<br />
-              <strong>{signupEmail}</strong>
+              <strong>{maskEmail(signupEmail)}</strong>
             </p>
             <p className="af-note af-note-muted">
               Enter the code below to verify your account.
@@ -365,7 +365,7 @@ function FacultyLogin() {
                 <h1 className="af-title" style={{ color: '#c8102e' }}>Check Your Email</h1>
                 <p className="af-note">
                   If an account exists for<br />
-                  <strong>{resetEmail}</strong>, a password reset link has been sent.
+                  <strong>{maskEmail(resetEmail)}</strong>, a password reset link has been sent.
                 </p>
                 <p className="af-note af-note-muted">
                   Click the link in the email to set a new password, then come back to log in.

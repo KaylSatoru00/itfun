@@ -15,6 +15,28 @@ export function isGmailAddress(email) {
   return /^[^\s@]+@gmail\.com$/i.test((email || '').trim());
 }
 
+// Masks the local part of an email for privacy-safe display, e.g.
+// "dct.capstone4@gmail.com" -> "dc*********04@gmail.com". Keeps the first
+// two and last two characters of the local part visible; short local parts
+// fall back to a lighter mask so we never reveal the whole thing.
+export function maskEmail(email) {
+  const trimmed = (email || '').trim();
+  const at = trimmed.indexOf('@');
+  if (at <= 0) return trimmed; // no local part to mask, return as-is
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at); // includes the leading '@'
+  if (local.length <= 2) {
+    return `${local[0]}*${domain}`;
+  }
+  if (local.length <= 4) {
+    return `${local[0]}***${domain}`;
+  }
+  const first = local.slice(0, 2);
+  const last = local.slice(-2);
+  const stars = '*'.repeat(local.length - 4);
+  return `${first}${stars}${last}${domain}`;
+}
+
 export const passwordRules = [
   { id: 'length',    label: '8–16 characters',                    test: p => p.length >= 8 && p.length <= 16 },
   { id: 'upper',     label: 'At least one uppercase letter (A–Z)', test: p => /[A-Z]/.test(p) },
