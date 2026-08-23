@@ -16,7 +16,7 @@ export function isGmailAddress(email) {
 }
 
 export const passwordRules = [
-  { id: 'length',    label: 'At least 8 characters',              test: p => p.length >= 8 },
+  { id: 'length',    label: '8–16 characters',                    test: p => p.length >= 8 && p.length <= 16 },
   { id: 'upper',     label: 'At least one uppercase letter (A–Z)', test: p => /[A-Z]/.test(p) },
   { id: 'lower',     label: 'At least one lowercase letter (a–z)', test: p => /[a-z]/.test(p) },
   { id: 'number',    label: 'At least one number (0–9)',           test: p => /[0-9]/.test(p) },
@@ -51,7 +51,7 @@ export function RequiredLabel({ label, touched, value }) {
   );
 }
 
-export function PasswordInput({ value, onChange, placeholder, invalid, onKeyDown }) {
+export function PasswordInput({ value, onChange, placeholder, invalid, onKeyDown, maxLength }) {
   const [show, setShow] = useState(false);
   return (
     <div className="af-pass">
@@ -62,6 +62,7 @@ export function PasswordInput({ value, onChange, placeholder, invalid, onKeyDown
         value={value}
         onChange={onChange}
         onKeyDown={onKeyDown}
+        maxLength={maxLength}
       />
       <button type="button" className="af-eye" tabIndex={-1} onClick={() => setShow(s => !s)}>
         {show ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}

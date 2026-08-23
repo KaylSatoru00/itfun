@@ -466,6 +466,7 @@ function FacultyLogin() {
                   className={`form-control ${signupTouched.firstName && !firstName ? 'is-invalid' : ''}`}
                   placeholder="Maria"
                   value={firstName}
+                  maxLength={20}
                   onChange={e => setFirstName(toPascalCase(e.target.value))}
                   onBlur={() => setSignupTouched(t => ({ ...t, firstName: true }))}
                 />
@@ -477,6 +478,7 @@ function FacultyLogin() {
                   className={`form-control ${signupTouched.lastName && !lastName ? 'is-invalid' : ''}`}
                   placeholder="Santos"
                   value={lastName}
+                  maxLength={20}
                   onChange={e => setLastName(toPascalCase(e.target.value))}
                   onBlur={() => setSignupTouched(t => ({ ...t, lastName: true }))}
                 />
@@ -507,6 +509,7 @@ function FacultyLogin() {
                   placeholder="••••••••"
                   value={signupPassword}
                   invalid={signupTouched.password && !signupPassword}
+                  maxLength={16}
                   onChange={e => {
                     setSignupPassword(e.target.value);
                     setSignupTouched(t => ({ ...t, password: true }));
@@ -519,6 +522,7 @@ function FacultyLogin() {
                   placeholder="••••••••"
                   value={confirmPassword}
                   invalid={signupTouched.confirmPassword && !confirmPassword}
+                  maxLength={16}
                   onChange={e => {
                     setConfirmPassword(e.target.value);
                     setSignupTouched(t => ({ ...t, confirmPassword: true }));
