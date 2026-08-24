@@ -25,12 +25,6 @@ function normalizeQuestionType(rawType) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// llama-3.3-70b-versatile on Groq: fast (280-394 tokens/sec) and, critically,
-// has a 12,000 TPM free-tier cap — enough headroom for our prompt +
-// max_tokens. gpt-oss-20b was tried first for its raw speed, but its
-// free-tier cap is only 8,000 TPM, which our request (prompt + max_tokens)
-// exceeds on its own — every attempt failed with a 429 "Request too large",
-// not something retries can fix.
 const REQUEST_TIMEOUT_MS = 20000;
 
 // HTTP statuses that mean "try again shortly" rather than "this request is
@@ -86,7 +80,7 @@ function getGeminiService() {
           console.log(`📤 Sending prompt to Groq (attempt ${attempt}/${MAX_ATTEMPTS})...`);
 
           const response = await fetch(
-            'https://api.groq.com/openai/v1/chat/completions',
+            'https://groq.com',
             {
               method: 'POST',
               headers: {
@@ -94,7 +88,7 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
+                model: 'openai/gpt-oss-120b', // Model string changed here
                 messages: [
                   { role: 'user', content: prompt }
                 ],
