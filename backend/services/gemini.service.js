@@ -25,10 +25,13 @@ function normalizeQuestionType(rawType) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// gpt-oss-20b on Groq is extremely fast (~900+ tokens/sec), so this can stay
-// tight. A hung request still fails fast and lets the retry loop try again
-// instead of eating the whole request budget on one dead attempt.
-const REQUEST_TIMEOUT_MS = 15000;
+// llama-3.3-70b-versatile on Groq: fast (280-394 tokens/sec) and, critically,
+// has a 12,000 TPM free-tier cap — enough headroom for our prompt +
+// max_tokens. gpt-oss-20b was tried first for its raw speed, but its
+// free-tier cap is only 8,000 TPM, which our request (prompt + max_tokens)
+// exceeds on its own — every attempt failed with a 429 "Request too large",
+// not something retries can fix.
+const REQUEST_TIMEOUT_MS = 20000;
 
 // HTTP statuses that mean "try again shortly" rather than "this request is
 // broken" — transient upstream/model outages, rate limits, gateway hiccups.
@@ -91,18 +94,12 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'openai/gpt-oss-20b',
+                model: 'llama-3.3-70b-versatile',
                 messages: [
                   { role: 'user', content: prompt }
                 ],
                 temperature: 0.7,
                 max_tokens: 8192,
-                // gpt-oss models are "reasoning" models with an adjustable
-                // effort dial. "high" spends extra thinking tokens (slower,
-                // marginally more careful) — not worth it for short quiz
-                // questions, so we ask for "medium" to keep most of the
-                // speed advantage while still getting solid answer quality.
-                reasoning_effort: 'medium',
               }),
               signal: controller.signal,
             }
