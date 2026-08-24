@@ -80,7 +80,7 @@ function getGeminiService() {
           console.log(`📤 Sending prompt to Groq (attempt ${attempt}/${MAX_ATTEMPTS})...`);
 
           const response = await fetch(
-            'https://groq.com',
+            'https://api.groq.com/openai/v1/chat/completions',
             {
               method: 'POST',
               headers: {
