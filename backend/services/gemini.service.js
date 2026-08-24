@@ -57,14 +57,12 @@ function isTransientNetworkError(error) {
 }
 
 function getGeminiService() {
-  // NOTE: kept as GEMINI_API_KEY -> now reads GROQ_API_KEY instead.
-  // Function/export name (`getGeminiService`) left unchanged so other files
-  // that `import { getGeminiService } from './gemini.service.js'` don't
-  // need to be touched. Rename later if you want full consistency.
-  const apiKey = process.env.GROQ_API_KEY;
+  // NOTE: variable name kept as GEMINI_API_KEY for continuity even though
+  // this now holds a Groq key — same pattern as before with NaraRouter.
+  const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('GROQ_API_KEY is not set in your .env file.');
+    throw new Error('GEMINI_API_KEY is not set in your .env file.');
   }
 
   console.log('✅ Groq API key loaded, length:', apiKey.length);
