@@ -1,6 +1,6 @@
 // backend/services/gemini.service.js
 
-// Hindi laging sinusunod ng LLM (ngayon: Groq/gpt-oss-20b) nang eksakto
+// Hindi laging sinusunod ng LLM (ngayon: Groq/gpt-oss-120b) nang eksakto
 // yung type string na hiniling natin sa prompt.service.js (hal.
 // "fill-in-blank"). Minsan nagbabalik ito ng "Fill in the Blank",
 // "fillInBlank", "FILL_IN_BLANK", atbp. — magkaparehong klase ng tanong
@@ -88,7 +88,7 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'openai/gpt-oss-120b', // Model string changed here
+                model: 'openai/gpt-oss-120b',
                 messages: [
                   { role: 'user', content: prompt }
                 ],
