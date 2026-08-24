@@ -92,7 +92,7 @@ function getGeminiService() {
                 'Authorization': `Bearer ${apiKey}`,
               },
               body: JSON.stringify({
-                model: 'mistral-large',
+                model: 'claude-fable-5',
                 messages: [
                   { role: 'user', content: prompt }
                 ],
