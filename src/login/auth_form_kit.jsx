@@ -38,7 +38,7 @@ export function maskEmail(email) {
 }
 
 export const passwordRules = [
-  { id: 'length',    label: '8–16 characters',                    test: p => p.length >= 8 && p.length <= 16 },
+  { id: 'length',    label: 'Password must be between 8 and 16 characters.',                    test: p => p.length >= 8 && p.length <= 16 },
   { id: 'upper',     label: 'At least one uppercase letter (A–Z)', test: p => /[A-Z]/.test(p) },
   { id: 'lower',     label: 'At least one lowercase letter (a–z)', test: p => /[a-z]/.test(p) },
   { id: 'number',    label: 'At least one number (0–9)',           test: p => /[0-9]/.test(p) },
