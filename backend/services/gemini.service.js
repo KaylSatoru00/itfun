@@ -42,6 +42,27 @@ function isTransient(status, data) {
   );
 }
 
+// Groq tells us exactly how long to wait on a 429 — either via a
+// `Retry-After` header or embedded in the error message text ("Please try
+// again in 24.1275s"). Use that real number instead of guessing with a
+// generic backoff formula, which is too short for TPM rate limits.
+function getRetryAfterMs(status, data, response) {
+  if (status !== 429) return null;
+
+  const headerVal = response?.headers?.get?.('retry-after');
+  if (headerVal && !Number.isNaN(Number(headerVal))) {
+    return Math.ceil(Number(headerVal) * 1000);
+  }
+
+  const msg = String(data?.error?.message || '');
+  const match = msg.match(/try again in ([\d.]+)s/i);
+  if (match) {
+    return Math.ceil(parseFloat(match[1]) * 1000);
+  }
+
+  return null;
+}
+
 function isTransientNetworkError(error) {
   // AbortController firing (our own REQUEST_TIMEOUT_MS) surfaces as
   // AbortError with a generic message — treat it as transient explicitly
@@ -69,7 +90,11 @@ function getGeminiService() {
       // Retry transient failures with exponential backoff + jitter, so a
       // brief upstream blip doesn't fail the whole generation. Non-transient
       // errors (bad JSON, auth) fail fast — retrying them just wastes tokens.
-      const MAX_ATTEMPTS = 4;
+      // Was 4. Now that 429s wait the real Groq-reported reset time
+      // (often ~20-25s) instead of a short generic backoff, 4 attempts
+      // could mean the caller waits over a minute total. 2 is enough —
+      // if the retry still fails, something else is going on.
+      const MAX_ATTEMPTS = 2;
       let lastError;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -105,7 +130,14 @@ function getGeminiService() {
 
           if (!response.ok) {
             if (isTransient(response.status, data) && attempt < MAX_ATTEMPTS) {
-              const wait = Math.round(700 * 2 ** (attempt - 1) + Math.random() * 400);
+              const retryAfterMs = getRetryAfterMs(response.status, data, response);
+              // Rate limits (429) get the real wait time Groq gave us, plus
+              // a small buffer. Other transient errors (500/502/503/etc.)
+              // keep the generic exponential backoff — those aren't tied to
+              // a known reset time.
+              const wait = retryAfterMs != null
+                ? retryAfterMs + 500
+                : Math.round(700 * 2 ** (attempt - 1) + Math.random() * 400);
               console.warn(`⚠️ Groq transient error ${response.status} — retrying in ${wait}ms`);
               lastError = new Error(JSON.stringify(data));
               await sleep(wait);
