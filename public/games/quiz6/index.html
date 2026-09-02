@@ -143,6 +143,8 @@
 
     <script src="Build/module6.loader.js"></script>
     <script>
+      var unityInstanceRef = null;
+
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         var meta = document.createElement('meta');
         meta.name = 'viewport';
@@ -153,12 +155,22 @@
         canvas.style.position = "fixed";
       }
 
-      // Mute bridge: parent posts { type: "SET_MUTE", value } on speaker click.
+      // ── Bridge: parent posts messages to control mute + fullscreen ──
+      // { type: "SET_MUTE", value }       -> toggles audio via master gain
+      // { type: "SET_FULLSCREEN", value } -> toggles Unity's fullscreen mode
       window.addEventListener("message", function (e) {
         var d = e.data;
-        if (d && d.type === "SET_MUTE") {
+        if (!d) return;
+
+        if (d.type === "SET_MUTE") {
           window.__itfunMuted = !!d.value;
           if (window.__itfunApplyMute) window.__itfunApplyMute();
+        }
+
+        if (d.type === "SET_FULLSCREEN") {
+          if (unityInstanceRef) {
+            unityInstanceRef.SetFullscreen(d.value ? 1 : 0);
+          }
         }
       });
 
@@ -180,6 +192,7 @@
         if (fillEl) fillEl.style.width = p + "%";
         if (pctEl) pctEl.textContent = "Loading… " + p + "%";
       }).then((unityInstance) => {
+        unityInstanceRef = unityInstance;
         if (loadingEl) {
           loadingEl.classList.add("hide");
           setTimeout(function () { loadingEl.style.display = "none"; }, 500);
