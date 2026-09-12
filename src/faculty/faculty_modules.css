@@ -156,6 +156,10 @@
 .fm-panel .navbar-spacer { flex: 1; }
 
 /* Avatar circle */
+.fm-panel .avatar-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .fm-panel .avatar-circle {
   width: 40px;
   height: 40px;
@@ -180,6 +184,42 @@
 .fm-panel .avatar-circle:hover {
   box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.18);
   transform: translateY(-1px);
+}
+
+/* ── Avatar dropdown ── */
+.fm-panel .avatar-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 12px 32px rgba(165, 0, 52, 0.2);
+  border: 1px solid rgba(200, 16, 46, 0.15);
+  padding: 6px;
+  z-index: 50;
+  transform-origin: top right;
+}
+.fm-panel .avatar-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c8102e;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.fm-panel .avatar-dropdown-item:hover {
+  background: #fdecea;
 }
 
 /* ══════════ BODY: SIDEBAR + MAIN ══════════ */

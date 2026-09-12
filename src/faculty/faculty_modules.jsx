@@ -119,9 +119,11 @@ const SEARCH_INDEX = buildSearchIndex();
 ═════════════════════════════════════════════*/
 function FacultyModules() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu]   = useState(false);
   const [searchQuery, setSearchQuery]         = useState('');
   const [showDropdown, setShowDropdown]       = useState(false);
   const searchRef                             = useRef(null);
+  const avatarMenuRef                         = useRef(null);
 
   // ── Carousel vs grid view toggle (persisted per session) ──
   const [view, setView] = useState(() => sessionStorage.getItem('itfun_ui_faculty_view') || 'carousel');
@@ -222,6 +224,25 @@ function FacultyModules() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  /* ── Close avatar dropdown on outside click / Escape ── */
+  useEffect(() => {
+    if (!showAvatarMenu) return;
+    const handleClickOutside = (e) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target)) {
+        setShowAvatarMenu(false);
+      }
+    };
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setShowAvatarMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showAvatarMenu]);
 
   /* ── Search results ── */
   const searchResults = (() => {
@@ -324,12 +345,37 @@ function FacultyModules() {
 
         <div className="navbar-spacer" />
 
-        <div
-          className="avatar-circle"
-          onClick={() => setShowLogoutModal(true)}
-          title={hasFullName ? `${user.firstName} ${user.lastName}` : 'Account'}
-        >
-          {hasFullName ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
+        <div className="avatar-menu-wrap" ref={avatarMenuRef}>
+          <div
+            className="avatar-circle"
+            onClick={() => setShowAvatarMenu(v => !v)}
+            title={hasFullName ? `${user.firstName} ${user.lastName}` : 'Account'}
+          >
+            {hasFullName ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
+          </div>
+
+          <AnimatePresence>
+            {showAvatarMenu && (
+              <motion.div
+                className="avatar-dropdown"
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+              >
+                <button
+                  className="avatar-dropdown-item"
+                  onClick={() => {
+                    setShowAvatarMenu(false);
+                    setShowLogoutModal(true);
+                  }}
+                >
+                  <CiLogout size={17} />
+                  <span>Logout</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

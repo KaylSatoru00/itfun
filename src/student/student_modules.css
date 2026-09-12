@@ -183,6 +183,10 @@
     inset 0 -2px 5px rgba(165, 0, 52, 0.12),
     0 9px 24px rgba(165, 0, 52, 0.36);
 }
+.lm-panel.sm-page .avatar-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .lm-panel.sm-page .avatar-circle {
   width: 38px;
   height: 38px;
@@ -201,6 +205,42 @@
 .lm-panel.sm-page .avatar-circle:hover {
   transform: scale(1.08);
   box-shadow: 0 0 16px rgba(200, 16, 46, 0.5);
+}
+
+/* ── Avatar dropdown ── */
+.lm-panel.sm-page .avatar-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 180px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(165, 0, 52, 0.18);
+  border: 1px solid rgba(200, 16, 46, 0.12);
+  padding: 6px;
+  z-index: 50;
+  transform-origin: top right;
+}
+.lm-panel.sm-page .avatar-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #C8102E;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.lm-panel.sm-page .avatar-dropdown-item:hover {
+  background: #fdecea;
 }
 
 /* ═══════════ BODY / CAROUSEL AREA ═══════════ */
@@ -382,6 +422,7 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -689,6 +730,7 @@
   min-height: 2.7em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
