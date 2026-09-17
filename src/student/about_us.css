@@ -1,0 +1,421 @@
+/* about_us.css — "Level Path" layout
+   ------------------------------------------------------------------
+   #root (index.css) is `position: fixed; inset: 0;` with
+   `align-items: center` — it flex-centers whatever page is rendered
+   inside it. That's fine for pages that fit in one screen, but once a
+   page is taller than the viewport, centering pushes the top half of
+   the overflow above the visible area, and since #root is fixed, no
+   amount of scrolling reaches it. Overriding to flex-start anchors
+   this page to the top instead, and overflow-y:auto lets #root's own
+   box scroll to reveal the rest. Scrolling still works by wheel,
+   trackpad, keyboard, or drag — the rules below just hide the
+   track/thumb so no scrollbar renders. */
+#root:has(.about-us-page) {
+  align-items: flex-start;
+  overflow-y: auto;
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* old Edge/IE */
+}
+#root:has(.about-us-page)::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari, new Edge */
+}
+
+.about-us-page {
+  width: 100%;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background: #fff;
+}
+
+.about-us-page,
+.about-us-page *,
+.about-us-page *::before,
+.about-us-page *::after {
+  box-sizing: border-box;
+}
+
+/* ── Header bar ── */
+.about-us-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #f3d9de;
+}
+
+.about-us-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 8px 10px;
+  margin: -8px -10px;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.about-us-back:hover {
+  background: #fdecea;
+  color: #C8102E;
+}
+.about-us-back:focus-visible {
+  outline: 2px solid #C8102E;
+  outline-offset: 2px;
+}
+
+.about-us-content {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 32px) clamp(48px, 8vw, 96px);
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════════════════
+   INTRO — title, tagline, pitch
+══════════════════════════════════════════════════ */
+.au-intro {
+  position: relative;
+  text-align: center;
+  padding: clamp(28px, 6vw, 56px) clamp(4px, 2vw, 16px) clamp(36px, 6vw, 64px);
+  background: radial-gradient(760px 420px at 50% -8%, #FCEEF0 0%, #fff 72%);
+}
+
+.au-title {
+  color: #C8102E;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 clamp(12px, 2.5vw, 18px);
+}
+
+.au-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #C8102E;
+  color: #C8102E;
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  margin-bottom: clamp(14px, 3vw, 20px);
+}
+.au-badge i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #C8102E;
+  animation: au-blip 1.8s ease-in-out infinite;
+}
+@keyframes au-blip {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.au-tagline {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 3.4vw, 1.9rem);
+  color: #A50034;
+  letter-spacing: -0.01em;
+  margin: 0 0 clamp(18px, 3vw, 26px);
+}
+
+.au-intro p.au-copy {
+  font-family: 'Montserrat', sans-serif;
+  color: #3a1a22;
+  line-height: 1.8;
+  font-size: clamp(0.9rem, 2.2vw, 0.98rem);
+  max-width: 68ch;
+  margin: 0 auto 16px;
+}
+.au-intro p.au-copy:last-child { margin-bottom: 0; }
+
+/* ══════════════════════════════════════════════════
+   LEVEL PATH — drawn line + nodes
+══════════════════════════════════════════════════ */
+.au-path {
+  position: relative;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 32px) 0;
+}
+
+.au-path-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.au-path-svg path {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.au-path-ghost { stroke: #F2D7D5; }
+.au-path-draw  { stroke: #C8102E; }
+
+.au-node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  align-items: center;
+  gap: clamp(10px, 2vw, 28px);
+  padding: clamp(22px, 4.5vw, 46px) 0;
+}
+.au-node--left  .au-card { grid-column: 1; }
+.au-node--right .au-card { grid-column: 3; }
+
+.au-dot {
+  grid-column: 2;
+  justify-self: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #F2D7D5;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.45s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.45s ease;
+}
+.au-dot::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #F2D7D5;
+  transition: background 0.45s ease;
+}
+.au-node.is-lit .au-dot {
+  border-color: #C8102E;
+  transform: scale(1.18);
+  box-shadow: 0 0 0 7px rgba(200, 16, 46, 0.12);
+}
+.au-node.is-lit .au-dot::after { background: #C8102E; }
+
+.au-card {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #f3d9de;
+  border-radius: 22px;
+  padding: clamp(20px, 3.2vw, 30px);
+  box-shadow: 0 18px 42px rgba(165, 0, 52, 0.09);
+}
+
+.au-card-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #C8102E, #A50034);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(200, 16, 46, 0.3);
+  margin-bottom: 14px;
+}
+
+.au-card h3 {
+  font-family: 'Poppins', sans-serif;
+  color: #C8102E;
+  font-size: clamp(1.02rem, 2.5vw, 1.28rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.au-card p {
+  font-family: 'Montserrat', sans-serif;
+  color: #3a1a22;
+  font-size: clamp(0.86rem, 2vw, 0.92rem);
+  line-height: 1.75;
+  margin: 0;
+  word-wrap: break-word;
+}
+
+/* ══════════════════════════════════════════════════
+   BRAND MOMENT
+══════════════════════════════════════════════════ */
+.au-brand {
+  max-width: 1040px;
+  margin: clamp(32px, 6vw, 64px) auto 0;
+  padding: clamp(40px, 7vw, 76px) clamp(16px, 4vw, 32px);
+  border-radius: 28px;
+  background: linear-gradient(155deg, #C8102E 0%, #A50034 100%);
+  text-align: center;
+  overflow: hidden;
+}
+
+.au-brand-chip {
+  display: grid;
+  place-items: center;
+  width: clamp(86px, 11vw, 118px);
+  height: clamp(86px, 11vw, 118px);
+  margin: 0 auto clamp(16px, 3vw, 24px);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+}
+.au-brand-logo {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+
+.au-brand-word {
+  display: flex;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: clamp(3.2rem, 15vw, 8.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.au-brand-word span { display: block; }
+.au-brand-word-it  { color: rgba(255, 255, 255, 0.55); }
+.au-brand-word-fun { color: #fff; }
+
+.au-brand-tagline {
+  font-family: 'Montserrat', sans-serif;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(0.88rem, 2.2vw, 0.96rem);
+  line-height: 1.75;
+  max-width: 46ch;
+  margin: clamp(18px, 3vw, 26px) auto 0;
+}
+
+/* ══════════════════════════════════════════════════
+   MEET THE TEAM
+══════════════════════════════════════════════════ */
+.au-team {
+  max-width: 1040px;
+  margin: clamp(40px, 7vw, 84px) auto 0;
+  text-align: center;
+}
+
+.au-team-title {
+  font-family: 'Poppins', sans-serif;
+  color: #C8102E;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 clamp(24px, 4vw, 40px);
+}
+
+.au-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: clamp(16px, 3vw, 24px);
+}
+
+.au-team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.au-team-avatar {
+  width: clamp(84px, 12vw, 150px);
+  height: clamp(84px, 12vw, 150px);
+  border-radius: 50%;
+  border: 4px solid transparent; /* color set per member via inline style */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(165, 0, 52, 0.25);
+  flex-shrink: 0;
+}
+
+.au-team-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.au-team-name {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #3a1a22;
+  font-size: clamp(0.84rem, 2vw, 0.92rem);
+  word-break: break-word;
+}
+
+.au-team-role {
+  font-family: 'Montserrat', sans-serif;
+  color: #8c1f34;
+  font-size: clamp(0.72rem, 1.8vw, 0.78rem);
+  word-break: break-word;
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+/* Tablet / large mobile — path collapses to a single rail on the left */
+@media (max-width: 760px) {
+  .au-path-svg { display: none; }
+  .au-path { padding-left: 4px; }
+  .au-node {
+    grid-template-columns: 30px 1fr;
+    gap: 14px;
+    padding: 16px 0;
+  }
+  .au-node--left .au-card,
+  .au-node--right .au-card { grid-column: 2; }
+  .au-dot {
+    grid-column: 1;
+    justify-self: center;
+    width: 22px;
+    height: 22px;
+  }
+  .au-dot::after { width: 7px; height: 7px; }
+  /* vertical rail behind the dots */
+  .au-node::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #F2D7D5;
+    z-index: -1;
+  }
+  .au-node.is-lit::before { background: #C8102E; }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .about-us-header { padding: 14px 16px; }
+  .about-us-content { padding: 0 16px 48px; }
+  .au-brand { border-radius: 22px; }
+  .au-team-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  .au-team-avatar { border-width: 3px; }
+}
+
+/* Motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .au-badge i { animation: none; }
+  .au-dot,
+  .au-node.is-lit .au-dot { transition: none; }
+}
