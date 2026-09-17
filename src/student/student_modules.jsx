@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './student_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdAccountCircle, MdViewCarousel, MdGridView } from 'react-icons/md';
+import { MdAccountCircle, MdViewCarousel, MdGridView, MdPerson, MdInfoOutline } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { CiLogout } from 'react-icons/ci';
 import { LuSwords } from 'react-icons/lu';
@@ -724,6 +724,27 @@ function LearningModules() {
                 >
                   <button
                     className="avatar-dropdown-item"
+                    onClick={() => {
+                      setShowAvatarMenu(false);
+                      navigate('/profile');
+                    }}
+                  >
+                    <MdPerson size={17} />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    className="avatar-dropdown-item"
+                    onClick={() => {
+                      setShowAvatarMenu(false);
+                      navigate('/about-us');
+                    }}
+                  >
+                    <MdInfoOutline size={17} />
+                    <span>About Us</span>
+                  </button>
+                  <div className="avatar-dropdown-divider" />
+                  <button
+                    className="avatar-dropdown-item avatar-dropdown-item-danger"
                     onClick={() => {
                       setShowAvatarMenu(false);
                       setShowLogoutModal(true);

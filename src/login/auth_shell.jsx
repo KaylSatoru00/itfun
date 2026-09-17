@@ -68,7 +68,7 @@ function AuthShell({ children }) {
           <p className="as-tagline">IT Fundamentals Made Fun</p>
           <div className="as-chips">
             <span className="as-chip as-chip-preview">
-              9 Learning Modules
+              Various Learning Modules
               <span className="as-chip-pop" aria-hidden="true">
                 <img src={previewModules} alt="" />
               </span>

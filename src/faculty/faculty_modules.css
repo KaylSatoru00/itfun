@@ -213,13 +213,21 @@
   border-radius: 8px;
   font-family: 'Poppins', Arial, sans-serif;
   font-size: 0.85rem;
-  font-weight: 700;
-  color: #c8102e;
+  font-weight: 600;
+  color: #3a1a22;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 .fm-panel .avatar-dropdown-item:hover {
   background: #fdecea;
+}
+.fm-panel .avatar-dropdown-item-danger {
+  color: #C8102E;
+}
+.fm-panel .avatar-dropdown-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgba(200, 16, 46, 0.12);
 }
 
 /* ══════════ BODY: SIDEBAR + MAIN ══════════ */

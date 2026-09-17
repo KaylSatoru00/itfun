@@ -22,6 +22,8 @@ import SelectType from './student/select_type.jsx'
 import WaitingLobby from './student/waiting_lobby_host.jsx'
 import WaitingLobbyJoin from './student/waiting_lobby_join.jsx'
 import QuizArena from './student/quiz_arena.jsx'
+import Profile from './student/profile.jsx'
+import AboutUs from './student/about_us.jsx'
 import Chapter1 from './student/s1.jsx'
 import Chapter2 from './student/s2.jsx'
 import Chapter3 from './student/s3.jsx'
@@ -38,6 +40,8 @@ import './student/chapter_theme.css'
 // Faculty
 import FacultyModules from './faculty/faculty_modules.jsx'
 import FacultyClass from './faculty/faculty_class.jsx'
+import FacultyProfile from './faculty/profile_faculty.jsx'
+import AboutFaculty from './faculty/about_us_faculty.jsx'
 import FacultyChapter1 from './faculty/f1.jsx'
 import FacultyChapter2 from './faculty/f2.jsx'
 import FacultyChapter3 from './faculty/f3.jsx'
@@ -72,7 +76,11 @@ function AnimatedRoutes() {
         <Route path="/faculty-login" element={<FacultyLogin />} />
         <Route path="/faculty-modules" element={<ProtectedRoute redirectTo="/faculty-login"><FacultyModules /></ProtectedRoute>} />
         <Route path="/faculty-class" element={<FacultyClass />} />
+        <Route path="/faculty-profile" element={<ProtectedRoute redirectTo="/faculty-login"><FacultyProfile /></ProtectedRoute>} />
+        <Route path="/about-faculty" element={<AboutFaculty />} />
         <Route path="/learning-modules" element={<ProtectedRoute><LearningModules /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/about-us" element={<AboutUs />} />
         <Route path="/pvp-quiz" element={<PvpQuiz />} />
         <Route path="/select-module" element={<SelectModule />} />
         <Route path="/select-type" element={<SelectType />} />

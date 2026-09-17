@@ -235,12 +235,20 @@
   font-family: 'Poppins', sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #C8102E;
+  color: #3a1a22;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 .lm-panel.sm-page .avatar-dropdown-item:hover {
   background: #fdecea;
+}
+.lm-panel.sm-page .avatar-dropdown-item-danger {
+  color: #C8102E;
+}
+.lm-panel.sm-page .avatar-dropdown-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgba(200, 16, 46, 0.12);
 }
 
 /* ═══════════ BODY / CAROUSEL AREA ═══════════ */

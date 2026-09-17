@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './faculty_modules.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdAccountCircle, MdViewCarousel, MdGridView, MdGroups } from 'react-icons/md';
+import { MdAccountCircle, MdViewCarousel, MdGridView, MdGroups, MdPerson, MdInfoOutline } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { CiLogout } from 'react-icons/ci';
 import { SiBookstack } from 'react-icons/si';
@@ -365,6 +365,27 @@ function FacultyModules() {
               >
                 <button
                   className="avatar-dropdown-item"
+                  onClick={() => {
+                    setShowAvatarMenu(false);
+                    navigate('/faculty-profile');
+                  }}
+                >
+                  <MdPerson size={17} />
+                  <span>Profile</span>
+                </button>
+                <button
+                  className="avatar-dropdown-item"
+                  onClick={() => {
+                    setShowAvatarMenu(false);
+                    navigate('/about-faculty');
+                  }}
+                >
+                  <MdInfoOutline size={17} />
+                  <span>About Us</span>
+                </button>
+                <div className="avatar-dropdown-divider" />
+                <button
+                  className="avatar-dropdown-item avatar-dropdown-item-danger"
                   onClick={() => {
                     setShowAvatarMenu(false);
                     setShowLogoutModal(true);

@@ -394,7 +394,7 @@ function FacultyLogin() {
           >
             <img className="af-login-logo" src={itfunLogo} alt="ITFun" />
             <h1 className="af-title">Faculty Login</h1>
-            <p className="af-sub">Log in to manage your classes</p>
+            <p className="af-sub">Log in to access and manage your classes</p>
             {error && <div className="alert alert-danger py-2 small mb-0 text-center">{error}</div>}
 
             <div className="af-field">

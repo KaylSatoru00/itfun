@@ -15,7 +15,7 @@
   font-weight: 700;
   font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   color: #1a1a1e;
-  margin: 0;
+  margin: -1rem;
   text-align: center;
 }
 
@@ -31,7 +31,7 @@
   font-family: 'Montserrat', sans-serif;
   font-size: 0.9rem;
   color: #6c6c72;
-  margin: 0.25rem 0 0;
+  margin: 1rem 0 0;
   text-align: center;
 }
 

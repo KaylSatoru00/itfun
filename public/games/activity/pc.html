@@ -501,20 +501,20 @@ const PHOTO={ssd:{ssd1:"data:image/webp;base64,UklGRtIRAABXRUJQVlA4WAoAAAAQAAAAK
 const STEPS=[
   {key:'mobo', num:1, name:'Motherboard', cat:'a motherboard', slbl:'Motherboard Tray', pos:{l:8.5,t:13,w:48,h:60},
    variants:[
-     {id:'b365', name:'MSI B365M PLUS', spec:'mATX - LGA1151 - DDR4', color:'#5a7099', img:1,
+     {id:'b365', name:'MSI B365M PLUS', spec:'mATX - LGA1151 - DDR4', color:'#5a7099', socket:'LGA1151', ddr:'DDR4', img:1,
       feat:{cpu:{bx:0.408,by:0.195,bw:0.180,bh:0.271}, cooler:{bx:0.3,by:0.10,bw:0.42,bh:0.5}, ram:{bx:0.706,by:0.043,bw:0.171,bh:0.602}, gpu:{bx:-0.01,by:0.62,bw:1,bh:0.2}}},
-     {id:'b760', name:'Gigabyte B760M DS3H AX', spec:'mATX - LGA1700 - DDR5', color:'#5a7099', img:1,
+     {id:'b760', name:'Gigabyte B760M DS3H AX', spec:'mATX - LGA1700 - DDR5', color:'#5a7099', socket:'LGA1700', ddr:'DDR5', img:1,
       feat:{cpu:{bx:0.388,by:0.166,bw:0.206,bh:0.297}, cooler:{bx:0.28,by:0.077,bw:0.42,bh:0.5}, ram:{bx:0.685,by:0.045,bw:0.171,bh:0.550}, gpu:{bx:-0.01,by:0.58,bw:1,bh:0.2}}},
-     {id:'b660', name:'ASUS TUF B660-PLUS D4', spec:'mATX - LGA1700 - DDR4', color:'#5a7099', img:1,
+     {id:'b660', name:'ASUS TUF B660-PLUS D4', spec:'mATX - LGA1700 - DDR4', color:'#5a7099', socket:'LGA1700', ddr:'DDR4', img:1,
       feat:{cpu:{bx:0.437,by:0.180,bw:0.196,bh:0.272}, cooler:{bx:0.30,by:0.087,bw:0.42,bh:0.5}, ram:{bx:0.702,by:0.055,bw:0.171,bh:0.535}, gpu:{bx:-0.01,by:0.58,bw:1,bh:0.2}}},
    ]},
   {key:'cpu', num:2, name:'CPU', cat:'a CPU', slbl:'CPU Socket', needs:'mobo', pos:{l:31.1,t:22.6,w:7.7,h:16.8},
    variants:[
-     {id:'i3', name:'Intel Core i3-12100',  spec:'4c/8t - 60W - DDR4',   color:'#2980b9', tier:1, tdp:60,  ddr:'DDR4', img:1},
-     {id:'i5', name:'Intel Core i5-12400F', spec:'6c/12t - 65W - DDR4',  color:'#2471a3', tier:2, tdp:65,  ddr:'DDR4', img:1},
-     {id:'i7', name:'Intel Core i7-12700K', spec:'12c/20t - 125W - DDR5',color:'#1f6fb2', tier:4, tdp:125, ddr:'DDR5', img:1},
-     {id:'r5', name:'AMD Ryzen 5 5600X',    spec:'6c/12t - 65W - DDR4',  color:'#c0392b', tier:2, tdp:65,  ddr:'DDR4', img:1},
-     {id:'r7', name:'AMD Ryzen 7 5800X3D',  spec:'8c/16t - 105W - DDR4', color:'#e74c3c', tier:4, tdp:105, ddr:'DDR4', img:1},
+     {id:'i3', name:'Intel Core i3-12100',  spec:'4c/8t - 60W - DDR4',   color:'#2980b9', tier:1, tdp:60,  ddr:'DDR4', socket:'LGA1700', img:1},
+     {id:'i5', name:'Intel Core i5-12400F', spec:'6c/12t - 65W - DDR4',  color:'#2471a3', tier:2, tdp:65,  ddr:'DDR4', socket:'LGA1700', img:1},
+     {id:'i7', name:'Intel Core i7-12700K', spec:'12c/20t - 125W - DDR5',color:'#1f6fb2', tier:4, tdp:125, ddr:'DDR5', socket:'LGA1700', img:1},
+     {id:'r5', name:'AMD Ryzen 5 5600X',    spec:'6c/12t - 65W - DDR4',  color:'#c0392b', tier:2, tdp:65,  ddr:'DDR4', socket:'AM4', img:1},
+     {id:'r7', name:'AMD Ryzen 7 5800X3D',  spec:'8c/16t - 105W - DDR4', color:'#e74c3c', tier:4, tdp:105, ddr:'DDR4', socket:'AM4', img:1},
    ]},
   {key:'cooler', num:2, name:'CPU Cooler', cat:'a CPU cooler', slbl:'Cooler', needs:'cpu', pos:{l:28.2,t:15.7,w:13.7,h:29.5},
    variants:[
@@ -525,10 +525,10 @@ const STEPS=[
    ]},
   {key:'ram', num:4, name:'RAM', cat:'a RAM module', slbl:'RAM Slots', needs:'mobo', pos:{l:43.9,t:13.1,w:7.4,h:37.3},
    variants:[
-     {id:'kf',  name:'Kingston Fury Beast', spec:'16GB DDR4-3200', color:'#e74c3c', type:'DDR4', tier:2, img:1},
-     {id:'lpx', name:'Corsair Vengeance LPX',spec:'16GB DDR4-3600', color:'#f5c518', type:'DDR4', tier:3, img:1},
-     {id:'cru', name:'Crucial DDR5',         spec:'16GB DDR5-5600', color:'#2ecc71', type:'DDR5', tier:3, img:1},
-     {id:'dom', name:'Corsair Dominator RGB',spec:'32GB DDR5-6000', color:'#a855f7', type:'DDR5', tier:4, img:1},
+     {id:'kf',  name:'Kingston Fury Beast', spec:'16GB DDR4-3200', color:'#e74c3c', type:'DDR4', tier:2, sticks:2, img:1},
+     {id:'lpx', name:'Corsair Vengeance LPX',spec:'16GB DDR4-3600', color:'#f5c518', type:'DDR4', tier:3, sticks:2, img:1},
+     {id:'cru', name:'Crucial DDR5',         spec:'16GB DDR5-5600', color:'#2ecc71', type:'DDR5', tier:3, sticks:2, img:1},
+     {id:'dom', name:'Corsair Dominator RGB',spec:'32GB DDR5-6000', color:'#a855f7', type:'DDR5', tier:4, sticks:4, img:1},
    ]},
   {key:'ssd', num:4, name:'SSD', cat:'an SSD', slbl:'2.5" Drive', pos:{l:67,t:37.1,w:12,h:10},
    variants:[
@@ -671,7 +671,9 @@ function fillSlot(cat,v,keepClasses){
   if(img && cat==='ram'){
     const r=el.getBoundingClientRect();
     const iw=Math.max(20,r.height*0.96), ih=Math.max(6,r.width*0.19); // pre-rotate size of each stick
-    const cy=r.height*0.5, cols=[0.13,0.38,0.63,0.88];                 // four DIMM columns
+    const cy=r.height*0.5, ALL_COLS=[0.13,0.38,0.63,0.88];              // four DIMM columns
+    const sticks=v.sticks||4;                                          // how many sticks this kit actually has
+    const cols = sticks>=4 ? ALL_COLS : (sticks===2 ? [ALL_COLS[1],ALL_COLS[3]] : ALL_COLS.slice(0,sticks)); // fill only the matching slots (dual-channel uses the 2nd & 4th slot)
     const ins=keepClasses?'':' ins';
     const mk=(cx,delay)=>`<img class="ramfill${ins}" src="${img}" style="left:${(r.width*cx).toFixed(0)}px;top:${cy.toFixed(0)}px;width:${iw.toFixed(0)}px;height:${ih.toFixed(0)}px;${delay?'animation-delay:'+delay+'ms':''}">`;
     el.innerHTML=cols.map((cx,i)=>mk(cx,i*90)).join('')+`<span class="sfill">${v.name.split(' ')[0]}</span>`;
@@ -762,6 +764,16 @@ function filledCount(){return STEPS.filter(s=>state.build[s.key]).length;}
 /* ---------- COMPATIBILITY / BOTTLENECK ---------- */
 function checks(){
   const b=state.build, out=[];
+  if(b.mobo&&b.cpu){
+    if(b.mobo.socket!==b.cpu.socket) out.push({lvl:'err',involves:['mobo','cpu'],
+      msg:`Socket mismatch - ${b.cpu.name} needs a ${b.cpu.socket} socket, but ${b.mobo.name} has ${b.mobo.socket}. The CPU physically won't fit.`});
+    else out.push({lvl:'ok',involves:['mobo','cpu'],msg:`${b.mobo.name}'s ${b.mobo.socket} socket fits the ${b.cpu.name}.`});
+  }
+  if(b.mobo&&b.ram){
+    if(b.mobo.ddr!==b.ram.type) out.push({lvl:'err',involves:['mobo','ram'],
+      msg:`RAM slot mismatch - ${b.mobo.name} has ${b.mobo.ddr} slots, but ${b.ram.name} is ${b.ram.type}. It won't fit in the slot.`});
+    else out.push({lvl:'ok',involves:['mobo','ram'],msg:`${b.ram.type} ${b.ram.name} fits the ${b.mobo.name}'s memory slots.`});
+  }
   if(b.cpu&&b.ram){
     if(b.ram.type!==b.cpu.ddr) out.push({lvl:'err',involves:['cpu','ram'],
       msg:`Memory incompatible - ${b.ram.name} is ${b.ram.type}, but ${b.cpu.name} needs ${b.cpu.ddr}. The PC won't boot.`});
@@ -913,7 +925,7 @@ function showHelp(){
       <h4>Goal</h4><p>Install one component in each of the 8 spots to build a working PC inside the case.</p>
       <h4>Choosing parts</h4><p>Each category has several options. Drag the one you want onto its slot, or click it to auto-install.</p>
       <h4>Placement</h4><p>Drop a part in the wrong slot and you lose a life (with an explanation why). 3 lives total.</p>
-      <h4>Compatibility</h4><p>The SYSTEM CHECK panel flags problems: DDR4/DDR5 memory mismatch, a cooler too weak for the CPU, an underpowered PSU, and CPU/GPU bottlenecks. Red = won't boot, yellow = works but not ideal.</p>
+      <h4>Compatibility</h4><p>The SYSTEM CHECK panel flags problems: motherboard/CPU socket mismatch, motherboard/RAM slot mismatch, DDR4/DDR5 memory mismatch, a cooler too weak for the CPU, an underpowered PSU, and CPU/GPU bottlenecks. Red = won't boot, yellow = works but not ideal.</p>
       <h4>Scoring</h4><p>+${POINTS} per install, plus time, lives, and a compatibility bonus. A flawless build scores highest.</p>
     </div>
     <div class="mbtns"><button class="btn primary" id="backBtn">Back</button></div>`;
