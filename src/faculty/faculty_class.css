@@ -36,6 +36,10 @@
 .fc-panel .fc-wordmark span { color: #c8102e; }
 .fc-panel .navbar-spacer { flex: 1; }
 
+.fc-panel .avatar-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
 .fc-panel .avatar-circle {
   width: 40px;
   height: 40px;
@@ -57,6 +61,50 @@
   transition: box-shadow 0.2s, transform 0.2s;
 }
 .fc-panel .avatar-circle:hover { box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.18); transform: translateY(-1px); }
+
+/* ── Avatar dropdown (matches faculty_modules) ── */
+.fc-panel .avatar-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 12px 32px rgba(165, 0, 52, 0.2);
+  border: 1px solid rgba(200, 16, 46, 0.15);
+  padding: 6px;
+  z-index: 50;
+  transform-origin: top right;
+}
+.fc-panel .avatar-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'Poppins', Arial, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3a1a22;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.fc-panel .avatar-dropdown-item:hover {
+  background: #fdecea;
+}
+.fc-panel .avatar-dropdown-item-danger {
+  color: #C8102E;
+}
+.fc-panel .avatar-dropdown-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgba(200, 16, 46, 0.12);
+}
 
 /* ══════════ BODY: SIDEBAR + MAIN ══════════ */
 .fc-panel .fc-below { display: flex; flex: 1; min-height: 0; }

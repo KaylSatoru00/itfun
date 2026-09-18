@@ -1,8 +1,8 @@
 // faculty_class.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './faculty_class.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdAccountCircle, MdGroups } from 'react-icons/md';
+import { MdAccountCircle, MdGroups, MdPerson, MdInfoOutline } from 'react-icons/md';
 import { IoSearchCircle } from 'react-icons/io5';
 import { SiBookstack } from 'react-icons/si';
 import { CiLogout } from 'react-icons/ci';
@@ -154,6 +154,8 @@ function DonutChart({ percent, size = 100, strokeWidth = 10, showSub = true }) {
 
 function FacultyClass() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const avatarMenuRef = useRef(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedSection, setSelectedSection] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
@@ -204,6 +206,25 @@ function FacultyClass() {
       document.body.style.backgroundColor = '';
     };
   }, []);
+
+  /* ── Close avatar dropdown on outside click / Escape ── */
+  useEffect(() => {
+    if (!showAvatarMenu) return;
+    const handleClickOutside = (e) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target)) {
+        setShowAvatarMenu(false);
+      }
+    };
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setShowAvatarMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showAvatarMenu]);
 
   // Load faculty's classes from Firestore
   useEffect(() => {
@@ -445,12 +466,58 @@ function FacultyClass() {
           <span className="fc-wordmark">IT<span>Fun</span></span>
         </div>
         <div className="navbar-spacer" />
-        <div
-          className="avatar-circle"
-          onClick={() => setShowLogoutModal(true)}
-          title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
-        >
-          {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
+        <div className="avatar-menu-wrap" ref={avatarMenuRef}>
+          <div
+            className="avatar-circle"
+            onClick={() => setShowAvatarMenu(v => !v)}
+            title={user ? `${user.firstName} ${user.lastName}` : 'Account'}
+          >
+            {user ? initials : <MdAccountCircle style={{ fontSize: 22 }} />}
+          </div>
+
+          <AnimatePresence>
+            {showAvatarMenu && (
+              <motion.div
+                className="avatar-dropdown"
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ duration: 0.16, ease: 'easeOut' }}
+              >
+                <button
+                  className="avatar-dropdown-item"
+                  onClick={() => {
+                    setShowAvatarMenu(false);
+                    navigate('/faculty-profile');
+                  }}
+                >
+                  <MdPerson size={17} />
+                  <span>Profile</span>
+                </button>
+                <button
+                  className="avatar-dropdown-item"
+                  onClick={() => {
+                    setShowAvatarMenu(false);
+                    navigate('/about-faculty');
+                  }}
+                >
+                  <MdInfoOutline size={17} />
+                  <span>About Us</span>
+                </button>
+                <div className="avatar-dropdown-divider" />
+                <button
+                  className="avatar-dropdown-item avatar-dropdown-item-danger"
+                  onClick={() => {
+                    setShowAvatarMenu(false);
+                    setShowLogoutModal(true);
+                  }}
+                >
+                  <CiLogout size={17} />
+                  <span>Logout</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
