@@ -18,7 +18,7 @@ import { RoomManager } from './rooms/room.manager.js';
 import { QuizEngine } from './quiz/quiz.engine.js';
 import { ScoringService } from './scoring/scoring.service.js';
 import { generateQuiz } from './services/ai.service.js';
-import { getLessonContent } from './services/lesson.service.js';
+import { getLessonContent, getModuleName } from './services/lesson.service.js';
 import { adminAuth, adminDb, adminRtdb } from './services/firebase-admin.service.js';
 import { ServerValue } from 'firebase-admin/database';
 import { sendPasswordResetEmail, sendOtpEmail } from './services/email.service.js';
@@ -459,7 +459,8 @@ async function validateRoomJoin(pin, uid) {
   if (!unlocked) {
     return {
       ok: false,
-      error: 'You need to unlock this module first before joining this quiz.',
+      error: `You need to unlock ${getModuleName(room.moduleId)} first before joining this quiz.`,
+      errorCode: 'MODULE_LOCKED',
     };
   }
 
@@ -738,7 +739,7 @@ app.post('/api/generate-quiz', async (req, res) => {
     console.log(`🚫 uid ${uid} tried to generate a quiz for locked module: ${moduleId}`);
     return res.status(403).json({
       success: false,
-      error: 'You need to unlock this module first before generating a quiz from it.',
+      error: `You need to unlock ${getModuleName(moduleId)} first before generating a quiz from it.`,
     });
   }
 
@@ -875,7 +876,7 @@ io.on('connection', (socket) => {
 
       const result = await validateRoomJoin(pin, uid);
       if (!result.ok) {
-        if (result.error === 'You need to unlock this module first before joining this quiz.') {
+        if (result.errorCode === 'MODULE_LOCKED') {
           console.log(`🚫 ${playerName} (${uid}) tried to join room ${pin} but the module is not yet unlocked`);
         }
         callback({ success: false, error: result.error });

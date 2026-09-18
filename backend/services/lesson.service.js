@@ -185,6 +185,15 @@ Windows Shortcuts:
   },
 };
 
+// ── Helper: human-readable module name from a moduleId ──
+// Ginagamit ng server.js sa mga error message (e.g. locked-module errors sa
+// check-join-eligibility/join-room at /api/generate-quiz) para sabihin sa
+// user kung ANONG module talaga ang kailangan niyang i-unlock, hindi lang
+// yung internal id (hal. "module3") na walang context sa kanya.
+function getModuleName(moduleId) {
+  return MODULE_CONTENT[moduleId]?.name || 'this module';
+}
+
 async function getLessonContent(moduleId, lessonId) {
   try {
     // Get content from hardcoded definitions
@@ -205,4 +214,4 @@ async function getLessonContent(moduleId, lessonId) {
   }
 }
 
-export { getLessonContent };
+export { getLessonContent, getModuleName };
