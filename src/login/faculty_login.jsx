@@ -104,7 +104,14 @@ function FacultyLogin() {
       // sumulat ng "online" ang presence effect sa user_context.jsx.
       confirmSession();
 
-      const userData = { uid, firstName: data.firstName, lastName: data.lastName, email: data.email, role: 'faculty' };
+      const userData = {
+        uid,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        role: 'faculty',
+        lastNameChangeAt: data.lastNameChangeAt,
+      };
       setUser(userData);
       // KRITIKAL: i-set din agad ang optimistic user dito (hindi lang umasa
       // sa async onAuthStateChanged restore path sa user_context.jsx) — kasi

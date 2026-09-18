@@ -23,6 +23,14 @@ const NAME_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 function toMillis(value) {
   if (!value) return null;
   if (typeof value.toMillis === 'function') return value.toMillis();
+  // A Firestore Timestamp that went through JSON.stringify/parse (e.g. the
+  // sessionStorage optimistic-restore cache in user_context.jsx) loses its
+  // class and becomes a plain { seconds, nanoseconds } object — handle that
+  // shape directly instead of falling through to `new Date(...)`, which
+  // can't parse it and would silently report "not locked".
+  if (typeof value.seconds === 'number') {
+    return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+  }
   const t = new Date(value).getTime();
   return Number.isNaN(t) ? null : t;
 }
