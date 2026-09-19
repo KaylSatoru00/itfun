@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import {
@@ -13,6 +14,116 @@ import {
   toPascalCase, passwordRules, PasswordChecklist,
   RequiredLabel, PasswordInput, screenVariants, isGmailAddress, maskEmail,
 } from './auth_form_kit.jsx';
+
+// ── "VERIFIED" success overlay ──
+// Lalabas 'to kapag tama ang OTP: dim ang buong screen, may card na
+// "VERIFIED" at may check na kusang iginuguhit. Naka-portal sa document.body
+// para (1) sakop ang buong page kasama yung kaliwang panel ng AuthShell, at
+// (2) hindi maapektuhan ng transform ng .af-card (kapag may transform ang
+// parent, hindi na sa viewport naka-"fixed" ang child).
+const VERIFIED_RED = '#c8102e';
+
+function VerifiedOverlay({ show }) {
+  const reduce = useReducedMotion();
+
+  return createPortal(
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          key="verified-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(20, 16, 18, 0.5)',
+            backdropFilter: 'blur(3px)',
+            WebkitBackdropFilter: 'blur(3px)',
+          }}
+        >
+          <motion.div
+            role="status"
+            aria-live="polite"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 18,
+              padding: '26px 44px 34px',
+              background: '#eeece6',
+              borderRadius: 22,
+              boxShadow: '0 18px 50px rgba(0, 0, 0, 0.28)',
+            }}
+          >
+            <motion.h2
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.3 }}
+              style={{
+                margin: 0,
+                color: VERIFIED_RED,
+                fontSize: '1.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+                lineHeight: 1,
+              }}
+            >
+              VERIFIED
+            </motion.h2>
+
+            {/* Maliit na "pop" ng buong icon pagkatapos maiguhit ang check */}
+            <motion.svg
+              viewBox="0 0 100 100"
+              width="112"
+              height="112"
+              aria-hidden="true"
+              animate={reduce ? undefined : { scale: [1, 1.1, 1] }}
+              transition={{ delay: 1.15, duration: 0.35, ease: 'easeInOut' }}
+            >
+              {/* Bilog — naka-rotate ng -90° para sa itaas nagsisimula ang guhit */}
+              <g transform="rotate(-90 50 50)">
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="48"
+                  fill="none"
+                  stroke={VERIFIED_RED}
+                  strokeWidth="1.5"
+                  initial={reduce ? false : { pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ delay: 0.25, duration: 0.5, ease: 'easeOut' }}
+                />
+              </g>
+              {/* Check mark */}
+              <motion.path
+                d="M31 52 L44 65 L70 36"
+                fill="none"
+                stroke={VERIFIED_RED}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={reduce ? false : { pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.7, duration: 0.4, ease: 'easeOut' }}
+              />
+            </motion.svg>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
 
 function StudentLogin() {
   const [screen, setScreen] = useState('login');
@@ -41,6 +152,20 @@ function StudentLogin() {
   // signup OTP verification state
   const [otpCode, setOtpCode] = useState('');
   const [otpTouched, setOtpTouched] = useState(false);
+  // true habang ipinapakita ang "VERIFIED" animation matapos ang tamang OTP
+  const [verified, setVerified] = useState(false);
+
+  // Kapag tama ang OTP: ipakita muna ang VERIFIED animation (~2.2s), saka
+  // pa lang ibalik sa login screen. Naka-cleanup para hindi mag-fire ang
+  // timer kung na-unmount na ang component.
+  useEffect(() => {
+    if (!verified) return;
+    const timer = setTimeout(() => {
+      setVerified(false);
+      setScreen('login');
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, [verified]);
 
   // forgot password state
   const [resetEmail, setResetEmail] = useState('');
@@ -209,6 +334,8 @@ function StudentLogin() {
   };
 
   const handleVerifyOtp = async () => {
+    // Iwas double-submit (hal. Enter key) habang naka-display ang VERIFIED.
+    if (verified) return;
     setOtpTouched(true);
     setError('');
     if (!otpCode || otpCode.length !== 6) {
@@ -226,9 +353,11 @@ function StudentLogin() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Verification failed.');
       }
-      setScreen('login');
+      // Ihanda na agad ang login fields; ang pag-lipat sa login screen ay
+      // gagawin ng useEffect sa itaas pagkatapos ng VERIFIED animation.
       setLoginEmail(signupEmail);
       setLoginPassword('');
+      setVerified(true);
     } catch (err) {
       setError(err.message || 'Verification failed. Please try again.');
     }
@@ -558,6 +687,9 @@ function StudentLogin() {
         )}
 
         </AnimatePresence>
+
+        {/* Naka-portal ito sa document.body, kaya kahit nasa loob ng card ang pwesto sa JSX, buong screen ang sakop */}
+        <VerifiedOverlay show={verified} />
       </motion.div>
     </AuthShell>
   );
