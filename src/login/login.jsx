@@ -1,12 +1,13 @@
 import './login.css';
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { PiStudentBold } from "react-icons/pi";
 import { GiTeacher } from "react-icons/gi";
 import { HiArrowRight } from "react-icons/hi";
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../user_context';
 import AuthShell from './auth_shell.jsx';
+import SplashScreen from './splash_screen.jsx';
 import itfunLogo from '../assets/LOGO_NAMEN.png';
 
 const sideVariants = {
@@ -17,6 +18,11 @@ const itemVariants = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 24 } },
 };
+
+// Isang beses lang ipapakita ang splash kada page load. Module-level variable
+// ang gamit (hindi sessionStorage) dahil nililinis ng logout() ang
+// sessionStorage — kaya babalik sana ang splash tuwing Back papunta dito.
+let splashPlayed = false;
 
 function RoleCard({ icon, name, desc, onClick }) {
   return (
@@ -40,6 +46,12 @@ function RoleCard({ icon, name, desc, onClick }) {
 function Login() {
   const navigate = useNavigate();
   const { user, logout } = useUser();
+  const [showSplash, setShowSplash] = useState(!splashPlayed);
+
+  const finishSplash = useCallback(() => {
+    splashPlayed = true;
+    setShowSplash(false);
+  }, []);
 
   // Bug fix: kapag Back lang ang ginamit papunta dito (walang click sa
   // Student/Faculty button), hindi natin na-clear yung session dati —
@@ -67,7 +79,11 @@ function Login() {
   };
 
   return (
+    <>
     <AuthShell>
+      {/* Hindi pa i-mount ang role picker hangga't tumatakbo ang splash, para
+          ang stagger entrance nito ay magsimula habang nagfe-fade ang splash. */}
+      {!showSplash && (
       <motion.div
         className="d-flex flex-column align-items-center gap-3 w-100"
         variants={sideVariants}
@@ -102,7 +118,12 @@ function Login() {
           />
         </div>
       </motion.div>
+      )}
     </AuthShell>
+    <AnimatePresence>
+      {showSplash && <SplashScreen key="splash" onDone={finishSplash} />}
+    </AnimatePresence>
+    </>
   );
 }
 
