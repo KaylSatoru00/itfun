@@ -125,17 +125,38 @@ function VerifiedOverlay({ show }) {
   );
 }
 
+// ── Refresh-proof na screen state ──
+// Naka-sessionStorage (tab-scoped) ang huling screen at ang mga hindi-sensitibong
+// field, para hindi na bumalik sa login ang F5 / hard refresh. HINDI sine-save
+// ang password. Nabubura ito kapag umalis na sa page (unmount) o nagsara ang tab.
+const AUTH_FLOW_KEY = 'itfun_student_auth_flow';
+const AUTH_SCREENS = ['login', 'signup', 'verify', 'forgot'];
+
+function readSavedAuthFlow() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(AUTH_FLOW_KEY));
+    if (!saved || !AUTH_SCREENS.includes(saved.screen)) return null;
+    // Walang email = wala nang ve-verify, kaya sa signup na lang ibabalik.
+    if (saved.screen === 'verify' && !saved.signupEmail) return { ...saved, screen: 'signup' };
+    return saved;
+  } catch {
+    return null;
+  }
+}
+
 function StudentLogin() {
-  const [screen, setScreen] = useState('login');
+  // Ibinabalik ang huling screen (login / signup / verify / forgot) matapos ang refresh.
+  const [saved] = useState(readSavedAuthFlow);
+  const [screen, setScreen] = useState(saved?.screen ?? 'login');
   const navigate = useNavigate();
   const { setUser, confirmSession, beginLogin, endLogin } = useUser();
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
+  const [firstName, setFirstName] = useState(saved?.firstName ?? '');
+  const [lastName, setLastName] = useState(saved?.lastName ?? '');
+  const [signupEmail, setSignupEmail] = useState(saved?.signupEmail ?? '');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -168,9 +189,30 @@ function StudentLogin() {
   }, [verified]);
 
   // forgot password state
-  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmail, setResetEmail] = useState(saved?.resetEmail ?? '');
   const [resetTouched, setResetTouched] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
+  const [resetSent, setResetSent] = useState(saved?.resetSent ?? false);
+
+  // I-save ang kasalukuyang screen at mga field sa bawat pagbabago. Kapag
+  // kaka-verify lang (VERIFIED animation pa ang ipinapakita), 'login' na ang
+  // isasave para hindi bumalik sa lumang OTP form kung mag-refresh sa gitna.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(AUTH_FLOW_KEY, JSON.stringify({
+        screen: verified ? 'login' : screen,
+        signupEmail, firstName, lastName, resetEmail, resetSent,
+      }));
+    } catch {
+      // best-effort lang — kung bawal o puno ang storage, hindi dapat mag-crash ang form
+    }
+  }, [screen, verified, signupEmail, firstName, lastName, resetEmail, resetSent]);
+
+  // Ang refresh ay hindi nagpapatakbo ng cleanup, pero ang pag-alis sa page
+  // (Go back, Login success, ibang route) ay oo — dito nabubura ang saved state
+  // para sa susunod na bisita ay sa login screen ulit magsisimula.
+  useEffect(() => () => {
+    try { sessionStorage.removeItem(AUTH_FLOW_KEY); } catch { /* ignore */ }
+  }, []);
 
   const passwordValid = passwordRules.every(r => r.test(signupPassword));
 
@@ -321,6 +363,14 @@ function StudentLogin() {
   };
 
   const handleResendOtp = async () => {
+    // Hindi sine-save sa storage ang password, kaya pagkatapos ng refresh wala na
+    // ito sa memory at hindi makakapag-request ng bagong code. Ibalik sa signup
+    // (nakapuno pa ang name at email) para ma-re-enter lang ang password.
+    if (!signupPassword) {
+      setScreen('signup');
+      setError("For your security, we don't keep passwords after a refresh. Re-enter your password to get a new code.");
+      return;
+    }
     setError('');
     setLoading(true);
     try {
