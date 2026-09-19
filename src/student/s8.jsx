@@ -1,6 +1,6 @@
 // s8.jsx — Application of Computers in Different Fields
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import businessImg   from '../assets/business.jpg';
@@ -24,22 +24,67 @@ const LESSON_TOTALS = {
   applications: 6, // 6 flipcards: business, banking, education, marketing, military, healthcare
 };
 
+// ── Resume support ──
+// Naka-save sa sessionStorage (per-tab) para kapag napindot ang Back at bumalik
+// sa module na ito, naka-scroll pa rin sa dating posisyon, nasa dating lesson,
+// at buo pa rin ang viewed/open state.
+// sessionStorage ang gamit (hindi localStorage) para hindi dumikit sa ibang
+// student na gagamit ng parehong computer.
+const ALL_SECTIONS = ['applications'];
+const STORE_PREFIX = 'itfun:m8:';
+const RESUME_KEY = STORE_PREFIX + 'resume';
+
+const readResume = () => {
+  try { return JSON.parse(sessionStorage.getItem(RESUME_KEY)) || null; } catch { return null; }
+};
+const writeResume = (data) => {
+  try { sessionStorage.setItem(RESUME_KEY, JSON.stringify(data)); } catch { /* storage unavailable */ }
+};
+
+// useState na naka-mirror sa sessionStorage (viewed marks, open accordions)
+function usePersistedState(key, initial) {
+  const storageKey = STORE_PREFIX + key;
+  const [value, setValue] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw !== null) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return typeof initial === 'function' ? initial() : initial;
+  });
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return; }
+    try { sessionStorage.setItem(storageKey, JSON.stringify(value)); } catch { /* ignore */ }
+  }, [storageKey, value]);
+  return [value, setValue];
+}
+
+// ── StatusBadge — same indicator, pinned to the upper-right of a tracked image ──
+function StatusBadge({ done }) {
+  return (
+    <span className={`chap-status chap-status-badge ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
+
 /* ────────────────────────────────────────────
    Flip Card — image front, text back
-   Calls onFirstFlip(id) once on first flip
+   Calls onFirstFlip(id) tuwing bubuksan ang card (ang tracker na ang bahala
+   sa duplicate); persisted sa sessionStorage ang viewed mark
 ─────────────────────────────────────────────*/
 function FlipCard({ id, frontImage, frontLabel, backText, backIcon = '💡', frontIcon = '🖥️', onFirstFlip }) {
   const [flipped, setFlipped] = useState(false);
-  const [counted, setCounted] = useState(false);
+  const [seen, setSeen] = usePersistedState(`seen:${id}`, false);
 
-  const handleClick = () => {
-    const next = !flipped;
-    setFlipped(next);
-    if (next && !counted) {
-      setCounted(true);
-      onFirstFlip?.(id);
+  const handleClick = useCallback(() => {
+    if (!flipped && onFirstFlip && id) {
+      onFirstFlip(id);
     }
-  };
+    setSeen(true);
+    setFlipped(f => !f);
+  }, [flipped, onFirstFlip, id]);
 
   // Zoom reveal (fx-zoom): ang photo ay lumalaki at nagba-blur palabas
   // habang ang description ay pumapasok nang bahagyang naka-scale.
@@ -48,6 +93,7 @@ function FlipCard({ id, frontImage, frontLabel, backText, backIcon = '💡', fro
       className={`fx-card fx-zoom ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
+      <StatusBadge done={seen} />
       <div className="fx-face fx-front">
         {frontImage
           ? <img src={frontImage} alt={frontLabel} />
@@ -102,10 +148,19 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function Chapter8() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useModuleSection(
-    'applications',
-    ['applications']
-  );
+
+  // ── Resume: scroll position + lesson (kinuha bago pa mag-render ang kahit ano) ──
+  const [searchParams] = useSearchParams();
+  const resumeRef = useRef(null);
+  if (resumeRef.current === null) {
+    resumeRef.current = { data: readResume(), deepLink: searchParams.has('section') };
+  }
+  const resumeData = resumeRef.current.data;
+  const startSection = resumeData && ALL_SECTIONS.includes(resumeData.section) ? resumeData.section : ALL_SECTIONS[0];
+
+  const [activeSection, setActiveSection] = useModuleSection(startSection, ALL_SECTIONS);
+  const sectionRef = useRef(activeSection);
+  sectionRef.current = activeSection;
 
   /* ── Progress tracking hook ── */
   const applicationsTracker = useProgressTracker(
@@ -138,6 +193,68 @@ function Chapter8() {
       document.body.style.width = '';
       const rootReset = document.getElementById('root');
       if (rootReset) { rootReset.style.position = ''; rootReset.style.display = ''; }
+    };
+  }, []);
+
+  // Nagsi-save ng {section, y}. Kapag lumipat ng lesson, i-save agad kahit hindi pa nag-scroll.
+  // (Ihahambing sa huling na-save na section para hindi ma-overwrite ang y pagpasok.)
+  const yRef = useRef(0);
+  const savedSectionRef = useRef(
+    resumeData && ALL_SECTIONS.includes(resumeData.section) ? resumeData.section : null
+  );
+  useEffect(() => {
+    if (savedSectionRef.current === activeSection) return;
+    savedSectionRef.current = activeSection;
+    writeResume({ section: activeSection, y: window.scrollY });
+  }, [activeSection]);
+
+  // Safety net: kung hindi pala ginagamit ng useModuleSection ang default value
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (!deepLink && data && ALL_SECTIONS.includes(data.section) && data.section !== sectionRef.current) {
+      setActiveSection(data.section);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // I-save ang scroll position habang nagba-browse
+  useEffect(() => {
+    let raf = 0;
+    const flush = () => { raf = 0; writeResume({ section: sectionRef.current, y: yRef.current }); };
+    const onScroll = () => {
+      yRef.current = window.scrollY;
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) { cancelAnimationFrame(raf); flush(); }
+    };
+  }, []);
+
+  // Ibalik ang scroll position pagpasok. May ilang retry dahil lumalaki pa ang
+  // page habang naglo-load ang mga image; titigil agad kapag ang student na mismo ang nag-scroll.
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (deepLink || !data || !(data.y > 40)) return undefined;
+    const target = data.y;
+    let cancelled = false;
+    const stop = () => { cancelled = true; };
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'];
+    events.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+    let elapsed = 0;
+    const id = setInterval(() => {
+      elapsed += 100;
+      if (cancelled || elapsed > 2500) { clearInterval(id); return; }
+      if (sectionRef.current !== data.section) return;
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxY >= target - 2 && Math.abs(window.scrollY - target) > 2) {
+        window.scrollTo({ top: target, behavior: 'instant' });
+      }
+    }, 100);
+    return () => {
+      clearInterval(id);
+      events.forEach((e) => window.removeEventListener(e, stop));
     };
   }, []);
 

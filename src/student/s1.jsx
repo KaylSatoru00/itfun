@@ -1,7 +1,7 @@
 // s1.jsx — Introduction to Computers and History of Computers
 // ── Progress tracking integrated ──
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import pic1 from '../assets/pic1.jpg';
 import pic2 from '../assets/pic2.jpg';
@@ -46,6 +46,40 @@ const LESSON_TOTALS = {
   history: 17,
 };
 
+// ── Resume support ──
+// Naka-save sa sessionStorage (per-tab) para kapag napindot ang Back at bumalik
+// sa module na ito, nasa dating lesson + scroll position + viewed/open state pa rin.
+// sessionStorage ang gamit (hindi localStorage) para hindi dumikit sa ibang
+// student na gagamit ng parehong computer.
+const ALL_SECTIONS = ['introduction', 'functionalities', 'history'];
+const STORE_PREFIX = 'itfun:m1:';
+const RESUME_KEY = STORE_PREFIX + 'resume';
+
+const readResume = () => {
+  try { return JSON.parse(sessionStorage.getItem(RESUME_KEY)) || null; } catch { return null; }
+};
+const writeResume = (data) => {
+  try { sessionStorage.setItem(RESUME_KEY, JSON.stringify(data)); } catch { /* storage unavailable */ }
+};
+
+// useState na naka-mirror sa sessionStorage (viewed marks, open accordions)
+function usePersistedState(key, initial) {
+  const storageKey = STORE_PREFIX + key;
+  const [value, setValue] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw !== null) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return typeof initial === 'function' ? initial() : initial;
+  });
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return; }
+    try { sessionStorage.setItem(storageKey, JSON.stringify(value)); } catch { /* ignore */ }
+  }, [storageKey, value]);
+  return [value, setValue];
+}
+
 function CircleProgress({ percent = 0, active = false }) {
   const radius = 18;
   const stroke = 3;
@@ -61,18 +95,30 @@ function CircleProgress({ percent = 0, active = false }) {
   );
 }
 
+// ── StatusBadge — same viewed indicator, pinned to the upper-right of a tracked image ──
+function StatusBadge({ done }) {
+  return (
+    <span className={`chap-status chap-status-badge ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
 // ── Tracked FlipCard — crossfade dissolve (fx-fade) ──
 function FlipCard({ image, text, title, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
+  const [seen, setSeen] = usePersistedState(`seen:${itemId}`, false);
   useEffect(() => { setFlipped(false); }, [title]);
 
   const handleClick = () => {
     if (!flipped && onInteract) onInteract(itemId);
+    setSeen(true);
     setFlipped(f => !f);
   };
 
   return (
     <div className={`fx-card fx-fade ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <StatusBadge done={seen} />
       <div className="fx-face fx-front">
         {image ? <img src={image} alt={title} /> : (
           <div className="fx-placeholder">
@@ -91,17 +137,31 @@ function FlipCard({ image, text, title, itemId, onInteract }) {
   );
 }
 
+// ── StatusBox — viewed indicator (empty box = not opened yet, ✓ = opened) ──
+function StatusBox({ done }) {
+  return (
+    <span className={`chap-status ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
 // ── Tracked AccordionItem ──
 function AccordionItem({ title, description, itemId, onInteract }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = usePersistedState(`acc-open:${itemId}`, false);
+  const [visited, setVisited] = usePersistedState(`acc-seen:${itemId}`, false);
   const handleToggle = () => {
     if (!isOpen && onInteract) onInteract(itemId);
+    setVisited(true);
     setIsOpen(o => !o);
   };
   return (
-    <div className="chap-accordion-item">
-      <button className={`chap-accordion-header ${isOpen ? 'open' : ''}`} onClick={handleToggle}>
-        <span>{title}</span>
+    <div className={`chap-accordion-item ${visited ? '' : 'unvisited'}`}>
+      <button className={`chap-accordion-header ${isOpen ? 'open' : ''}`} onClick={handleToggle} aria-expanded={isOpen}>
+        <span className="chap-accordion-title">
+          <StatusBox done={visited} />
+          <span>{title}</span>
+        </span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>
       </button>
       <AnimatePresence initial={false}>
@@ -132,8 +192,10 @@ function AccordionItem({ title, description, itemId, onInteract }) {
 // progress tracking (same itemId gaya ng dating PersonFlipCard flip).
 function InventorStage({ image, name, description, wide = false, itemId, onInteract }) {
   const [revealed, setRevealed] = useState(false);
+  const [seen, setSeen] = usePersistedState(`seen:${itemId}`, false);
   const handleToggle = () => {
     if (!revealed && onInteract) onInteract(itemId);
+    setSeen(true);
     setRevealed(r => !r);
   };
   return (
@@ -156,6 +218,7 @@ function InventorStage({ image, name, description, wide = false, itemId, onInter
           <span>{revealed ? 'Tap to close' : `Meet ${name.split(' ')[0]}`}</span>
           <span>{revealed ? '✕' : '↪'}</span>
         </div>
+        <StatusBadge done={seen} />
       </motion.div>
 
       <AnimatePresence mode="popLayout">
@@ -180,8 +243,11 @@ function InventorStage({ image, name, description, wide = false, itemId, onInter
 
 // ── HistoryPersonBlock — passes tracking down ──
 function HistoryPersonBlock({ name, label, image, description, inventions, wide = false, personItemId, inventionBaseId, onInteract }) {
-  const [openInv, setOpenInv] = useState(() => new Set());
-  const toggleInv = (i) => setOpenInv(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; });
+  const [openArr, setOpenArr] = usePersistedState(`inv-open:${inventionBaseId}`, []);
+  const [seenArr, setSeenArr] = usePersistedState(`inv-seen:${inventionBaseId}`, []);
+  const openInv = new Set(openArr);
+  const seenInv = new Set(seenArr);
+  const toggleInv = (i) => setOpenArr(prev => (prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]));
   return (
     <>
       <div className="chap-history-divider" />
@@ -197,15 +263,20 @@ function HistoryPersonBlock({ name, label, image, description, inventions, wide 
         <p className="chap-pascal-invention-label">{inventions.length > 1 ? 'Inventions' : 'Invention'}</p>
         <div className="chap-accordion">
           {inventions.map((item, i) => (
-            <div key={i} className="chap-accordion-item">
+            <div key={i} className={`chap-accordion-item ${seenInv.has(i) ? '' : 'unvisited'}`}>
               <button
                 className={`chap-accordion-header ${openInv.has(i) ? 'open' : ''}`}
+                aria-expanded={openInv.has(i)}
                 onClick={() => {
                   if (!openInv.has(i) && onInteract) onInteract(`${inventionBaseId}_${i}`);
+                  setSeenArr(prev => (prev.includes(i) ? prev : [...prev, i]));
                   toggleInv(i);
                 }}
               >
-                <span>{item.title}</span>
+                <span className="chap-accordion-title">
+                  <StatusBox done={seenInv.has(i)} />
+                  <span>{item.title}</span>
+                </span>
                 <span className="chap-accordion-chevron">{openInv.has(i) ? '∧' : '∨'}</span>
               </button>
               <AnimatePresence initial={false}>
@@ -239,10 +310,19 @@ function Chapter1() {
   const navigate = useNavigate();
 
   // ── Section from URL ?section= param (search bar navigation) ──
-  const [activeSection, setActiveSection] = useModuleSection(
-    'introduction',
-    ['introduction', 'functionalities', 'history']
-  );
+  // ── Resume: huling lesson + scroll position (kinuha bago pa mag-render ang kahit ano) ──
+  const [searchParams] = useSearchParams();
+  const resumeRef = useRef(null);
+  if (resumeRef.current === null) {
+    resumeRef.current = { data: readResume(), deepLink: searchParams.has('section') };
+  }
+  const resumeData = resumeRef.current.data;
+  const startSection = resumeData && ALL_SECTIONS.includes(resumeData.section) ? resumeData.section : 'introduction';
+
+  // Kapag may ?section= (galing sa search bar), yun ang masusunod, hindi ang resume.
+  const [activeSection, setActiveSection] = useModuleSection(startSection, ALL_SECTIONS);
+  const sectionRef = useRef(activeSection);
+  sectionRef.current = activeSection;
   const [openIndex, setOpenIndex] = useState(null);
   const [advOpenIndex, setAdvOpenIndex] = useState(null);
   const [pascalOpenIndex, setPascalOpenIndex] = useState(null);
@@ -295,6 +375,63 @@ function Chapter1() {
         root.style.position = '';
         root.style.display = '';
       }
+    };
+  }, []);
+
+  // Safety net: kung hindi pala ginagamit ng useModuleSection ang default value
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (!deepLink && data && ALL_SECTIONS.includes(data.section) && data.section !== sectionRef.current) {
+      setActiveSection(data.section);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // I-save ang lesson at scroll position habang nagba-browse
+  const yRef = useRef(0);
+  const sectionSaved = useRef(false);
+  useEffect(() => {
+    if (!sectionSaved.current) { sectionSaved.current = true; return; }
+    writeResume({ section: activeSection, y: window.scrollY });
+  }, [activeSection]);
+
+  useEffect(() => {
+    let raf = 0;
+    const flush = () => { raf = 0; writeResume({ section: sectionRef.current, y: yRef.current }); };
+    const onScroll = () => {
+      yRef.current = window.scrollY;
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) { cancelAnimationFrame(raf); flush(); }
+    };
+  }, []);
+
+  // Ibalik ang scroll position pagpasok. May ilang retry dahil lumalaki pa ang
+  // page habang naglo-load ang mga image; titigil agad kapag ang student na mismo ang nag-scroll.
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (deepLink || !data || !(data.y > 40)) return undefined;
+    const target = data.y;
+    let cancelled = false;
+    const stop = () => { cancelled = true; };
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'];
+    events.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+    let elapsed = 0;
+    const id = setInterval(() => {
+      elapsed += 100;
+      if (cancelled || elapsed > 2500) { clearInterval(id); return; }
+      if (sectionRef.current !== data.section) return;
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxY >= target - 2 && Math.abs(window.scrollY - target) > 2) {
+        window.scrollTo({ top: target, behavior: 'instant' });
+      }
+    }, 100);
+    return () => {
+      clearInterval(id);
+      events.forEach((e) => window.removeEventListener(e, stop));
     };
   }, []);
 

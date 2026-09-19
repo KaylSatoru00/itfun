@@ -1,7 +1,7 @@
 // s3.jsx — Decimal & Binary Number System
 // ── Progress tracking integrated ──
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import numberImg from '../assets/number.jpg';
 import numbersystemImg from '../assets/numbersystem.webp';
@@ -21,16 +21,73 @@ import './s3.css';
 // conversions  : 3 FlipCardImageBacks = 3
 const LESSON_TOTALS = { numbersystem: 5, conversions: 3 };
 
+// ── Resume support ──
+// Naka-save sa sessionStorage (per-tab) para kapag napindot ang Back at bumalik
+// sa module na ito, nasa dating lesson + scroll position + viewed/open state pa rin.
+// sessionStorage ang gamit (hindi localStorage) para hindi dumikit sa ibang
+// student na gagamit ng parehong computer.
+const ALL_SECTIONS = ['numbersystem', 'conversions', 'converter'];
+const STORE_PREFIX = 'itfun:m3:';
+const RESUME_KEY = STORE_PREFIX + 'resume';
+
+const readResume = () => {
+  try { return JSON.parse(sessionStorage.getItem(RESUME_KEY)) || null; } catch { return null; }
+};
+const writeResume = (data) => {
+  try { sessionStorage.setItem(RESUME_KEY, JSON.stringify(data)); } catch { /* storage unavailable */ }
+};
+
+// useState na naka-mirror sa sessionStorage (viewed marks, open accordions)
+function usePersistedState(key, initial) {
+  const storageKey = STORE_PREFIX + key;
+  const [value, setValue] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw !== null) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return typeof initial === 'function' ? initial() : initial;
+  });
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return; }
+    try { sessionStorage.setItem(storageKey, JSON.stringify(value)); } catch { /* ignore */ }
+  }, [storageKey, value]);
+  return [value, setValue];
+}
+
+// ── StatusBox — viewed indicator (empty box = not opened yet, ✓ = opened) ──
+function StatusBox({ done }) {
+  return (
+    <span className={`chap-status ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
+// ── StatusBadge — same indicator, pinned to the upper-right of a tracked image ──
+function StatusBadge({ done }) {
+  return (
+    <span className={`chap-status chap-status-badge ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
 function AccordionItem({ title, description, itemId, onInteract }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = usePersistedState(`acc-open:${itemId}`, false);
+  const [visited, setVisited] = usePersistedState(`acc-seen:${itemId}`, false);
   const handleToggle = () => {
     if (!isOpen && onInteract) onInteract(itemId);
+    setVisited(true);
     setIsOpen(o => !o);
   };
   return (
-    <div className="chap-accordion-item">
-      <button className={`chap-accordion-header ${isOpen ? 'open' : ''}`} onClick={handleToggle}>
-        <span>{title}</span>
+    <div className={`chap-accordion-item ${visited ? '' : 'unvisited'}`}>
+      <button className={`chap-accordion-header ${isOpen ? 'open' : ''}`} onClick={handleToggle} aria-expanded={isOpen}>
+        <span className="chap-accordion-title">
+          <StatusBox done={visited} />
+          <span>{title}</span>
+        </span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>
       </button>
       <AnimatePresence initial={false}>
@@ -50,16 +107,19 @@ function AccordionItem({ title, description, itemId, onInteract }) {
 // sa puntong tinapik — fixed ang laki ng card.
 function FlipCard({ frontImage, frontLabel, backText, backIcon = <PiBinary />, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
+  const [seen, setSeen] = usePersistedState(`seen:${itemId}`, false);
   const handleClick = (e) => {
     const el = e.currentTarget;
     const r = el.getBoundingClientRect();
     el.style.setProperty('--cx', `${((e.clientX - r.left) / r.width) * 100}%`);
     el.style.setProperty('--cy', `${((e.clientY - r.top) / r.height) * 100}%`);
     if (!flipped && onInteract) onInteract(itemId);
+    setSeen(true);
     setFlipped(f => !f);
   };
   return (
     <div className={`fx-card fx-wipe ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <StatusBadge done={seen} />
       <div className="fx-face fx-front">
         {frontImage ? <img src={frontImage} alt={frontLabel} /> : (
           <div className="fx-placeholder">
@@ -82,12 +142,15 @@ function FlipCard({ frontImage, frontLabel, backText, backIcon = <PiBinary />, i
 // makita nang malinaw ang worked-example image sa loob ng white panel.
 function FlipCardImageBack({ frontLabel, backImage, backAlt, itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
+  const [seen, setSeen] = usePersistedState(`seen:${itemId}`, false);
   const handleClick = () => {
     if (!flipped && onInteract) onInteract(itemId);
+    setSeen(true);
     setFlipped(f => !f);
   };
   return (
     <div className={`fx-card fx-expand ${flipped ? 'open' : ''}`} onClick={handleClick}>
+      <StatusBadge done={seen} />
       <div className="fx-face fx-front fx-front-label">
         <p>{frontLabel}</p>
         <div className="fx-strip"><span>Tap to see example</span><span>⤢</span></div>
@@ -283,17 +346,26 @@ function ConverterSolution({ sourceOption, targetOption, input, decimalValue }) 
 
 function Chapter3() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useModuleSection(
-    'numbersystem',
-    ['numbersystem', 'conversions', 'converter']
-  );
+  // ── Resume: huling lesson + scroll position (kinuha bago pa mag-render ang kahit ano) ──
+  const [searchParams] = useSearchParams();
+  const resumeRef = useRef(null);
+  if (resumeRef.current === null) {
+    resumeRef.current = { data: readResume(), deepLink: searchParams.has('section') };
+  }
+  const resumeData = resumeRef.current.data;
+  const startSection = resumeData && ALL_SECTIONS.includes(resumeData.section) ? resumeData.section : ALL_SECTIONS[0];
+
+  // Kapag may ?section= (galing sa search bar), yun ang masusunod, hindi ang resume.
+  const [activeSection, setActiveSection] = useModuleSection(startSection, ALL_SECTIONS);
+  const sectionRef = useRef(activeSection);
+  sectionRef.current = activeSection;
   const [nsOpenIndex, setNsOpenIndex] = useState(null);
 
   // ── Convert Tool state ──
-  const [convBase, setConvBase] = useState('binary');
-  const [convInput, setConvInput] = useState('');
+  const [convBase, setConvBase] = usePersistedState('conv-base', 'binary');
+  const [convInput, setConvInput] = usePersistedState('conv-input', '');
   // Which conversion results have their step-by-step solution expanded.
-  const [openSol, setOpenSol] = useState({});
+  const [openSol, setOpenSol] = usePersistedState('conv-sol', {});
 
   const nsT   = useProgressTracker('module3', 'lesson1', LESSON_TOTALS.numbersystem);
   const convT = useProgressTracker('module3', 'lesson2', LESSON_TOTALS.conversions);
@@ -321,7 +393,64 @@ function Chapter3() {
     };
   }, []);
 
-  const currentBaseOption = BASE_OPTIONS.find(b => b.key === convBase);
+  // Safety net: kung hindi pala ginagamit ng useModuleSection ang default value
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (!deepLink && data && ALL_SECTIONS.includes(data.section) && data.section !== sectionRef.current) {
+      setActiveSection(data.section);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // I-save ang lesson at scroll position habang nagba-browse
+  const yRef = useRef(0);
+  const sectionSaved = useRef(false);
+  useEffect(() => {
+    if (!sectionSaved.current) { sectionSaved.current = true; return; }
+    writeResume({ section: activeSection, y: window.scrollY });
+  }, [activeSection]);
+
+  useEffect(() => {
+    let raf = 0;
+    const flush = () => { raf = 0; writeResume({ section: sectionRef.current, y: yRef.current }); };
+    const onScroll = () => {
+      yRef.current = window.scrollY;
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) { cancelAnimationFrame(raf); flush(); }
+    };
+  }, []);
+
+  // Ibalik ang scroll position pagpasok. May ilang retry dahil lumalaki pa ang
+  // page habang naglo-load ang mga image; titigil agad kapag ang student na mismo ang nag-scroll.
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (deepLink || !data || !(data.y > 40)) return undefined;
+    const target = data.y;
+    let cancelled = false;
+    const stop = () => { cancelled = true; };
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'];
+    events.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+    let elapsed = 0;
+    const id = setInterval(() => {
+      elapsed += 100;
+      if (cancelled || elapsed > 2500) { clearInterval(id); return; }
+      if (sectionRef.current !== data.section) return;
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxY >= target - 2 && Math.abs(window.scrollY - target) > 2) {
+        window.scrollTo({ top: target, behavior: 'instant' });
+      }
+    }, 100);
+    return () => {
+      clearInterval(id);
+      events.forEach((e) => window.removeEventListener(e, stop));
+    };
+  }, []);
+
+  const currentBaseOption = BASE_OPTIONS.find(b => b.key === convBase) || BASE_OPTIONS[0];
   const targetBaseOptions = BASE_OPTIONS.filter(b => b.key !== convBase);
 
   const handleBaseChange = (key) => {

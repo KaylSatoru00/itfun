@@ -1,6 +1,6 @@
 // s7.jsx — Microsoft Office Applications (UPDATED Word Interface Section)
-import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgressTracker } from '../hooks/useProgressTracker';
 import { useModuleSection } from '../hooks/useModuleSection';
@@ -28,7 +28,7 @@ import './s7.css';
 /* ─────────────────────────────────────────────
    Module / Lesson config for Chapter 7
    intro:       3 items (2 flipcards + 1 accordion)
-   apps:        4 items (1 ppt accordion + 1 ppt image + 1 word section + 1 excel accordion)
+   apps:        16 items (1 ppt accordion + 8 word interface cards + 7 excel accordions)
 ──────────────────────────────────────────────*/
 const MODULE_ID = 'module7';
 const LESSON_TOTALS = {
@@ -36,30 +36,86 @@ const LESSON_TOTALS = {
   apps: 16,       // 1 ppt accordion + 8 word interface cards + 7 excel feature dropdowns
 };
 
+// ── Resume support ──
+// Naka-save sa sessionStorage (per-tab) para kapag napindot ang Back at bumalik
+// sa module na ito, naka-scroll pa rin sa dating posisyon, nasa dating lesson,
+// at buo pa rin ang viewed/open state.
+// sessionStorage ang gamit (hindi localStorage) para hindi dumikit sa ibang
+// student na gagamit ng parehong computer.
+const ALL_SECTIONS = ['intro', 'apps'];
+const STORE_PREFIX = 'itfun:m7:';
+const RESUME_KEY = STORE_PREFIX + 'resume';
+
+const readResume = () => {
+  try { return JSON.parse(sessionStorage.getItem(RESUME_KEY)) || null; } catch { return null; }
+};
+const writeResume = (data) => {
+  try { sessionStorage.setItem(RESUME_KEY, JSON.stringify(data)); } catch { /* storage unavailable */ }
+};
+
+// useState na naka-mirror sa sessionStorage (viewed marks, open accordions)
+function usePersistedState(key, initial) {
+  const storageKey = STORE_PREFIX + key;
+  const [value, setValue] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      if (raw !== null) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return typeof initial === 'function' ? initial() : initial;
+  });
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return; }
+    try { sessionStorage.setItem(storageKey, JSON.stringify(value)); } catch { /* ignore */ }
+  }, [storageKey, value]);
+  return [value, setValue];
+}
+
+// ── StatusBox — viewed indicator (empty box = not opened yet, ✓ = opened) ──
+function StatusBox({ done }) {
+  return (
+    <span className={`chap-status ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
+// ── StatusBadge — same indicator, pinned to the upper-right of a tracked image ──
+function StatusBadge({ done }) {
+  return (
+    <span className={`chap-status chap-status-badge ${done ? 'done' : ''}`} role="img" aria-label={done ? 'Viewed' : 'Not yet viewed'}>
+      {done ? '✓' : ''}
+    </span>
+  );
+}
+
+
 /* ────────────────────────────────────────────
    Accordion — calls trackInteraction(id) once on first open
 ─────────────────────────────────────────────*/
 function AccordionItem({ title, children, itemId, onInteract }) {
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = usePersistedState(`acc-open:${itemId}`, false);
+  const [visited, setVisited] = usePersistedState(`acc-seen:${itemId}`, false);
 
   const handleToggle = useCallback(() => {
-    if (!isOpen && !hasInteracted) {
-      setHasInteracted(true);
-      if (onInteract) {
-        onInteract(itemId);
-      }
+    if (!isOpen && onInteract) {
+      onInteract(itemId);
     }
+    setVisited(true);
     setIsOpen(o => !o);
-  }, [isOpen, hasInteracted, onInteract, itemId]);
+  }, [isOpen, onInteract, itemId]);
 
   return (
-    <div className="chap-accordion-item">
+    <div className={`chap-accordion-item ${visited ? '' : 'unvisited'}`}>
       <button
         className={`chap-accordion-header ${isOpen ? 'open' : ''}`}
         onClick={handleToggle}
+        aria-expanded={isOpen}
       >
-        <span>{title}</span>
+        <span className="chap-accordion-title">
+          <StatusBox done={visited} />
+          <span>{title}</span>
+        </span>
         <span className="chap-accordion-chevron">{isOpen ? '∧' : '∨'}</span>
       </button>
       <AnimatePresence initial={false}>
@@ -89,25 +145,22 @@ function AccordionItem({ title, children, itemId, onInteract }) {
 // nagre-render bilang staggered list; fallback ang `backText` paragraph.
 function FlipCard({ frontImage, frontLabel, backTitle, backItems, backText, backIcon = '💡', itemId, onInteract }) {
   const [flipped, setFlipped] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [seen, setSeen] = usePersistedState(`seen:${itemId}`, false);
 
   const handleClick = useCallback(() => {
-    const nextFlipped = !flipped;
-    setFlipped(nextFlipped);
-
-    if (nextFlipped && !hasInteracted) {
-      setHasInteracted(true);
-      if (onInteract) {
-        onInteract(itemId);
-      }
+    if (!flipped && onInteract && itemId) {
+      onInteract(itemId);
     }
-  }, [flipped, hasInteracted, onInteract, itemId]);
+    setSeen(true);
+    setFlipped(f => !f);
+  }, [flipped, onInteract, itemId]);
 
   return (
     <div
       className={`fx-card fx-stagger ${flipped ? 'open' : ''}`}
       onClick={handleClick}
     >
+      <StatusBadge done={seen} />
       <div className="fx-face fx-front">
         {frontImage
           ? <img src={frontImage} alt={frontLabel} />
@@ -137,6 +190,36 @@ function FlipCard({ frontImage, frontLabel, backTitle, backItems, backText, back
         )}
         <span className="fx-hint">Tap to go back</span>
       </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
+   Word interface card — tap para markitang viewed.
+   StatusBadge (upper-right) ang pumalit sa lumang green check.
+   `trackedDone` = galing sa tracker (Firestore), para hindi mawala
+   ang ✓ ng mga card na na-view na noong nakaraang session.
+─────────────────────────────────────────────*/
+function InterfaceCard({ item, itemId, trackedDone, onInteract }) {
+  const [seen, setSeen] = usePersistedState(`seen:${itemId}`, false);
+  const done = seen || trackedDone;
+
+  const handleClick = useCallback(() => {
+    if (!done) {
+      onInteract?.(itemId);
+    }
+    setSeen(true);
+  }, [done, onInteract, itemId]);
+
+  return (
+    <div className="s7-word-card-centered" onClick={handleClick}>
+      <div className="s7-word-card-centered-img-wrap">
+        <img src={item.img} alt={item.name} className="s7-word-card-centered-img" />
+        <StatusBadge done={done} />
+        {!done && <span className="s7-word-card-centered-hint">👆 Tap to check</span>}
+      </div>
+      <h4 className="s7-word-card-centered-name">{item.name}</h4>
+      <p className="s7-word-card-centered-desc">{item.desc}</p>
     </div>
   );
 }
@@ -175,10 +258,19 @@ const navItems = [
 ═════════════════════════════════════════════*/
 function Chapter7() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useModuleSection(
-    'intro',
-    ['intro', 'apps']
-  );
+
+  // ── Resume: scroll position + lesson (kinuha bago pa mag-render ang kahit ano) ──
+  const [searchParams] = useSearchParams();
+  const resumeRef = useRef(null);
+  if (resumeRef.current === null) {
+    resumeRef.current = { data: readResume(), deepLink: searchParams.has('section') };
+  }
+  const resumeData = resumeRef.current.data;
+  const startSection = resumeData && ALL_SECTIONS.includes(resumeData.section) ? resumeData.section : ALL_SECTIONS[0];
+
+  const [activeSection, setActiveSection] = useModuleSection(startSection, ALL_SECTIONS);
+  const sectionRef = useRef(activeSection);
+  sectionRef.current = activeSection;
 
   // ── Use individual trackers per lesson ──
   const introTracker = useProgressTracker(MODULE_ID, 'intro', LESSON_TOTALS.intro);
@@ -262,6 +354,68 @@ function Chapter7() {
     { name: 'Charts', desc: 'Present graphical representation of data in the form of Pie, Bar, Line charts, and more.' },
     { name: 'Shortcut Menus', desc: 'Commands appropriate to the task appear by clicking the right mouse button.' },
   ];
+
+  // Nagsi-save ng {section, y}. Kapag lumipat ng lesson, i-save agad kahit hindi pa nag-scroll.
+  // (Ihahambing sa huling na-save na section para hindi ma-overwrite ang y pagpasok.)
+  const yRef = useRef(0);
+  const savedSectionRef = useRef(
+    resumeData && ALL_SECTIONS.includes(resumeData.section) ? resumeData.section : null
+  );
+  useEffect(() => {
+    if (savedSectionRef.current === activeSection) return;
+    savedSectionRef.current = activeSection;
+    writeResume({ section: activeSection, y: window.scrollY });
+  }, [activeSection]);
+
+  // Safety net: kung hindi pala ginagamit ng useModuleSection ang default value
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (!deepLink && data && ALL_SECTIONS.includes(data.section) && data.section !== sectionRef.current) {
+      setActiveSection(data.section);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // I-save ang scroll position habang nagba-browse
+  useEffect(() => {
+    let raf = 0;
+    const flush = () => { raf = 0; writeResume({ section: sectionRef.current, y: yRef.current }); };
+    const onScroll = () => {
+      yRef.current = window.scrollY;
+      if (!raf) raf = requestAnimationFrame(flush);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) { cancelAnimationFrame(raf); flush(); }
+    };
+  }, []);
+
+  // Ibalik ang scroll position pagpasok. May ilang retry dahil lumalaki pa ang
+  // page habang naglo-load ang mga image; titigil agad kapag ang student na mismo ang nag-scroll.
+  useEffect(() => {
+    const { data, deepLink } = resumeRef.current;
+    if (deepLink || !data || !(data.y > 40)) return undefined;
+    const target = data.y;
+    let cancelled = false;
+    const stop = () => { cancelled = true; };
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'];
+    events.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+    let elapsed = 0;
+    const id = setInterval(() => {
+      elapsed += 100;
+      if (cancelled || elapsed > 2500) { clearInterval(id); return; }
+      if (sectionRef.current !== data.section) return;
+      const maxY = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxY >= target - 2 && Math.abs(window.scrollY - target) > 2) {
+        window.scrollTo({ top: target, behavior: 'instant' });
+      }
+    }, 100);
+    return () => {
+      clearInterval(id);
+      events.forEach((e) => window.removeEventListener(e, stop));
+    };
+  }, []);
 
   return (
     <motion.div
@@ -479,24 +633,14 @@ function Chapter7() {
               <div className="s7-word-interface-grid">
                 {wordInterfaceItems.map((item, index) => {
                   const itemId = `s7-word-${index}`;
-                  const isViewed = appsTracker.completedItems.has(itemId);
                   return (
-                    <div
-                      key={index}
-                      className="s7-word-card-centered"
-                      onClick={() => appsTracker.trackInteraction(itemId)}
-                    >
-                      <div className="s7-word-card-centered-img-wrap">
-                        <img src={item.img} alt={item.name} className="s7-word-card-centered-img" />
-                        {isViewed ? (
-                          <span className="s7-word-card-centered-badge" title="Viewed">✓</span>
-                        ) : (
-                          <span className="s7-word-card-centered-hint">👆 Tap to check</span>
-                        )}
-                      </div>
-                      <h4 className="s7-word-card-centered-name">{item.name}</h4>
-                      <p className="s7-word-card-centered-desc">{item.desc}</p>
-                    </div>
+                    <InterfaceCard
+                      key={itemId}
+                      item={item}
+                      itemId={itemId}
+                      trackedDone={appsTracker.completedItems.has(itemId)}
+                      onInteract={appsTracker.trackInteraction}
+                    />
                   );
                 })}
               </div>

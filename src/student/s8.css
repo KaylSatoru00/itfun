@@ -389,3 +389,89 @@
     height: auto !important;
   }
 }
+
+/* ── Viewed status (empty box = not opened yet, filled ✓ = opened) ── */
+.chap-accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chap-status {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #A50034;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.chap-status.done {
+  background: #A50034;
+  animation: chap-status-pop 0.3s ease;
+}
+
+/* on the crimson open header, invert so the box stays visible */
+.chap-accordion-header.open .chap-status {
+  border-color: #fff;
+}
+
+.chap-accordion-header.open .chap-status.done {
+  background: #fff;
+  color: #A50034;
+}
+
+/* thin crimson bar on items not opened yet (overlay, so no layout shift) */
+.chap-accordion-item.unvisited {
+  position: relative;
+}
+
+.chap-accordion-item.unvisited::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #A50034;
+  z-index: 1;
+}
+
+/* ── Same indicator pinned to the upper-right of tracked images
+   (flip cards). White fill so it reads on any photo. ── */
+.chap-status.chap-status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.chap-status.chap-status-badge.done {
+  background: #A50034;
+  border-color: #fff;
+}
+
+@keyframes chap-status-pop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chap-status.done { animation: none; }
+}
