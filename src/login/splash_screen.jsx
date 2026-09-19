@@ -21,7 +21,7 @@ const CRIMSON_DEEP = '#a50034';
 const PINK = '#ff2929';
 const BG = '#0d0d10';
 
-const AVATAR_SIZE = 'min(58vw, 200px)'; // diameter ng puting bilog
+const AVATAR_SIZE = 'min(30vw, 200px)'; // diameter ng puting bilog
 const LOGO_INSET = '1%'; // espasyo sa pagitan ng gilid ng bilog at ng logo
 
 const FILL_DELAY = 0.6;
