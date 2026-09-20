@@ -30,7 +30,15 @@ const app = express();
 // (trimmed + trailing slash stripped) so an env-var quirk like a trailing
 // slash can't silently break CORS.
 const normalizeOrigin = (o) => String(o || '').trim().replace(/\/+$/, '');
+
+// Base URL of the production frontend. Used for links inside emails (e.g. the
+// password-reset link) so they always point to wherever the frontend lives.
+// Reads CLIENT_URL from the environment; falls back to the production domain.
+const CLIENT_BASE_URL = normalizeOrigin(process.env.CLIENT_URL) || 'https://itfun.site';
+
 const allowedOrigins = [
+  'https://itfun.site',
+  'https://www.itfun.site',
   'https://itfun.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
@@ -185,7 +193,7 @@ app.post('/api/forgot-password', async (req, res) => {
     // uses the Firebase client SDK's verifyPasswordResetCode/confirmPasswordReset
     // functions with that code.
     const actionCodeSettings = {
-      url: 'https://itfun.vercel.app/reset-password',
+      url: `${CLIENT_BASE_URL}/reset-password`,
     };
 
     let resetLink;
@@ -196,7 +204,7 @@ app.post('/api/forgot-password', async (req, res) => {
       //   https://<project>.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=XXXX&apiKey=...&continueUrl=...
       // We only need the oobCode — pull it out and build our own link.
       const oobCode = new URL(firebaseHostedLink).searchParams.get('oobCode');
-      resetLink = `https://itfun.vercel.app/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
+      resetLink = `${CLIENT_BASE_URL}/reset-password?oobCode=${encodeURIComponent(oobCode)}`;
     } catch (err) {
       // Don't reveal whether the email exists — respond with success
       // regardless, but only actually send an email if the account exists.
