@@ -1,0 +1,22 @@
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteBase /
+     RewriteRule ^index\.html$ - [L]
+     RewriteCond %{REQUEST_FILENAME} !-f
+     RewriteCond %{REQUEST_FILENAME} !-d
+     RewriteRule . /index.html [L]
+   </IfModule>
+
+   # Unity WebGL builds (Brotli-compressed)
+<Files "*.js.br">
+  AddType text/javascript .br
+  AddEncoding br .br
+</Files>
+<Files "*.data.br">
+  AddType application/octet-stream .br
+  AddEncoding br .br
+</Files>
+<Files "*.wasm.br">
+  AddType application/wasm .br
+  AddEncoding br .br
+</Files>

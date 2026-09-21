@@ -8,6 +8,7 @@ import { UserProvider } from './user_context'
 import { SocketProvider } from './socket_context'
 import ProtectedRoute from './ProtectedRoute.jsx'
 import RedirectIfAuthed from './RedirectIfAuthed.jsx'
+import ProtectedModuleRoute from './ProtectedModuleRoute.jsx'
 
 // Login
 import Login from './login/login.jsx'
@@ -87,15 +88,15 @@ function AnimatedRoutes() {
         <Route path="/waiting-lobby" element={<WaitingLobby />} />
         <Route path="/waiting-lobby-join" element={<WaitingLobbyJoin />} />
         <Route path="/quiz-arena" element={<QuizArena />} />
-        <Route path="/student-chapter-1" element={<Chapter1 />} />
-        <Route path="/student-chapter-2" element={<Chapter2 />} />
-        <Route path="/student-chapter-3" element={<Chapter3 />} />
-        <Route path="/student-chapter-4" element={<Chapter4 />} />
-        <Route path="/student-chapter-5" element={<Chapter5 />} />
-        <Route path="/student-chapter-6" element={<Chapter6 />} />
-        <Route path="/student-chapter-7" element={<Chapter7 />} />
-        <Route path="/student-chapter-8" element={<Chapter8 />} />
-        <Route path="/student-chapter-9" element={<Chapter9 />} />
+        <Route path="/student-chapter-1" element={<ProtectedModuleRoute moduleNum={1}><Chapter1 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-2" element={<ProtectedModuleRoute moduleNum={2}><Chapter2 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-3" element={<ProtectedModuleRoute moduleNum={3}><Chapter3 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-4" element={<ProtectedModuleRoute moduleNum={4}><Chapter4 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-5" element={<ProtectedModuleRoute moduleNum={5}><Chapter5 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-6" element={<ProtectedModuleRoute moduleNum={6}><Chapter6 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-7" element={<ProtectedModuleRoute moduleNum={7}><Chapter7 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-8" element={<ProtectedModuleRoute moduleNum={8}><Chapter8 /></ProtectedModuleRoute>} />
+        <Route path="/student-chapter-9" element={<ProtectedModuleRoute moduleNum={9}><Chapter9 /></ProtectedModuleRoute>} />
         <Route path="/faculty-chapter-1" element={<FacultyChapter1 />} />
         <Route path="/faculty-chapter-2" element={<FacultyChapter2 />} />
         <Route path="/faculty-chapter-3" element={<FacultyChapter3 />} />
