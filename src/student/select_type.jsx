@@ -120,6 +120,7 @@ function QuizLoader() {
             />
           )}
         </div>
+        <div className="ql-disclaimer">AI can make mistakes.</div>
       </motion.div>
     </motion.div>
   );

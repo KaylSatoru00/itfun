@@ -491,6 +491,14 @@
   width: 100%;
   background: linear-gradient(90deg, #C8102E, #A50034);
 }
+.st-body .ql-disclaimer {
+  margin-top: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #b89297;
+  text-align: center;
+}
 
 @media (max-width: 640px) {
   .st-body .ql-card { padding: 30px 30px 26px; }
@@ -498,4 +506,5 @@
   .st-body .ql-qc { width: 104px; height: 104px; margin-left: -52px; }
   .st-body .ql-icon { width: 60px; height: 60px; }
   .st-body .ql-bar { width: 220px; }
+  .st-body .ql-disclaimer { font-size: 0.68rem; }
 }
