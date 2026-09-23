@@ -9,6 +9,7 @@ import { SocketProvider } from './socket_context'
 import ProtectedRoute from './ProtectedRoute.jsx'
 import RedirectIfAuthed from './RedirectIfAuthed.jsx'
 import ProtectedModuleRoute from './ProtectedModuleRoute.jsx'
+import ProtectedGamifiedRoute from './ProtectedGamifiedRoute.jsx'
 
 // Login
 import Login from './login/login.jsx'
@@ -106,14 +107,14 @@ function AnimatedRoutes() {
         <Route path="/faculty-chapter-7" element={<FacultyChapter7 />} />
         <Route path="/faculty-chapter-8" element={<FacultyChapter8 />} />
         <Route path="/faculty-chapter-9" element={<FacultyChapter9 />} />
-        <Route path="/gamified-1" element={<Gamified1 />} />
-        <Route path="/gamified-2" element={<Gamified2 />} />
-        <Route path="/gamified-4" element={<Gamified4 />} />
-        <Route path="/gamified-5" element={<Gamified5 />} />
-        <Route path="/gamified-6" element={<Gamified6 />} />
-        <Route path="/gamified-7" element={<Gamified7 />} />
-        <Route path="/gamified-8" element={<Gamified8 />} />
-        <Route path="/gamified-9" element={<Gamified9 />} />
+        <Route path="/gamified-1" element={<ProtectedGamifiedRoute moduleNum={1}><Gamified1 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-2" element={<ProtectedGamifiedRoute moduleNum={2}><Gamified2 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-4" element={<ProtectedGamifiedRoute moduleNum={4}><Gamified4 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-5" element={<ProtectedGamifiedRoute moduleNum={5}><Gamified5 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-6" element={<ProtectedGamifiedRoute moduleNum={6}><Gamified6 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-7" element={<ProtectedGamifiedRoute moduleNum={7}><Gamified7 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-8" element={<ProtectedGamifiedRoute moduleNum={8}><Gamified8 /></ProtectedGamifiedRoute>} />
+        <Route path="/gamified-9" element={<ProtectedGamifiedRoute moduleNum={9}><Gamified9 /></ProtectedGamifiedRoute>} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </AnimatePresence>
