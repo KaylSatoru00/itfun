@@ -285,6 +285,8 @@ function StudentLogin() {
       // user_context.jsx restores from) so a refresh keeps us logged in even
       // if the onAuthStateChanged getDocFromServer read hiccups.
       sessionStorage.setItem('user', JSON.stringify(userData));
+      // Show the one-time Disclaimer popup on the modules page after login.
+      sessionStorage.setItem('itfun_show_disclaimer', '1');
       navigate('/learning-modules', { replace: true });
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {

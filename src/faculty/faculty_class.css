@@ -170,6 +170,44 @@
   font-size: 0.9rem;
 }
 
+/* ══════════ CLASS DURATION BAR (above the heading) ══════════ */
+/* Heading on the left, Class Duration on the right */
+.fc-panel .fc-head-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px 24px;
+  margin: 0 0 6px;
+}
+.fc-panel .fc-head-row .fc-heading { margin: 0; padding-top: 10px; }
+.fc-panel .fc-duration-wrap {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 6px; margin-left: auto; max-width: 100%;
+}
+.fc-panel .fc-duration-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+  gap: 10px; margin: 0;
+}
+.fc-panel .fc-dur-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #8a6a70;
+}
+.fc-panel .fc-dur-field {
+  width: 170px; max-width: 100%;
+  background: #fff;
+  border: 1.5px solid #e7d7db; border-radius: 12px;
+  padding: 8px 12px;
+}
+.fc-panel .fc-dur-field.lock { background: #f7f2f3; }
+.fc-panel .fc-dur-field.end { border-color: #C8102E; box-shadow: 0 0 0 3px rgba(200,16,46,0.07); }
+.fc-panel .fc-dur-field.end.filled { box-shadow: none; }
+.fc-panel .fc-dur-arrow { color: #C8102E; font-weight: 800; }
+.fc-panel .fc-dur-help {
+  text-align: right;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.66rem; color: #a294a0; line-height: 1.4;
+}
+.fc-panel .fc-dur-help.ended { color: #C8102E; font-weight: 600; }
+
 /* ══════════ CLASS CARDS ══════════ */
 .fc-panel .fc-class-grid {
   display: grid;
@@ -240,6 +278,17 @@
   color: #8a6a70;
 }
 .fc-panel .fc-class-duration.ended { color: #C8102E; font-weight: 700; }
+.fc-panel .fc-class-remove {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 28px; height: 28px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 50%;
+  background: #f7eceF; color: #C8102E;
+  font-size: 1.3rem; line-height: 1; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.fc-panel .fc-class-remove:hover { background: #C8102E; color: #fff; transform: scale(1.08); }
 .fc-panel .fc-class-finish {
   width: 100%;
   margin-top: 14px;
@@ -358,6 +407,90 @@
 }
 .fc-panel .fc-search-input::placeholder { color: rgba(0, 0, 0, 0.42); }
 .fc-panel .fc-search-clear { border: none; background: none; color: #b89; font-size: 1.1rem; cursor: pointer; line-height: 1; }
+
+/* ══════════ Download PDF / Excel buttons ══════════ */
+.fc-panel .fc-inside-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; min-width: 0; }
+.fc-panel .fc-export-group { display: flex; align-items: center; gap: 10px; }
+
+.fc-panel .fc-export-btn {
+  --accent: #c8102e;
+  --tint: #fdecea;
+  --glow: rgba(200, 16, 46, 0.38);
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 16px 5px 5px;
+  background: #fff;
+  border: 1px solid #ecd3d8;
+  border-radius: 999px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  line-height: 1;
+  color: #4a2a31;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(120, 20, 40, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease,
+              border-color 0.18s ease, color 0.18s ease;
+}
+.fc-panel .fc-export-xlsx {
+  --accent: #1d6f42;
+  --tint: #e3f3ea;
+  --glow: rgba(29, 111, 66, 0.38);
+}
+
+/* round icon chip, tinted per file type */
+.fc-panel .fc-export-ico {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--accent);
+  font-size: 17px;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+/* hover: fills with the file-type color, same idea as the Back button */
+.fc-panel .fc-export-btn:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -8px var(--glow);
+}
+.fc-panel .fc-export-btn:hover:not(:disabled) .fc-export-ico {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.fc-panel .fc-export-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); box-shadow: none; }
+.fc-panel .fc-export-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* disabled (no students yet, or another export is running) */
+.fc-panel .fc-export-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* loading: the icon turns into a spinner */
+.fc-panel .fc-export-btn.is-loading:disabled { opacity: 1; cursor: progress; }
+.fc-panel .fc-export-btn.is-loading .fc-export-ico svg { display: none; }
+.fc-panel .fc-export-btn.is-loading .fc-export-ico::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: fc-export-spin 0.7s linear infinite;
+}
+@keyframes fc-export-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-panel .fc-export-btn { transition: none; }
+  .fc-panel .fc-export-btn:hover:not(:disabled) { transform: none; }
+}
 
 /* student cards */
 .fc-panel .fc-student-grid {
@@ -720,6 +853,26 @@
   text-decoration: line-through; text-decoration-color: rgba(200,16,46,0.5);
   background: #f6f2f3;
 }
+/* Section input with fixed BSIT- prefix */
+.fc-panel .ccm-secfield {
+  display: flex; align-items: center;
+  border: 1.5px solid #e7d7db; border-radius: 12px;
+  padding: 0 14px; background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.fc-panel .ccm-secfield:focus-within { border-color: #C8102E; box-shadow: 0 0 0 3px rgba(200,16,46,0.07); }
+.fc-panel .ccm-secfield.invalid { border-color: #C8102E; background: #fff6f7; }
+.fc-panel .ccm-secprefix {
+  font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1rem;
+  color: #C8102E; user-select: none;
+}
+.fc-panel .ccm-secinput {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  padding: 12px 0 12px 2px;
+  font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1rem;
+  letter-spacing: 0.04em; color: #111; text-transform: uppercase;
+}
+.fc-panel .ccm-secinput::placeholder { color: #d4bfc5; font-weight: 700; }
 /* Duration */
 .fc-panel .ccm-drow { display: flex; gap: 10px; margin-bottom: 8px; }
 .fc-panel .ccm-dfield {
@@ -753,6 +906,8 @@
   font-family: 'Montserrat', sans-serif;
   font-size: 0.66rem; color: #a294a0; margin: 8px 2px 0; line-height: 1.4;
 }
+/* Warning line inside the Add Class modal when no end date is set yet */
+.fc-panel .ccm-help-warn { color: #C8102E; font-weight: 600; margin: 4px 2px 0; }
 .fc-panel .ccm-gen {
   width: 100%; margin-top: 16px;
   padding: 12px; border-radius: 12px;
@@ -988,6 +1143,12 @@
 }
 
 @media (max-width: 560px) {
+  .fc-panel .fc-duration-wrap { margin-left: 0; align-items: flex-start; }
+  .fc-panel .fc-duration-bar { justify-content: flex-start; }
+  .fc-panel .fc-dur-help { text-align: left; }
   .fc-panel .fc-inside-toolbar { flex-direction: column; align-items: stretch; }
   .fc-panel .fc-search { flex: 1 1 auto; }
+  .fc-panel .fc-inside-left { flex-direction: column; align-items: stretch; gap: 10px; }
+  .fc-panel .fc-export-group { width: 100%; }
+  .fc-panel .fc-export-btn { flex: 1; justify-content: center; }
 }

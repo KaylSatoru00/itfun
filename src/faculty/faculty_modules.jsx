@@ -119,6 +119,21 @@ const SEARCH_INDEX = buildSearchIndex();
 ═════════════════════════════════════════════*/
 function FacultyModules() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // ── Disclaimer popup: shown once right after login (the login page sets the flag) ──
+  const [showDisclaimer, setShowDisclaimer] = useState(() => {
+    try { return sessionStorage.getItem('itfun_show_disclaimer') === '1'; } catch { return false; }
+  });
+  const handleDisclaimerOk = () => {
+    try { sessionStorage.removeItem('itfun_show_disclaimer'); } catch { /* ignore */ }
+    setShowDisclaimer(false);
+  };
+  useEffect(() => {
+    if (!showDisclaimer) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [showDisclaimer]);
   const [showAvatarMenu, setShowAvatarMenu]   = useState(false);
   const [searchQuery, setSearchQuery]         = useState('');
   const [showDropdown, setShowDropdown]       = useState(false);
@@ -566,6 +581,63 @@ function FacultyModules() {
               <div className="modal-footer">
                 <button className="modal-join-btn" onClick={handleConfirmLogout}>Yes, Logout</button>
                 <button className="modal-cancel-btn" onClick={() => setShowLogoutModal(false)}>Cancel</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+      {/* ── DISCLAIMER (shown once after login) ── */}
+      <AnimatePresence>
+        {showDisclaimer && (
+          <motion.div
+            className="dsc-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="dsc-box"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="dsc-title"
+              initial={{ scale: 0.92, opacity: 0, y: 14 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 8 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            >
+              <div className="dsc-head">
+                <img src={itfunLogo} className="dsc-logo" alt="ITFun logo" />
+                <h2 id="dsc-title" className="dsc-title">Disclaimer</h2>
+              </div>
+
+              <div className="dsc-body">
+                <p>
+                  ITFun is a capstone project developed by students of the College of Computer
+                  Studies, Dominican College of Tarlac, as a learning platform for IT 11 – IT
+                  Fundamentals. It was created for educational purposes only and is not intended
+                  for commercial use or profit.
+                </p>
+                <p>
+                  The lessons, text, images, icons, illustrations, and other materials in this
+                  platform were gathered from various references, including textbooks, websites,
+                  and other online resources. These materials are used only to support learning
+                  and remain the property of their respective authors, publishers, and owners. No
+                  copyright infringement is intended, and we do not claim ownership of any
+                  third-party content. Where possible, sources are credited, and open-source
+                  libraries and free-license assets are used according to their licenses.
+                </p>
+                <p>
+                  The information in this platform is meant as a study aid and may not always be
+                  complete or up to date. Users are encouraged to consult official textbooks and
+                  their instructors for further guidance.
+                </p>
+              </div>
+
+              <div className="dsc-foot">
+                <button type="button" className="dsc-ok" onClick={handleDisclaimerOk} autoFocus>
+                  OK
+                </button>
               </div>
             </motion.div>
           </motion.div>

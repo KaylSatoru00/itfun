@@ -288,6 +288,8 @@ function FacultyLogin() {
       // binabasa ng user_context.jsx optimistic restore; kung localStorage,
       // hindi ito nakikita sa refresh kaya babalik sa /faculty-login.
       sessionStorage.setItem('user', JSON.stringify(userData));
+      // Show the one-time Disclaimer popup on the modules page after login.
+      sessionStorage.setItem('itfun_show_disclaimer', '1');
       navigate('/faculty-modules', { replace: true });
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
